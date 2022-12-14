@@ -15,7 +15,7 @@ private:
 public:
 	Player();
 	Player(Board* board, int type);
-	int getType() const;
+	const int& getType() const;
 	Board& getBoard();
 };
 
