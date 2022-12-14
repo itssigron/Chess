@@ -25,6 +25,10 @@
 
 using std::string;
 
+class Piece;
+class Board;
+class Player;
+
 class Piece
 {
 protected:
@@ -35,6 +39,7 @@ protected:
 
 public:
 	static string getLocation(int index);
+	static int getIndex(string location);
 	Piece(Player* owner, string location, char type);
 
 	//getters
@@ -51,6 +56,6 @@ public:
 	int basicValidateMove(Player& currentPlayer, Piece& dest);
 
 	//abstract methods
-	virtual int move(Piece& dest) = 0;
+	virtual int validateMove(Piece& dest) = 0;
 };
 

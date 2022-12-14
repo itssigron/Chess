@@ -6,12 +6,15 @@
 
 using std::string;
 
+class Board;
+class Piece;
+class Player;
 
 class Board
 {
 private:
 	Piece*** _board;
-	Player _players[2];
+	Player* _players[2];
 	int _currentPlayer;
 	bool _gameFinished;
 
@@ -26,7 +29,7 @@ public:
 
 	//getters
 	Piece*** getBoard() const;
-	const Player* getPlayers() const;
+	Player** getPlayers();
 	Player& getCurrentPlayer();
 	bool isGameFinished() const;
 
