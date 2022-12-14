@@ -3,6 +3,11 @@
 class Rook : public Piece
 {
 public:
+	/*
+	* Initiates the Rook - defines the owner, location and sets Piece type to ROOK
+	* input: owner and stringifed location
+	* output: the Rook
+	*/
 	Rook(Player* owner, string location);
 
 	/*

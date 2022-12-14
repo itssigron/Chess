@@ -38,22 +38,70 @@ protected:
 	char _type; // type of the piece
 
 public:
+	// Constructor
+	/*
+	* Initiates the Piece - defines the owner, location and type of this piece
+	* input: owner, stringifed location and piece type
+	* output: the Piece
+	*/
 	Piece(Player* owner, string location, char type);
 
-	//getters
-	Player* getOwner();
-	string getLocation();
-	char getType();
+	// getters
+
+	/*
+	* Gets the owner of this piece
+	* input: none
+	* output: a pointer to the player object
+	*/
+	const Player* getOwner() const;
+
+	/*
+	* Gets the location of this piece
+	* input: none
+	* output: the location's string
+	*/
+	string& getLocation();
+
+	/*
+	* Gets the type of this piece
+	* input: none
+	* output: the piece's type char
+	*/
+	const char& getType() const;
 
 	//setters
-	void setLocation(string location);
-	void setType(char type);
+
+	/*
+	* Sets the location of this piece
+	* input: the location to set
+	* output: none
+	*/
+	void setLocation(string& location);
+	
+	/*
+	* Sets the type of this piece
+	* input: the type to set
+	* output: none
+	*/
+	void setType(char& type);
 
 	// methods
+
+	/*
+	* A streaming operator, allows us to print the type of this piece,
+	* by printing the Piece object itself
+	* input: the output stream and the Piece object
+	*/
 	friend std::ostream& operator<<(std::ostream& os, const Piece& obj);
+
+	/*
+	* Performs basic checks on the provided move
+	* input: the current player, and the destination piece
+	* output: VALID_MOVE if all basic checks were passed, error code otherwise
+	*/
 	int basicValidateMove(Player& currentPlayer, Piece& dest);
 
-	//abstract methods
+	//abstract method to validate the move according to its piece type
 	virtual int validateMove(Piece& dest) = 0;
 };
 
