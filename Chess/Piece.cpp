@@ -7,27 +7,27 @@ Piece::Piece(Player* owner, string location, char type)
 	_type = type;
 }
 
-Player* Piece::getOwner()
+const Player* Piece::getOwner() const
 {
 	return _owner;
 }
 
-string Piece::getLocation()
+string& Piece::getLocation()
 {
 	return _location;
 }
 
-char Piece::getType()
+const char& Piece::getType() const
 {
 	return _type;
 }
 
-void Piece::setLocation(string location)
+void Piece::setLocation(string& location)
 {
 	_location = location;
 }
 
-void Piece::setType(char type)
+void Piece::setType(char& type)
 {
 	_type = type;
 }
