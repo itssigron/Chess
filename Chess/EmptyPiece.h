@@ -5,7 +5,7 @@ class EmptyPiece : public Piece
 public:
 	EmptyPiece(Player* owner, string location);
 
-	int move(Piece& dest) override;
+	int validateMove(Piece& dest) override;
 };
 
 

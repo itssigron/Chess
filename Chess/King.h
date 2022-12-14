@@ -5,6 +5,6 @@ class King : public Piece
 public:
 	King(Player* owner, string location);
 
-	int move(Piece& dest) override;
+	int validateMove(Piece& dest) override;
 };
 

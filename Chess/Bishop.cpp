@@ -5,7 +5,7 @@ Bishop::Bishop(Player* owner, string location) : Piece(owner, location, BISHOP)
 
 }
 
-int Bishop::move(Piece& dest)
+int Bishop::validateMove(Piece& dest)
 {
 	return VALID_MOVE;
 }

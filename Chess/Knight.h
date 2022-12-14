@@ -5,6 +5,6 @@ class Knight : public Piece
 public:
 	Knight(Player* owner, string location);
 
-	int move(Piece& dest) override;
+	int validateMove(Piece& dest) override;
 };
 

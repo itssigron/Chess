@@ -5,7 +5,7 @@ EmptyPiece::EmptyPiece(Player* owner, string location) : Piece(owner, location, 
 
 }
 
-int EmptyPiece::move(Piece& dest)
+int EmptyPiece::validateMove(Piece& dest)
 {
 	return VALID_MOVE;
 }

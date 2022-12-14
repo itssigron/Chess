@@ -5,5 +5,5 @@ class Bishop : public Piece
 public:
 	Bishop(Player* owner, string location);
 
-	int move(Piece& dest) override;
+	int validateMove(Piece& dest) override;
 };
