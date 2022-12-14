@@ -14,7 +14,7 @@ class Player;
 class Board
 {
 private:
-	Piece*** _board; // 2d array of Piece pointers
+	Piece* _board[BOARD_SIZE * BOARD_SIZE]; // "2d" array of Piece pointers
 	Player* _players[2]; // array of player pointers
 	int _currentPlayer; // index of current player
 
@@ -67,7 +67,7 @@ public:
 	* input: none
 	* output: the 2d array of Piece pointers
 	*/
-	Piece*** getBoard() const;
+	Piece** getBoard();
 
 	/*
 	* Gets the players
