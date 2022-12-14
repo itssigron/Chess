@@ -2,6 +2,7 @@
 #include "Player.h"
 #include <iostream>
 
+// Piece types
 #define ROOK 'r'
 #define KNIGHT 'n'
 #define BISHOP 'b'
@@ -25,21 +26,18 @@
 
 using std::string;
 
-class Piece;
+// protect against circular reference
 class Board;
 class Player;
 
 class Piece
 {
 protected:
-	Player* _owner;
-	string _location;
-	bool _killed;
-	char _type;
+	Player* _owner; // the player who owns this piece
+	string _location; // the stringifed location of this piece
+	char _type; // type of the piece
 
 public:
-	static string getLocation(int index);
-	static int getIndex(string location);
 	Piece(Player* owner, string location, char type);
 
 	//getters

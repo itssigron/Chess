@@ -1,37 +1,10 @@
 #include "Piece.h"
 
-string Piece::getLocation(int index)
-{
-	string result = "";
-	char dictionary[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
-	int row = index / 8;
-	int col = index % 8;
-
-	result = dictionary[col];
-	result += (8 - row) + '0'; // we start from top which is row 8
-
-	return result;
-}
-
-int Piece::getIndex(string location)
-{
-	int result = 0;
-	char dictionary[] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' };
-
-	int col = location[0] - 'a'; // convert column letter to a number from 0 to 7
-	int row = 8 - (location[1] - '0'); // convert row number to a number from 0 to 7
-
-	result = row * 8 + col; // calculate the index
-
-	return result;
-}
-
 Piece::Piece(Player* owner, string location, char type)
 {
 	_owner = owner;
 	_location = location;
 	_type = type;
-	_killed = false;
 }
 
 Player* Piece::getOwner()
