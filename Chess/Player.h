@@ -4,6 +4,7 @@
 #define WHITE_PLAYER 0
 #define BLACK_PLAYER 1
 
+// protect against circular reference
 class Board;
 
 class Player
