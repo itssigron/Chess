@@ -11,6 +11,9 @@
 #define PAWN 'p'
 #define EMPTY_PIECE '#'
 
+#define WHITE_PAWNS_INDEX 2 // line after special pieces
+#define BLACK_PAWNS_INDEX BOARD_SIZE - 1 // line before special pieces
+
 // valid moves
 #define VALID_MOVE 0 // valid move
 #define VALID_CHESS 1 // valid move, current player made a chess
@@ -100,24 +103,6 @@ public:
 	* output: VALID_MOVE if all basic checks were passed, error code otherwise
 	*/
 	int basicValidateMove(Player& currentPlayer, Piece& dest);
-
-	/*
-	* A function to validate a vertical path,
-	* it checks if src and dest are on the same vertical path
-	* + that there isnt a piece in their middle that interrupts the move
-	* input: dest piece
-	* output: result move code
-	*/
-	int validateVertically(Piece& dest);
-
-	/*
-	* A function to validate an horizontal path,
-	* it checks if src and dest are on the same horizontal path
-	* + that there isnt a piece in their middle that interrupts the move
-	* input: dest piece
-	* output: result move code
-	*/
-	int validateHorizontally(Piece& dest);
 
 	//abstract method to validate the move according to its piece type
 	virtual int validateMove(Piece& dest) = 0;
