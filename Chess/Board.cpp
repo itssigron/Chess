@@ -160,7 +160,7 @@ void Board::movePiece(Piece& src, Piece& dest)
 	_board[getIndex(destRow, destCol)] = &src; // transfer source to dest
 
 	// switch turn from black to white and vice versa
-	_currentPlayer = (_currentPlayer + 1) % 2;
+	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
 }
 
 Piece& Board::getPiece(string location) const
