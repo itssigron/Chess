@@ -16,6 +16,13 @@ using std::string;
 
 int main()
 {
+	// enable virtual terimal processing (ansi color codes)
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD dwMode = 0;
+	GetConsoleMode(hOut, &dwMode);
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(hOut, dwMode);
+
 	srand(time_t(NULL));
 	Pipe p;
 	bool isConnect = p.connect();
