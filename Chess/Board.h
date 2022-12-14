@@ -4,9 +4,10 @@
 #include "Player.h"
 #include "Piece.h"
 
+#define BOARD_SIZE 8
 using std::string;
 
-class Board;
+// protect against circular reference
 class Piece;
 class Player;
 
@@ -16,29 +17,36 @@ private:
 	Piece*** _board;
 	Player* _players[2];
 	int _currentPlayer;
-	bool _gameFinished;
 
 public:
+	//static functions
+
+	static string getLocation(int& index);
+	static int getIndex(string& location);
+
 	//constructors
+
 	Board();
 	Board(const string& board);
 	
 	//destructor
+
 	~Board();
 
 
 	//getters
+
 	Piece*** getBoard() const;
 	Player** getPlayers();
 	Player& getCurrentPlayer();
-	bool isGameFinished() const;
 
 	//setters
+
 	void setBoard(const string& board);
 
 	// methods
+
 	void initBoard();
 	void setPiece(Piece& src, Piece& dest);
-	Player* getWinner();
 	Piece& getPiece(string location) const;
 };
