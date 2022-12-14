@@ -13,14 +13,14 @@ Board::Board()
 	_board = nullptr;
 	_currentPlayer = WHITE_PLAYER;
 	_gameFinished = false;
-	_players[0] = Player(WHITE_PLAYER);
-	_players[1] = Player(BLACK_PLAYER);
+	_players[0] = nullptr;
+	_players[1] = nullptr;
 }
 
 Board::Board(const string& board)
 {
-	_players[WHITE_PLAYER] = Player(WHITE_PLAYER);
-	_players[BLACK_PLAYER] = Player(BLACK_PLAYER);
+	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
+	_players[BLACK_PLAYER] = new Player(this, BLACK_PLAYER);
 	_currentPlayer = board[64] - '0';
 	_gameFinished = false;
 
@@ -46,14 +46,14 @@ Piece*** Board::getBoard() const
 	return _board;
 }
 
-const Player* Board::getPlayers() const
+Player** Board::getPlayers()
 {
 	return _players;
 }
 
 Player& Board::getCurrentPlayer()
 {
-	return _players[_currentPlayer];
+	return *_players[_currentPlayer];
 }
 
 bool Board::isGameFinished() const
@@ -76,7 +76,7 @@ void Board::setBoard(const string& board)
 			index = i * 8 + j;
 			location = Piece::getLocation(index);
 			// rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR
-			player = isupper(board[index]) ? &_players[WHITE_PLAYER] : &_players[BLACK_PLAYER];
+			player = isupper(board[index]) ? _players[WHITE_PLAYER] : _players[BLACK_PLAYER];
 
 			switch (tolower(board[index]))
 			{
@@ -157,24 +157,12 @@ void Board::setPiece(Piece& src, Piece& dest)
 
 Player* Board::getWinner()
 {
-	return _gameFinished ? &_players[_currentPlayer] : nullptr;
+	return _gameFinished ? _players[_currentPlayer] : nullptr;
 }
 
 Piece& Board::getPiece(string location) const
 {
-	int i = 0, j = 0;
-	Piece* result = nullptr;
-
-	for (i = 0; i < 8 && !result; i++)
-	{
-		for (j = 0; j < 8 && !result; j++)
-		{
-			if (_board[i][j]->getLocation() == location)
-			{
-				result = _board[i][j];
-			}
-		}
-	}
-
-	return *result;
+	int index = Piece::getIndex(location);
+	int row = index / 8, col = index % 8;
+	return *_board[row][col];
 }
