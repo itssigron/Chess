@@ -58,8 +58,9 @@ int main()
 		// make basic checks, if all basic checks passed, make
 		// further checks with the current piece, and send result to graphics
 		int result = srcPiece.basicValidateMove(board.getCurrentPlayer(), destPiece);
-		if (result == VALID_MOVE) result = srcPiece.move(destPiece);
+		if (result == VALID_MOVE) result = srcPiece.validateMove(destPiece);
 
+		// perform the actual "move"
 		if (result == VALID_MOVE)
 		{
 			// update source piece location
