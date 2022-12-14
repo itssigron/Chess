@@ -10,6 +10,7 @@
 
 string Board::getLocation(int& index)
 {
+	// calculate row and col by the index
 	int row = index / BOARD_SIZE;
 	int col = index % BOARD_SIZE;
 
@@ -19,22 +20,20 @@ string Board::getLocation(int& index)
 
 int Board::getIndex(string& location)
 {
-	// row * BOARD_SIZE + col
-	return (BOARD_SIZE - (location[1] - '0')) * BOARD_SIZE + (location[0] - 'a');
+	return getIndex(BOARD_SIZE - (location[1] - '0'), location[0] - 'a');
 }
 
-Board::Board()
+int Board::getIndex(int row, int col)
 {
-	_board = nullptr;
-	_currentPlayer = WHITE_PLAYER;
-	_players[WHITE_PLAYER] = nullptr;
-	_players[BLACK_PLAYER] = nullptr;
+	return row * BOARD_SIZE + col;
 }
 
 Board::Board(const string& board)
 {
+	// initiate our 2 players's objects
 	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
 	_players[BLACK_PLAYER] = new Player(this, BLACK_PLAYER);
+
 	// last char is which player is starting
 	_currentPlayer = board[BOARD_SIZE * BOARD_SIZE] - '0';
 
@@ -44,15 +43,15 @@ Board::Board(const string& board)
 
 Board::~Board()
 {
-	int i = 0, j = 0;
+	int i = 0;
 
-	for (i = 0; i < 8; i++)
+	// loop through the board and free all of its memory
+	for (i = 0; i < BOARD_SIZE; i++)
 	{
-		for (j = 0; j < 8; j++)
-		{
-			delete _board[i][j];
-		}
+		delete[] _board[i]; // free the current row
 	}
+
+	delete[] _board; // free the 2d array (the row container)
 }
 
 Piece*** Board::getBoard() const
@@ -65,7 +64,7 @@ Player** Board::getPlayers()
 	return _players;
 }
 
-Player& Board::getCurrentPlayer()
+Player& Board::getCurrentPlayer() const
 {
 	return *_players[_currentPlayer];
 }
@@ -74,19 +73,20 @@ void Board::setBoard(const string& board)
 {
 	int i = 0, j = 0;
 	int index = 0;
-	Piece* piece = nullptr;
-	Player* player = nullptr;
-	string location = "";
+	Player* player = nullptr; // store the current player
+	string location = ""; // store the current location
 
-	for (i = 0; i < 8; i++)
+	// loop through the board to initiate its values with pieces
+	for (i = 0; i < BOARD_SIZE; i++)
 	{
-		for (j = 0; j < 8; j++)
+		for (j = 0; j < BOARD_SIZE; j++)
 		{
-			index = i * 8 + j;
+			index = i * BOARD_SIZE + j;
 			location = Board::getLocation(index); //get stringifed location
-			// rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR
+			// calculate which player owns this piece
 			player = isupper(board[index]) ? _players[WHITE_PLAYER] : _players[BLACK_PLAYER];
 
+			// create the corresponding piece object
 			switch (tolower(board[index]))
 			{
 			case ROOK:
@@ -108,6 +108,7 @@ void Board::setBoard(const string& board)
 				_board[i][j] = new Pawn(player, location);
 				break;
 			default:
+				// create an empty piece object to represent an empty spot
 				_board[i][j] = new EmptyPiece(nullptr, location);
 				break;
 			}
@@ -130,7 +131,7 @@ void Board::initBoard()
 	}
 }
 
-void Board::setPiece(Piece& src, Piece& dest)
+void Board::movePiece(Piece& src, Piece& dest)
 {
 	int i = 0, j = 0;
 	int srcRow = 0, srcCol = 0;
