@@ -5,12 +5,11 @@ Rook::Rook(Player* owner, string location) : Piece(owner, location, ROOK)
 
 }
 
+// todo: optimize this function
 int Rook::validateMove(Piece& dest)
 {
-	char srcRow = _location[1];
-	char srcCol = _location[0];
-	char destRow = dest.getLocation()[1];
-	char destCol = dest.getLocation()[0];
+	char srcRow = _location[1], srcCol = _location[0];
+	char destRow = dest.getLocation()[1], destCol = dest.getLocation()[0];
 	bool foundPiece = false; // loop flag to whether we found a non-empty piece in the rook's path
 	char i = 0;
 	int bigger = 0, lower = 0;

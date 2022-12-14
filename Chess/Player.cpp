@@ -1,11 +1,5 @@
 #include "Player.h"
 
-Player::Player()
-{
-	_type = WHITE_PLAYER;
-	_board = nullptr;
-}
-
 Player::Player(Board* board, int type)
 {
 	if (type != WHITE_PLAYER && type != BLACK_PLAYER)
