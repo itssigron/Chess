@@ -58,6 +58,9 @@ int main()
 		Piece& srcPiece = board.getPiece(msgFromGraphics.substr(0, 2));
 		Piece& destPiece = board.getPiece(msgFromGraphics.substr(2, 2));
 
+		// print all valid moves this src can do to console for debugging
+		board.printAllValidLocations(srcPiece);
+		
 		// make basic checks, if all basic checks passed, make
 		// further checks with the current piece, and send result to graphics
 		int result = srcPiece.basicValidateMove(board.getCurrentPlayer(), destPiece);
