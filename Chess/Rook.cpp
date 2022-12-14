@@ -35,7 +35,7 @@ int Rook::validateMove(Piece& dest)
 	for (i = smaller + 1; i < bigger && !foundPiece; i++)
 	{
 		// get row and col based on loop index, x and y's
-		x1 == x2 ? row = BOARD_SIZE - i, col = x1 : row = BOARD_SIZE - y1, col = i;
+		x1 == x2 ? (row = BOARD_SIZE - i, col = x1) : (row = BOARD_SIZE - y1, col = i);
 		// get pieace stringified location
 		location = Board::getLocation(row, col);
 
