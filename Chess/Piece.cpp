@@ -36,13 +36,10 @@ int Piece::basicValidateMove(Player& currentPlayer, Piece& dest)
 {
 	int result = VALID_MOVE; // assume move is valid until proven wrong
 
-	if (_type == EMPTY_PIECE)
+	if (_type == EMPTY_PIECE || currentPlayer.getType() != _owner->getType())
 	{
-		result = INVALID_SRC_MISSING_PIECE; //src location doesnt have a piece on it
-	}
-	else if (currentPlayer.getType() != _owner->getType())
-	{
-		result = INVALID_PIECE_MOVE; // its not his turn.
+		//src location doesnt have the current player's piece on it
+		result = INVALID_SRC_MISSING_PIECE;
 	}
 	else if (this->_location == dest._location)
 	{
@@ -58,6 +55,60 @@ int Piece::basicValidateMove(Player& currentPlayer, Piece& dest)
 
 	//finished all basic checks, return final result
 	return result;
+}
+
+int Piece::validateVertically(Piece& dest)
+{
+	char srcRow = _location[1], srcCol = _location[0];
+	char destRow = dest.getLocation()[1], destCol = dest.getLocation()[0];
+	bool foundPiece = false; // loop flag to whether we found a non-empty piece in the rook's path
+	char i = 0;
+	int bigger = 0, lower = 0;
+
+	 // if its not vertically, return invalid move
+	if (srcCol != destCol) return INVALID_PIECE_MOVE;
+
+	bigger = srcRow > destRow ? srcRow : destRow;
+	lower = bigger == srcRow ? destRow : srcRow;
+	// loop through all pieces in the path (excluding src and dest pieces)
+	// we dont need to check for src and dest because it was already validated
+	for (i = lower + 1; i < bigger && !foundPiece; i++)
+	{
+		// if there is a piece in the rook's path, move is invalid.
+		if (_owner->getBoard().getPiece(string(1, srcCol) + i).getType() != EMPTY_PIECE)
+		{
+			foundPiece = true;
+		}
+	}
+
+	return foundPiece ? INVALID_PIECE_MOVE : VALID_MOVE;
+}
+
+int Piece::validateHorizontally(Piece& dest)
+{
+	char srcRow = _location[1], srcCol = _location[0];
+	char destRow = dest.getLocation()[1], destCol = dest.getLocation()[0];
+	bool foundPiece = false; // loop flag to whether we found a non-empty piece in the rook's path
+	char i = 0;
+	int bigger = 0, lower = 0;
+
+	// if its not horizontally, return invalid move
+	if (srcRow != destRow) return INVALID_PIECE_MOVE;
+
+	bigger = srcCol > destCol ? srcCol : destCol;
+	lower = bigger == srcCol ? destCol : srcCol;
+	// loop through all pieces in the path (excluding src and dest pieces)
+	// we dont need to check for src and dest because it was already validated
+	for (i = lower + 1; i < bigger && !foundPiece; i++)
+	{
+		// if there is a piece in the rook's path, move is invalid.
+		if (_owner->getBoard().getPiece(string(1, i) + srcRow).getType() != EMPTY_PIECE)
+		{
+			foundPiece = true;
+		}
+	}
+
+	return foundPiece ? INVALID_PIECE_MOVE : VALID_MOVE;
 }
 
 std::ostream& operator<<(std::ostream& os, const Piece& obj)

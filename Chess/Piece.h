@@ -101,6 +101,24 @@ public:
 	*/
 	int basicValidateMove(Player& currentPlayer, Piece& dest);
 
+	/*
+	* A function to validate a vertical path,
+	* it checks if src and dest are on the same vertical path
+	* + that there isnt a piece in their middle that interrupts the move
+	* input: dest piece
+	* output: result move code
+	*/
+	int validateVertically(Piece& dest);
+
+	/*
+	* A function to validate an horizontal path,
+	* it checks if src and dest are on the same horizontal path
+	* + that there isnt a piece in their middle that interrupts the move
+	* input: dest piece
+	* output: result move code
+	*/
+	int validateHorizontally(Piece& dest);
+
 	//abstract method to validate the move according to its piece type
 	virtual int validateMove(Piece& dest) = 0;
 };
