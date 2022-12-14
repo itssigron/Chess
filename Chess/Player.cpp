@@ -16,7 +16,7 @@ Player::Player(Board* board, int type)
 	_board = board;
 }
 
-int Player::getType() const
+const int& Player::getType() const
 {
 	return _type;
 }
