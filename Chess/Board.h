@@ -5,6 +5,8 @@
 #include "Piece.h"
 
 #define BOARD_SIZE 8
+#define CHESS_PLAYERS 2
+
 using std::string;
 
 // protect against circular reference
@@ -15,7 +17,7 @@ class Board
 {
 private:
 	Piece* _board[BOARD_SIZE * BOARD_SIZE]; // "2d" array of Piece pointers
-	Player* _players[2]; // array of player pointers
+	Player* _players[CHESS_PLAYERS]; // array of player pointers
 	int _currentPlayer; // index of current player
 
 public:
