@@ -8,21 +8,35 @@
 #include "EmptyPiece.h"
 
 
+string Board::getLocation(int& index)
+{
+	int row = index / BOARD_SIZE;
+	int col = index % BOARD_SIZE;
+
+	// BOARD_SIZE - row because we start from top
+	return string(1, col + 'a') + (char)((BOARD_SIZE - row) + '0');
+}
+
+int Board::getIndex(string& location)
+{
+	// row * BOARD_SIZE + col
+	return (BOARD_SIZE - (location[1] - '0')) * BOARD_SIZE + (location[0] - 'a');
+}
+
 Board::Board()
 {
 	_board = nullptr;
 	_currentPlayer = WHITE_PLAYER;
-	_gameFinished = false;
-	_players[0] = nullptr;
-	_players[1] = nullptr;
+	_players[WHITE_PLAYER] = nullptr;
+	_players[BLACK_PLAYER] = nullptr;
 }
 
 Board::Board(const string& board)
 {
 	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
 	_players[BLACK_PLAYER] = new Player(this, BLACK_PLAYER);
-	_currentPlayer = board[64] - '0';
-	_gameFinished = false;
+	// last char is which player is starting
+	_currentPlayer = board[BOARD_SIZE * BOARD_SIZE] - '0';
 
 	initBoard(); // allocate memory for board
 	setBoard(board); //fill its places with pieces
@@ -56,11 +70,6 @@ Player& Board::getCurrentPlayer()
 	return *_players[_currentPlayer];
 }
 
-bool Board::isGameFinished() const
-{
-	return _gameFinished;
-}
-
 void Board::setBoard(const string& board)
 {
 	int i = 0, j = 0;
@@ -74,7 +83,7 @@ void Board::setBoard(const string& board)
 		for (j = 0; j < 8; j++)
 		{
 			index = i * 8 + j;
-			location = Piece::getLocation(index);
+			location = Board::getLocation(index); //get stringifed location
 			// rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR
 			player = isupper(board[index]) ? _players[WHITE_PLAYER] : _players[BLACK_PLAYER];
 
@@ -155,14 +164,9 @@ void Board::setPiece(Piece& src, Piece& dest)
 	_currentPlayer = (_currentPlayer + 1) % 2;
 }
 
-Player* Board::getWinner()
-{
-	return _gameFinished ? _players[_currentPlayer] : nullptr;
-}
-
 Piece& Board::getPiece(string location) const
 {
-	int index = Piece::getIndex(location);
+	int index = Board::getIndex(location); //get numeric location
 	int row = index / 8, col = index % 8;
 	return *_board[row][col];
 }
