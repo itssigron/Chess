@@ -20,6 +20,8 @@ int main()
 	Pipe p;
 	bool isConnect = p.connect();
 
+	// if connection failed, ask the user if he wants to re-connect or not,
+	// until theres either a successful reconnection or the user chose not to.
 	string ans;
 	while (!isConnect)
 	{
@@ -41,6 +43,7 @@ int main()
 	}
 
 
+	// the first message to the graphics will be our board
 	char msgToGraphics[1024] = "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR1";
 	Board board = Board(string(msgToGraphics)); //initialize our Board class
 
@@ -67,6 +70,8 @@ int main()
 			board.movePiece(srcPiece, destPiece);
 		}
 
+		// send the result code to graphics
+		// constants for the codes can be found in Piece.h
 		msgToGraphics[0] = result + '0';
 		msgToGraphics[1] = 0; //end string
 
