@@ -64,7 +64,7 @@ int main()
 		if (result == VALID_MOVE)
 		{
 			// update source piece location
-			board.setPiece(srcPiece, destPiece);
+			board.movePiece(srcPiece, destPiece);
 		}
 
 		msgToGraphics[0] = result + '0';
