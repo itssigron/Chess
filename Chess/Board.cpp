@@ -6,9 +6,10 @@
 #include "Pawn.h"
 #include "Knight.h"
 #include "EmptyPiece.h"
+#include <windows.h>   // WinApi header
 
 
-string Board::getLocation(int& index)
+string Board::getLocation(int index)
 {
 	// calculate row and col by the index
 	int row = index / BOARD_SIZE;
@@ -16,6 +17,47 @@ string Board::getLocation(int& index)
 
 	// BOARD_SIZE - row because we start from top
 	return string(1, col + 'a') + (char)((BOARD_SIZE - row) + '0');
+}
+
+string Board::getLocation(int row, int col)
+{
+	return getLocation(getIndex(row, col));
+}
+
+void Board::printAllValidLocations(Piece& src)
+{
+	Piece* dest;
+	int i = 0, j = 0;
+
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			dest = &getPiece(getLocation(i, j));
+			if (dest->getLocation() == src.getLocation())
+			{
+				std::cout << "\033[0;31m" << *dest << "\033[0m";
+			}
+			else
+			{
+				// make basic checks, if all basic checks passed, make
+				// further checks with the current piece, and send result to graphics
+				int result = src.basicValidateMove(getCurrentPlayer(), *dest);
+				if (result == VALID_MOVE) result = src.validateMove(*dest);
+				if (result == VALID_MOVE)
+				{
+					std::cout << "\033[0;32m" << *dest << "\033[0m";
+				}
+				else
+				{
+					std::cout << *dest;
+				}
+			}
+			std::cout << "  ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
 }
 
 int Board::getIndex(string& location)
