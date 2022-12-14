@@ -28,7 +28,16 @@ public:
 	* input: the numeric index
 	* output: its stringified location
 	*/
-	static string getLocation(int& index);
+	static string getLocation(int index);
+
+	/*
+	* Gets the stringified location of a row and col
+	* input: row and col
+	* output: their stringified location
+	*/
+	static string getLocation(int row, int col);
+
+	void printAllValidLocations(Piece& src);
 
 	/*
 	* Gets the numeric index of a stringified location
