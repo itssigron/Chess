@@ -16,6 +16,8 @@ using std::string;
 
 int main()
 {
+	Pipe p;
+
 	// enable virtual terimal processing (ansi color codes)
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	DWORD dwMode = 0;
@@ -23,8 +25,12 @@ int main()
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(hOut, dwMode);
 
+	// start the client
+	system("start chessClient.exe");
+
+	Sleep(1000); // wait for client to start
+
 	srand(time_t(NULL));
-	Pipe p;
 	bool isConnect = p.connect();
 
 	// if connection failed, ask the user if he wants to re-connect or not,
