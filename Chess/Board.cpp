@@ -142,7 +142,7 @@ bool Board::madeChess(Player* player)
 			type = src->getType();
 
 			// only check for pieces whom their validateMove function was implemented
-			if (type == ROOK || type == PAWN)
+			if (type == ROOK || type == PAWN || type == KING || type == BISHOP)
 			{
 				moveCode = src->basicValidateMove(*player, *king);
 				if (moveCode == VALID_MOVE) moveCode = src->validateMove(*king);
