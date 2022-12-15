@@ -90,7 +90,7 @@ Board::~Board()
 	// free the memory of our players
 	delete _players[WHITE_PLAYER];
 	delete _players[BLACK_PLAYER];
-	
+
 	// clear board's string
 	_board.clear();
 }
@@ -183,34 +183,40 @@ bool Board::madeCheckmate(Player* player) {
 
 	for (i = 0; i < _board.length() && didCheckmate; i++)
 	{
-			dest = getPiece(getLocation(i));
+		dest = getPiece(getLocation(i));
 
-			// set current player to enemey, so it can check if enemey's king can move out of chess
+		// set current player to enemey, so it can check if enemey's king can move out of chess
+		_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+		// make basic checks, if all basic checks passed, make
+		// further checks with the current piece, and send result to graphics
+		int result = king->basicValidateMove(getCurrentPlayer(), *dest);
+		if (result == VALID_MOVE) result = king->validateMove(*dest);
+		if (result == VALID_MOVE)
+		{
+			_board[king->getIndex()] = '#';
+
+			// move source to desired destination
+			_board[dest->getIndex()] = kingIdentifier;
+
+			// restore current player to check for chess
 			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+			
+			// if madeChess will return false, meaning the king has escaped.
+			// and therefore, didCheckmate should be false aswell
+			didCheckmate = madeChess(player);
 
-			// make basic checks, if all basic checks passed, make
-			// further checks with the current piece, and send result to graphics
-			int result = king->basicValidateMove(getCurrentPlayer(), *dest);
-			if (result == VALID_MOVE) result = king->validateMove(*dest);
-			if (result == VALID_MOVE)
-			{
-				_board[king->getIndex()] = '#';
-
-				// move source to desired destination
-				_board[dest->getIndex()] = kingIdentifier;
-
-				// restore current player to check for chess
-				_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-				if (!madeChess(player))
-				{
-					didCheckmate = false;
-				}
-
-				// restore board
-				_board = boardCopy;
-			}
-			delete dest; // free Piece's memory after use
+			// restore board
+			_board = boardCopy;
 		}
+		else
+		{
+			// current player should get restored to its original state
+			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+		}
+
+		delete dest; // free Piece's memory after use
+	}
 
 	// If none of the player's moves allow them to escape the chess,
 	// then the player has made a checkmate and the function should
@@ -227,13 +233,13 @@ int Board::movePiece(Piece& src, Piece& dest)
 
 	// move source to desired destination
 	_board[dest.getIndex()] = src.getOwner()->getType() == WHITE_PLAYER ? toupper(src.getType()) : src.getType();
-	
+
 	// check if either one of sides did chess
 	// and whether they made a self chess or not
 	bool whiteDidChess = madeChess(_players[WHITE_PLAYER]);
 	bool blackDidChess = madeChess(_players[BLACK_PLAYER]);
 	bool whitePlayer = src.getOwner()->getType() == WHITE_PLAYER;
-	
+
 	// if its a self-chess
 	if ((whiteDidChess && !whitePlayer) || (blackDidChess && whitePlayer))
 	{
