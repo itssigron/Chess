@@ -59,7 +59,7 @@ int main()
 
 
 	// the first message to the graphics will be our board
-	char msgToGraphics[1024] = "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR1";
+	char msgToGraphics[1024] = "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR0";
 	Board board = Board(string(msgToGraphics)); //initialize our Board class
 
 	p.sendMessageToGraphics(msgToGraphics);   // send the board string
