@@ -84,8 +84,8 @@ int main()
 		// perform the actual "move"
 		if (result == VALID_MOVE)
 		{
-			// update source piece location
-			board.movePiece(*srcPiece, *destPiece);
+			// update source piece location + update result incase of "chess"
+			result = board.movePiece(*srcPiece, *destPiece);
 		}
 
 		// free pieces's memory after use
