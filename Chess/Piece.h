@@ -42,12 +42,22 @@ protected:
 
 public:
 	// Constructor
+
 	/*
 	* Initiates the Piece - defines the owner, location and type of this piece
 	* input: owner, stringifed location and piece type
 	* output: the Piece
 	*/
 	Piece(Player* owner, string location, char type);
+
+	// Destructor
+
+	/*
+	* Clears all memory used in the object
+	* input: none
+	* output: none
+	*/
+	~Piece();
 
 	// getters
 
@@ -64,6 +74,13 @@ public:
 	* output: the location's string
 	*/
 	string& getLocation();
+
+	/*
+	* Gets the numeric index of this piece
+	* input: none
+	* output: the piece's numeric index
+	*/
+	int getIndex();
 
 	/*
 	* Gets the type of this piece

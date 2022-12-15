@@ -7,6 +7,11 @@ Piece::Piece(Player* owner, string location, char type)
 	_type = type;
 }
 
+Piece::~Piece()
+{
+	_location.clear();
+}
+
 const Player* Piece::getOwner() const
 {
 	return _owner;
@@ -15,6 +20,11 @@ const Player* Piece::getOwner() const
 string& Piece::getLocation()
 {
 	return _location;
+}
+
+int Piece::getIndex()
+{
+	return Board::getIndex(getLocation());
 }
 
 const char& Piece::getType() const
