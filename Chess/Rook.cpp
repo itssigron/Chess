@@ -20,7 +20,7 @@ int Rook::validateMove(Piece& dest)
 	int i = 0;
 	int row = 0, col = 0;
 	bool foundPiece = false; // loop flag
-	string location = "";
+	string& board = _owner->getBoard().getBoard();
 
 	// if its neither horizontally nor vertically, return invalid move
 	if (x1 != x2 && y1 != y2)
@@ -36,11 +36,9 @@ int Rook::validateMove(Piece& dest)
 	{
 		// get row and col based on loop index, x and y's
 		x1 == x2 ? (row = BOARD_SIZE - i, col = x1) : (row = BOARD_SIZE - y1, col = i);
-		// get pieace stringified location
-		location = Board::getLocation(row, col);
 
 		// if pieace isnt empty, set it to true and return invalid move
-		foundPiece = _owner->getBoard().getPiece(location).getType() != EMPTY_PIECE;
+		foundPiece = board[Board::getIndex(row, col)] != EMPTY_PIECE;
 	}
 	
 	// if a piece wasnt found in the middle of the rook's path, return valid move
