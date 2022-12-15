@@ -47,8 +47,8 @@ void Board::printAllValidLocations(Piece& src)
 				if (result == VALID_MOVE) result = src.validateMove(*dest);
 				if (result == VALID_MOVE)
 				{
-					// all valid moves should be printed in green
-					std::cout << "\033[0;32m" << *dest << "\033[0m";
+					// all valid moves should be printed in green (or blue if its a capture move)
+					std::cout << (dest->getType() == EMPTY_PIECE ? "\033[0;32m" : "\033[0;34m") << *dest << "\033[0m";
 				}
 				else
 				{
@@ -201,7 +201,7 @@ bool Board::madeCheckmate(Player* player) {
 
 			// restore current player to check for chess
 			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-			
+
 			// if madeChess will return false, meaning the king has escaped.
 			// and therefore, didCheckmate should be false aswell
 			didCheckmate = madeChess(player);
