@@ -32,6 +32,7 @@
 
 # Executables
 *.exe
+!ChessClient.exe # client shouldnt be ignored
 *.out
 *.app
 *.lnk
