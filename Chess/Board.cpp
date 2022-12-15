@@ -110,16 +110,81 @@ Player& Board::getCurrentPlayer() const
 	return *_players[_currentPlayer];
 }
 
-void Board::movePiece(Piece& src, Piece& dest)
+bool Board::madeChess(Player* player)
 {
+	int i = 0;
+	bool whitePlayer = player->getType() == WHITE_PLAYER;
+	// enemy's king identifier
+	char kingIdentifier = whitePlayer ? KING : toupper(KING);
+	Piece *src = nullptr, *king = nullptr;
+	bool didChess = false;
+	int moveCode = 0;
+	char type = ' ';
+
+	// loop through the board to get the enemey king's piece
+	for (i = 0; i < _board.length() && king == nullptr; i++)
+	{
+		if (_board[i] == kingIdentifier)
+		{
+			king = getPiece(getLocation(i));
+		}
+	}
+
+	// loop through the board to check if any of the player's pieces
+	// can make a valid move against the enemy king, if yes, its a chess.
+	for (i = 0; i < _board.length() && !didChess; i++)
+	{
+		if ((whitePlayer && isupper(_board[i])) ||
+			!whitePlayer && islower(_board[i]))
+		{
+			// we found one of our player's pieces, lets save it
+			src = getPiece(getLocation(i));
+			type = src->getType();
+
+			// only check for pieces whom their validateMove function was implemented
+			if (type == ROOK || type == PAWN)
+			{
+				moveCode = src->basicValidateMove(*player, *king);
+				if (moveCode == VALID_MOVE) moveCode = src->validateMove(*king);
+
+				// if all checks passed, its a chess!
+				if (moveCode == VALID_MOVE) didChess = true;
+			}
+		}
+	}
+
+	// return final result
+	return didChess;
+}
+
+int Board::movePiece(Piece& src, Piece& dest)
+{
+	// save a copy of our board incase of a self-chess
+	string boardCopy = _board;
 	// empty out source
 	_board[src.getIndex()] = '#';
 
 	// move source to desired destination
 	_board[dest.getIndex()] = src.getOwner()->getType() == WHITE_PLAYER ? toupper(src.getType()) : src.getType();
+	
+	// check if either one of sides did chess
+	// and whether they made a self chess or not
+	bool whiteDidChess = madeChess(_players[WHITE_PLAYER]);
+	bool blackDidChess = madeChess(_players[BLACK_PLAYER]);
+	bool whitePlayer = src.getOwner()->getType() == WHITE_PLAYER;
+	
+	// if its a self-chess
+	if ((whiteDidChess && !whitePlayer) || (blackDidChess && whitePlayer))
+	{
+		// restore our board and return an invalid move
+		_board = boardCopy;
+		return INVALID_SELF_CHESS;
+	}
 
 	// switch turn from black to white and vice versa
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+	return (whiteDidChess || blackDidChess) ? VALID_CHESS : VALID_MOVE;
 }
 
 Piece* Board::getPiece(const string location) const
