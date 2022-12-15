@@ -109,6 +109,8 @@ public:
 	*/
 	bool madeChess(Player* player);
 
+	bool madeCheckmate(Player* player);
+
 	/*
 	* Moves the source piece into the destination piece,
 	* if destination doesnt contain a piece in it, then
