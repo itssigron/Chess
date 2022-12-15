@@ -16,7 +16,7 @@ class Player;
 class Board
 {
 private:
-	Piece* _board[BOARD_SIZE * BOARD_SIZE]; // "2d" array of Piece pointers
+	string _board;
 	Player* _players[CHESS_PLAYERS]; // array of player pointers
 	int _currentPlayer; // index of current player
 
@@ -28,15 +28,20 @@ public:
 	* input: the numeric index
 	* output: its stringified location
 	*/
-	static string getLocation(int index);
+	static string getLocation(const int index);
 
 	/*
 	* Gets the stringified location of a row and col
 	* input: row and col
 	* output: their stringified location
 	*/
-	static string getLocation(int row, int col);
+	static string getLocation(const int row, const int col);
 
+	/*
+	* Prints the board with src colored in red and all valid moves colored in green
+	* input: the src piece to check all locations against
+	* output: none
+	*/
 	void printAllValidLocations(Piece& src);
 
 	/*
@@ -44,7 +49,7 @@ public:
 	* input: the stringified location
 	* output: its numeric index
 	*/
-	static int getIndex(string& location);
+	static int getIndex(const string& location);
 
 	/*
 	* Gets the numeric index by row and col
@@ -76,9 +81,9 @@ public:
 	/*
 	* Gets the board
 	* input: none
-	* output: the 2d array of Piece pointers
+	* output: the board's string
 	*/
-	Piece** getBoard();
+	string& getBoard();
 
 	/*
 	* Gets the players
@@ -94,23 +99,9 @@ public:
 	*/
 	Player& getCurrentPlayer() const;
 
-	// ---------------------- SETTERS ----------------------
-
-	/*
-	* Fill the board with pieces according to the stringified board
-	* input: the stringified board
-	* output: none
-	*/
-	void setBoard(const string& board);
 
 	// ---------------------- METHODS ----------------------
 
-	/*
-	* Allocates memory for the board and initiate them to null
-	* input: none
-	* output: none
-	*/
-	void initBoard();
 	/*
 	* Moves the source piece into the destination piece,
 	* if destination doesnt contain a piece in it, then
@@ -123,9 +114,10 @@ public:
 	void movePiece(Piece& src, Piece& dest);
 
 	/*
-	* Gets a piece at a specific location
+	* Gets a Piece object for a specific location on the board
 	* input: the piece's stringified location
-	* output; that Piece object's reference
+	* output; that Piece object's
+	(dynamically allocated, user's responsibility to delete)
 	*/
-	Piece& getPiece(string location) const;
+	Piece* getPiece(string location) const;
 };
