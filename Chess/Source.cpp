@@ -26,7 +26,7 @@ int main()
 	SetConsoleMode(hOut, dwMode);
 
 	// start the client
-	system("start chessClient.exe");
+	system("start ChessClient.exe");
 
 	Sleep(1000); // wait for client to start
 
