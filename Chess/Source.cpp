@@ -58,7 +58,7 @@ int main()
 	ans.clear();
 
 
-	// the first message to the graphics will be our board
+	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
 	char msgToGraphics[1024] = "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR0";
 	Board board = Board(string(msgToGraphics)); //initialize our Board class
 
