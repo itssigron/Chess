@@ -141,15 +141,11 @@ bool Board::madeChess(Player* player)
 			src = getPiece(getLocation(i));
 			type = src->getType();
 
-			// only check for pieces whom their validateMove function was implemented
-			if (type == ROOK || type == PAWN || type == KING || type == BISHOP)
-			{
-				moveCode = src->basicValidateMove(*player, *king);
-				if (moveCode == VALID_MOVE) moveCode = src->validateMove(*king);
+			moveCode = src->basicValidateMove(*player, *king);
+			if (moveCode == VALID_MOVE) moveCode = src->validateMove(*king);
 
-				// if all checks passed, its a chess!
-				if (moveCode == VALID_MOVE) didChess = true;
-			}
+			// if all checks passed, its a chess!
+			if (moveCode == VALID_MOVE) didChess = true;
 		}
 	}
 
