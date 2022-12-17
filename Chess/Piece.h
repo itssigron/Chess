@@ -39,6 +39,8 @@ protected:
 	Player* _owner; // the player who owns this piece
 	string _location; // the stringifed location of this piece
 	char _type; // type of the piece
+	char _identifier; //capital letter for white and small for black
+	bool _captured; // whether piece is captured or not 
 
 public:
 	// Constructor
@@ -66,7 +68,7 @@ public:
 	* input: none
 	* output: a pointer to the player object
 	*/
-	const Player* getOwner() const;
+	Player* getOwner() const;
 
 	/*
 	* Gets the location of this piece
@@ -89,6 +91,20 @@ public:
 	*/
 	const char& getType() const;
 
+	/*
+	* Check whether this piece is captured or not
+	* input: none
+	* output: the piece's captured state
+	*/
+	const bool& isCaptured() const;
+
+	/*
+	* Gets the identifier of this piece
+	* input: none
+	* output: the piece's identifier char
+	*/
+	const char& getIdentifier() const;
+
 	//setters
 
 	/*
@@ -104,6 +120,13 @@ public:
 	* output: none
 	*/
 	void setType(char& type);
+
+	/*
+	* Sets the piece's captured state
+	* input: its new state
+	* output: none
+	*/
+	void setCaptured(bool isCaptured);
 
 	// methods
 
