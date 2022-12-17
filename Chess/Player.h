@@ -1,17 +1,20 @@
 #pragma once
 #include "Board.h"
+#include <vector>
 
 #define WHITE_PLAYER 0
 #define BLACK_PLAYER 1
 
 // protect against circular reference
 class Board;
+class Piece;
 
 class Player
 {
 private:
 	int _type; // either WHITE_PLAYER or BLACK_PLAYER
-	Board* _board; // 
+	Board* _board; // the board in which this player belongs to
+	std::vector<Piece*> _pieces; // all player's pieces
 public:
 	/*
 	* Initiates our Player object
@@ -26,6 +29,13 @@ public:
 	* output: the player's type (WHITE_PLAYER or BLACK_PLAYER)
 	*/
 	const int& getType() const;
+
+	/*
+	* Gets the player's pieces
+	* input: none
+	* output: the player's pieces vector
+	*/
+	const std::vector<Piece*>& getPieces() const;
 
 	/*
 	* Gets the board
