@@ -24,6 +24,13 @@ public:
 	Player(Board* board, int type);
 
 	/*
+	* Clears all used memory in the player's constructor
+	* input: none
+	* output: none
+	*/
+	~Player();
+
+	/*
 	* Gets the player type
 	* input: none
 	* output: the player's type (WHITE_PLAYER or BLACK_PLAYER)

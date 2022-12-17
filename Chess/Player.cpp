@@ -54,6 +54,16 @@ Player::Player(Board* board, int type)
 	}
 }
 
+Player::~Player()
+{
+	int i = 0;
+	for (i = 0; i < _pieces.size(); i++)
+	{
+		delete _pieces[i]; //clear piece memory
+	}
+	_pieces.clear();
+}
+
 const int& Player::getType() const
 {
 	return _type;
