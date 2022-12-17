@@ -1,10 +1,5 @@
-#include "Board.h"
-#include "Rook.h"
-#include "King.h"
-#include "Queen.h"
-#include "Bishop.h"
-#include "Pawn.h"
-#include "Knight.h"
+#pragma warning(disable:6011)
+
 #include "EmptyPiece.h"
 #include <windows.h>   // WinApi header
 
@@ -55,7 +50,10 @@ void Board::printAllValidLocations(Piece& src)
 					std::cout << *dest;
 				}
 			}
-			delete dest; // free Piece's memory after use
+			if (dest->getType() == EMPTY_PIECE)
+			{
+				delete dest; // free Piece's memory after use
+			}
 			std::cout << "  ";
 		}
 		std::cout << std::endl;
@@ -75,14 +73,14 @@ int Board::getIndex(const int row, const int col)
 
 Board::Board(const string& board)
 {
-	// initiate our 2 players's objects
-	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
-	_players[BLACK_PLAYER] = new Player(this, BLACK_PLAYER);
-
 	// last char is which player is starting
 	_currentPlayer = board[BOARD_SIZE * BOARD_SIZE] - '0';
 	_board = board;
 	_board.pop_back(); // remove the starting player char
+
+	// initiate our 2 players's objects
+	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
+	_players[BLACK_PLAYER] = new Player(this, BLACK_PLAYER);
 }
 
 Board::~Board()
@@ -114,38 +112,46 @@ bool Board::madeChess(Player* player)
 {
 	int i = 0;
 	bool whitePlayer = player->getType() == WHITE_PLAYER;
+	Player* enemy = _players[whitePlayer ? BLACK_PLAYER : WHITE_PLAYER];
 	// enemy's king identifier
 	char kingIdentifier = whitePlayer ? KING : toupper(KING);
-	Piece *src = nullptr, *king = nullptr;
+	Piece* src = nullptr, * king = nullptr;
 	bool didChess = false;
 	int moveCode = 0;
 	char type = ' ';
+	std::vector<Piece*> pieces = player->getPieces();
+	std::vector<Piece*> enemyPieces = enemy->getPieces();
 
 	// loop through the board to get the enemey king's piece
-	for (i = 0; i < _board.length() && king == nullptr; i++)
+	for (i = 0; i < enemyPieces.size() && king == nullptr; i++)
 	{
-		if (_board[i] == kingIdentifier)
+		if (enemyPieces[i]->getIdentifier() == kingIdentifier)
 		{
-			king = getPiece(getLocation(i));
+			king = enemyPieces[i];
 		}
 	}
 
+
 	// loop through the board to check if any of the player's pieces
 	// can make a valid move against the enemy king, if yes, its a chess.
-	for (i = 0; i < _board.length() && !didChess; i++)
+	for (i = 0; i < pieces.size() && !didChess; i++)
 	{
-		if ((whitePlayer && isupper(_board[i])) ||
-			!whitePlayer && islower(_board[i]))
+		// we found one of our player's pieces, lets save it
+		src = pieces[i];
+		if (!src->isCaptured())
 		{
-			// we found one of our player's pieces, lets save it
-			src = getPiece(getLocation(i));
 			type = src->getType();
 
 			moveCode = src->basicValidateMove(*player, *king);
-			if (moveCode == VALID_MOVE) moveCode = src->validateMove(*king);
+			if (moveCode == VALID_MOVE)
+			{
+				moveCode = src->validateMove(*king);
+			}
 
 			// if all checks passed, its a chess!
-			if (moveCode == VALID_MOVE) didChess = true;
+			if (moveCode == VALID_MOVE) {
+				didChess = true;
+			}
 		}
 	}
 
@@ -154,11 +160,13 @@ bool Board::madeChess(Player* player)
 }
 
 bool Board::madeCheckmate(Player* player) {
-	int i = 0;
+	int i = 0, j = 0;
 	bool didCheckmate = true;
 	bool whitePlayer = player->getType() == WHITE_PLAYER;
-	char kingIdentifier = whitePlayer ? KING : toupper(KING);
-	Piece *king = nullptr, *dest = nullptr;
+	Player* enemy = _players[whitePlayer ? BLACK_PLAYER : WHITE_PLAYER];
+	Piece *src = nullptr, *dest = nullptr;
+	std::vector<Piece*> pieces = player->getPieces();
+	std::vector<Piece*> enemyPieces = enemy->getPieces();
 
 	// First, check if the player has made a chess
 	if (!madeChess(player)) {
@@ -166,53 +174,60 @@ bool Board::madeCheckmate(Player* player) {
 	}
 
 	// loop through the board to get the enemey king's piece
-	for (i = 0; i < _board.length() && king == nullptr; i++)
+	for (i = 0; i < enemyPieces.size() && didCheckmate; i++)
 	{
-		if (_board[i] == kingIdentifier)
+		src = enemyPieces[i];
+		if (!src->isCaptured())
 		{
-			king = getPiece(getLocation(i));
+
+			// save a copy of our board incase of a self-chess
+			string boardCopy = _board;
+			string location = src->getLocation();
+
+			for (j = 0; j < _board.length() && didCheckmate; j++)
+			{
+				dest = getPiece(getLocation(j));
+
+				// set current player to enemey, so it can check if enemey's king can move out of chess
+				_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+				// make basic checks, if all basic checks passed, make
+				//// further checks with the current piece, and send result to graphics
+				int result = src->basicValidateMove(getCurrentPlayer(), *dest);
+				if (result == VALID_MOVE) result = src->validateMove(*dest);
+				if (result == VALID_MOVE)
+				{
+					_board[src->getIndex()] = '#';
+
+					// move source to desired destination
+					_board[dest->getIndex()] = src->getIdentifier();
+					src->setLocation(dest->getLocation());
+
+					// restore current player to check for chess
+					_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+					// if madeChess will return false, meaning the king has escaped.
+					// and therefore, didCheckmate should be false aswell
+					didCheckmate = madeChess(player);
+
+					// restore board
+					_board = boardCopy;
+					src->setLocation(location);
+				}
+				else
+				{
+					// current player should get restored to its original state
+					_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+				}
+
+				if (dest->getType() == EMPTY_PIECE)
+				{
+					delete dest; // free Piece's memory after use
+				}
+			}
 		}
 	}
 
-	// save a copy of our board incase of a self-chess
-	string boardCopy = _board;
-
-	for (i = 0; i < _board.length() && didCheckmate; i++)
-	{
-		dest = getPiece(getLocation(i));
-
-		// set current player to enemey, so it can check if enemey's king can move out of chess
-		_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-
-		// make basic checks, if all basic checks passed, make
-		// further checks with the current piece, and send result to graphics
-		int result = king->basicValidateMove(getCurrentPlayer(), *dest);
-		if (result == VALID_MOVE) result = king->validateMove(*dest);
-		if (result == VALID_MOVE)
-		{
-			_board[king->getIndex()] = '#';
-
-			// move source to desired destination
-			_board[dest->getIndex()] = kingIdentifier;
-
-			// restore current player to check for chess
-			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-
-			// if madeChess will return false, meaning the king has escaped.
-			// and therefore, didCheckmate should be false aswell
-			didCheckmate = madeChess(player);
-
-			// restore board
-			_board = boardCopy;
-		}
-		else
-		{
-			// current player should get restored to its original state
-			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-		}
-
-		delete dest; // free Piece's memory after use
-	}
 
 	// If none of the player's moves allow them to escape the chess,
 	// then the player has made a checkmate and the function should
@@ -224,11 +239,20 @@ int Board::movePiece(Piece& src, Piece& dest)
 {
 	// save a copy of our board incase of a self-chess
 	string boardCopy = _board;
+	string oldLocation = src.getLocation();
 	// empty out source
 	_board[src.getIndex()] = '#';
 
 	// move source to desired destination
-	_board[dest.getIndex()] = src.getOwner()->getType() == WHITE_PLAYER ? toupper(src.getType()) : src.getType();
+	_board[dest.getIndex()] = src.getIdentifier();
+
+	src.setLocation(dest.getLocation()); // update piece location
+
+	// if a capture was made, then perform the action on the player's pieces
+	if (dest.getType() != EMPTY_PIECE)
+	{
+		dest.setCaptured(true);
+	}
 
 	// check if either one of sides did chess
 	// and whether they made a self chess or not
@@ -239,8 +263,10 @@ int Board::movePiece(Piece& src, Piece& dest)
 	// if its a self-chess
 	if ((whiteDidChess && !whitePlayer) || (blackDidChess && whitePlayer))
 	{
-		// restore our board and return an invalid move
+		// restore our board state and return an invalid move
 		_board = boardCopy;
+		src.setLocation(oldLocation);
+		dest.setCaptured(false);
 		return INVALID_SELF_CHESS;
 	}
 
@@ -250,6 +276,7 @@ int Board::movePiece(Piece& src, Piece& dest)
 		return VALID_CHECKMATE;
 	}
 
+
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
 	// switch turn from black to white and vice versa
 
@@ -258,34 +285,26 @@ int Board::movePiece(Piece& src, Piece& dest)
 
 Piece* Board::getPiece(const string location) const
 {
+	int i = 0;
 	int index = getIndex(location); //get numeric location
 	Piece* piece = nullptr;
 	Player* player = isupper(_board[index]) ? _players[WHITE_PLAYER] : _players[BLACK_PLAYER];
+	std::vector<Piece*> pieces = player->getPieces();
 
-	switch (tolower(_board[index]))
+	if (_board[index] == EMPTY_PIECE)
 	{
-	case ROOK:
-		piece = new Rook(player, location);
-		break;
-	case KNIGHT:
-		piece = new Knight(player, location);
-		break;
-	case BISHOP:
-		piece = new Bishop(player, location);
-		break;
-	case KING:
-		piece = new King(player, location);
-		break;
-	case QUEEN:
-		piece = new Queen(player, location);
-		break;
-	case PAWN:
-		piece = new Pawn(player, location);
-		break;
-	default:
-		// create an empty piece object to represent an empty spot
+		// create an empty piece object
 		piece = new EmptyPiece(nullptr, location);
-		break;
+	}
+	else
+	{
+		for (i = 0; i < pieces.size(); i++)
+		{
+			if (pieces[i]->getLocation() == location && !pieces[i]->isCaptured())
+			{
+				piece = pieces[i];
+			}
+		}
 	}
 
 	return piece;
