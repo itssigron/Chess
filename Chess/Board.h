@@ -6,6 +6,7 @@
 
 #define BOARD_SIZE 8
 #define CHESS_PLAYERS 2
+#define EACH_PLAYER_ROWS 2 // amount of rows each player has filled with pieces
 
 using std::string;
 
