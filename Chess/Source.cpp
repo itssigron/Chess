@@ -89,8 +89,14 @@ int main()
 		}
 
 		// free pieces's memory after use
-		delete srcPiece;
-		delete destPiece;
+		if (srcPiece->getType() == EMPTY_PIECE)
+		{
+			delete srcPiece;
+		}
+		if (destPiece->getType() == EMPTY_PIECE)
+		{
+			delete destPiece;
+		}
 
 		// send the result code to graphics
 		// constants for the codes can be found in Piece.h
