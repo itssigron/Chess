@@ -55,7 +55,7 @@ int main()
 	// get message from graphics
 	string msgFromGraphics = p.getMessageFromGraphics();
 
-	while (msgFromGraphics != "quit")
+	while (msgFromGraphics != "quit" && msgFromGraphics != "") // an empty string can be considered as a "quit"
 	{
 		// source piece selection, meaning we want to send all of its possible moves to graphics
 		if (msgFromGraphics.length() == 2)
@@ -127,7 +127,9 @@ int main()
 	}
 
 	// dump history to terminal
-	std::cout << board.getAllMoves() << std::endl;
+	std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
+
+	std::cout << "Goodbye!" << std::endl;
 
 	// free program's used memory
 	p.close();
