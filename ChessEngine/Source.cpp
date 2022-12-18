@@ -133,5 +133,7 @@ int main()
 	p.close();
 	msgFromGraphics.clear();
 
+	system("pause"); // wait until user presses a key
+
 	return 0;
 }
