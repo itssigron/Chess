@@ -2,6 +2,12 @@
 
 #include "EmptyPiece.h"
 #include <windows.h>   // WinApi header
+#include "Board.h"
+#include "Queen.h"
+#include "Rook.h"
+#include "Bishop.h"
+#include "Knight.h"
+#include "Pawn.h"
 
 string Board::getLocation(int index)
 {
@@ -40,7 +46,7 @@ void Board::printAllValidLocations(Piece& src)
 				// further checks with the current piece, and send result to graphics
 				int result = src.basicValidateMove(getCurrentPlayer(), *dest);
 				if (result == VALID_MOVE) result = src.validateMove(*dest);
-				if (result == VALID_MOVE)
+				if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
 				{
 					// all valid moves should be printed in green (or blue if its a capture move)
 					std::cout << (dest->getType() == EMPTY_PIECE ? "\033[0;32m" : "\033[0;34m") << *dest << "\033[0m";
@@ -149,7 +155,7 @@ bool Board::madeChess(Player* player)
 			}
 
 			// if all checks passed, its a chess!
-			if (moveCode == VALID_MOVE) {
+			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION) {
 				didChess = true;
 			}
 		}
@@ -195,7 +201,7 @@ bool Board::madeCheckmate(Player* player) {
 				//// further checks with the current piece, and send result to graphics
 				int result = src->basicValidateMove(getCurrentPlayer(), *dest);
 				if (result == VALID_MOVE) result = src->validateMove(*dest);
-				if (result == VALID_MOVE)
+				if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
 				{
 					_board[src->getIndex()] = '#';
 
@@ -281,6 +287,70 @@ int Board::movePiece(Piece& src, Piece& dest)
 	// switch turn from black to white and vice versa
 
 	return (whiteDidChess || blackDidChess) ? VALID_CHESS : VALID_MOVE;
+}
+
+int Board::promotePiece(Piece* promoted, char newType)
+{
+	// since this function is called after the move has been complete, we should "switch" the turn to get the previous player
+	// which was promoted
+	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+	Player* player = &getCurrentPlayer();
+	std::vector<Piece*>& pieces = player->getPieces();
+	string location = promoted->getLocation();
+	Piece* newPiece = nullptr;
+	int i = 0;
+	bool foundPiece = false;
+	int result = 0;
+
+	for (i = 0; i < pieces.size() && !foundPiece; i++)
+	{
+		foundPiece = pieces[i]->getLocation() == location;
+	}
+
+
+	i--; // to get the index of pieces in which "promoted" is in
+
+	switch (newType)
+	{
+	case QUEEN:
+		newPiece = new Queen(player, location);
+		break;
+	case ROOK:
+		newPiece = new Rook(player, location);
+		break;
+	case BISHOP:
+		newPiece = new Bishop(player, location);
+		break;
+	case KNIGHT:
+		newPiece = new Knight(player, location);
+		break;
+	default:
+		// a default "promotion"
+		newPiece = new Pawn(player, location);
+	}
+
+	delete promoted; // we dont need this piece anymore
+	pieces[i] = newPiece; // assign our new promoted piece to the pieces vector
+	_board[newPiece->getIndex()] = newPiece->getIdentifier(); // update the board
+
+	// check if promotion caused check/checkmate
+	if (madeCheckmate(&getCurrentPlayer()))
+	{
+		result = VALID_CHECKMATE;
+	}
+	else if (madeChess(player))
+	{
+		result = VALID_CHESS;
+	}
+	else
+	{
+		result = SUCCESSFUL_PROMOTION;
+	}
+
+	// reset current player's state
+	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+	return result;
 }
 
 Piece* Board::getPiece(const string location) const

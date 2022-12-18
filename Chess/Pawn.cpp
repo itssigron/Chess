@@ -13,6 +13,7 @@ int Pawn::validateMove(Piece& dest)
 	int whiteDiff = destRow - srcRow, blackDiff = srcRow - destRow;
 	bool whitePlayer = _owner->getType() == WHITE_PLAYER, blackPlayer = _owner->getType() == BLACK_PLAYER;
 	bool emptyPiece = dest.getType() == EMPTY_PIECE;
+	int result = INVALID_PIECE_MOVE;
 
 
 	// check if either one of the following:
@@ -34,15 +35,21 @@ int Pawn::validateMove(Piece& dest)
 		{
 			if (whitePlayer && (whiteDiff == 1 || whiteDiff == 2 && srcRow == WHITE_PAWNS_INDEX))
 			{
-				return VALID_MOVE;
+				result = VALID_MOVE;
 			}
 			else if (blackPlayer && (blackDiff == 1 || blackDiff == 2 && srcRow == BLACK_PAWNS_INDEX))
 			{
-				return VALID_MOVE;
+				result = VALID_MOVE;
 			}
 		}
 	}
 
-	// if none of the above, return an invalid move
-	return INVALID_PIECE_MOVE;
+	
+	// if a pawn reaches his farthest rank, he can promote his pawn
+	if (result == VALID_MOVE && (destRow == 8 && whitePlayer || destRow == 1 && !whitePlayer))
+	{
+		result = VALID_PAWN_PROMOTION;
+	}
+	// return final result code
+	return result;
 }

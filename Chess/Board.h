@@ -124,6 +124,13 @@ public:
 	int movePiece(Piece& src, Piece& dest);
 
 	/*
+	* Promotes a piece (usually a pawn) to a better one (queen/rook/bishop/knight)
+	* input: the piece to promote, the type in which he will be promoted to
+	* output: result code
+	*/
+	int promotePiece(Piece* promoted, char newType);
+
+	/*
 	* Gets a Piece object for a specific location on the board
 	* input: the piece's stringified location
 	* output; that Piece object's

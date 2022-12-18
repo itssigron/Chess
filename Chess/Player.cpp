@@ -69,7 +69,7 @@ const int& Player::getType() const
 	return _type;
 }
 
-const std::vector<Piece*>& Player::getPieces() const
+std::vector<Piece*>& Player::getPieces()
 {
 	return _pieces;
 }

@@ -42,7 +42,7 @@ public:
 	* input: none
 	* output: the player's pieces vector
 	*/
-	const std::vector<Piece*>& getPieces() const;
+	std::vector<Piece*>& getPieces();
 
 	/*
 	* Gets the board

@@ -14,10 +14,14 @@
 #define WHITE_PAWNS_INDEX 2 // line after special pieces
 #define BLACK_PAWNS_INDEX BOARD_SIZE - 1 // line before special pieces
 
+#define FINAL_RANK 8 // chess board final rank
+
 // valid moves
 #define VALID_MOVE 0 // valid move
 #define VALID_CHESS 1 // valid move, current player made a chess
 #define VALID_CHECKMATE 8 // valid move, current player made a checkmate
+#define VALID_PAWN_PROMOTION 9
+#define SUCCESSFUL_PROMOTION 10
 
 // invalid moves
 #define INVALID_SRC_MISSING_PIECE 2 // current player is *not* in src piece
