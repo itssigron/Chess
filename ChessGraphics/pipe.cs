@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.IO.Pipes;
 using System.IO;
 using System.Threading;
+using System.Diagnostics;
 
 
 namespace chessGraphics
@@ -96,7 +97,10 @@ namespace chessGraphics
 
 
             String MyString = Encoding.ASCII.GetString(inBuffer).TrimEnd((Char)0);
-            return Encoding.ASCII.GetString(inBuffer).TrimEnd((Char)0);
+            string res = Encoding.ASCII.GetString(inBuffer).TrimEnd((Char)0);
+            Debug.WriteLine("[ENGINE]: " + res);
+
+            return res;
         }
 
         public void sendMoveToEngine(string outString)
@@ -104,6 +108,7 @@ namespace chessGraphics
             byte[] t = Encoding.ASCII.GetBytes(outString);
             byte[] inBuffer = new byte[t.Length + 1];
 
+            Debug.WriteLine("[GRAPHICS]: " + outString);
             for (int i = 0; i < t.Length; i++)
             {
                 inBuffer[i] = t[i];

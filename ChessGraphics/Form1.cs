@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using Microsoft.VisualBasic;
+using System.Diagnostics;
 
 namespace chessGraphics
 {
@@ -56,9 +57,9 @@ namespace chessGraphics
                 {
                     isCurPlWhite = (s[s.Length - 1] == '0');
                     PaintBoard(s);
-                    //CheckMateTest();
-                    //TieTest();
-                    //StalemateTest();
+                    //CheckMateTest(400);
+                    //TieTest(400);
+                    //StalemateTest(400);
                 }
 
             });
@@ -285,10 +286,23 @@ namespace chessGraphics
             return messages[res];
         }
 
+        void MakeMoves(string moves, int delay)
+        {
+            string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
+
+            for (int i = 0; i < movesArray.Length - 1; i++)
+            {
+                string src = movesArray[i].Substring(0, 2);
+                string dst = movesArray[i].Substring(2);
+                int copy = i; // we must save a copy, otherwise it could run a thread with a different iteration of i
+                new Thread(() => MakeMove(src, dst, (copy + 1) * delay)).Start();
+            }
+        }
 
         void MakeMove(string src, string dest, int sleepTime)
         {
             Thread.Sleep(sleepTime);
+            Debug.WriteLine(src + dest + " | " + sleepTime);
             int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
             int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
             srcSquare = new Square(srcRow, srcCol);
@@ -344,7 +358,8 @@ namespace chessGraphics
                         matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
                         matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
 
-                        // quit engine and close pipe
+                        // quit engine, close pipe and remove the load moves button since its un-useable at that point
+                        this.Controls.Remove(LoadMoves);
                         enginePipe.sendEngineMove("quit");
                         enginePipe.close();
                     }
@@ -445,287 +460,68 @@ namespace chessGraphics
             }
         }
 
-        private void CheckMateTest()
+        private void CheckMateTest(int delay)
         {
-            Thread move;
-
-            move = new Thread(() => MakeMove("h2", "h4", 0));
-            move.Start();
-            move = new Thread(() => MakeMove("g8", "h6", 500));
-            move.Start();
-            move = new Thread(() => MakeMove("h4", "h5", 1000));
-            move.Start();
-            move = new Thread(() => MakeMove("h6", "g4", 1500));
-            move.Start();
-            move = new Thread(() => MakeMove("h5", "h6", 2000));
-            move.Start();
-            move = new Thread(() => MakeMove("g4", "f2", 2500));
-            move.Start();
-            move = new Thread(() => MakeMove("e1", "f2", 3000));
-            move.Start();
-            move = new Thread(() => MakeMove("b8", "c6", 3500));
-            move.Start();
-            move = new Thread(() => MakeMove("b1", "c3", 4000));
-            move.Start();
-            move = new Thread(() => MakeMove("c6", "e5", 4500));
-            move.Start();
-            move = new Thread(() => MakeMove("c3", "e4", 5000));
-            move.Start();
-            move = new Thread(() => MakeMove("e5", "g4", 5500));
-            move.Start();
-            move = new Thread(() => MakeMove("e4", "g3", 6000));
-            move.Start();
-            move = new Thread(() => MakeMove("g4", "e5", 6500));
-            move.Start();
-            move = new Thread(() => MakeMove("g3", "h5", 7000));
-            move.Start();
-            move = new Thread(() => MakeMove("e5", "c4", 7500));
-            move.Start();
-            move = new Thread(() => MakeMove("h5", "f4", 8000));
-            move.Start();
-            move = new Thread(() => MakeMove("c4", "e5", 8500));
-            move.Start();
-            move = new Thread(() => MakeMove("f4", "d3", 9000));
-            move.Start();
-            move = new Thread(() => MakeMove("e5", "g4", 9500));
-            move.Start();
-            move = new Thread(() => MakeMove("d3", "e2", 10000));
-            move.Start();
-            move = new Thread(() => MakeMove("d3", "e1", 10500));
-            move.Start();
-            move = new Thread(() => MakeMove("g4", "h2", 11000));
-            move.Start();
-            move = new Thread(() => MakeMove("f2", "b6", 11500));
-            move.Start();
-            move = new Thread(() => MakeMove("h2", "g4", 12000));
-            move.Start();
-            move = new Thread(() => MakeMove("b6", "a5", 12500));
-            move.Start();
-            move = new Thread(() => MakeMove("g4", "f2", 13000));
-            move.Start();
+            MakeMoves("h2h4g8h6h4h5h6g4h5h6g4f2e1f2b8c6b1c3c6e5c3e4e5g4e4g3g4e5g3h5e5c4h5f4c4e5f4d3e5g4d3e2d3e1g4h2f2b6h2g4b6a5g4f2"
+                , delay);
         }
 
-        void TieTest()
+        private void TieTest(int delay)
         {
-            Thread move;
-
-            move = new Thread(() => MakeMove("e2", "e4", 0));
-            move.Start();
-            move = new Thread(() => MakeMove("e7", "e5", 500));
-            move.Start();
-            move = new Thread(() => MakeMove("e1", "e3", 1000));
-            move.Start();
-            move = new Thread(() => MakeMove("e8", "e6", 1500));
-            move.Start();
-            move = new Thread(() => MakeMove("e3", "a7", 2000));
-            move.Start();
-            move = new Thread(() => MakeMove("e6", "a2", 2500));
-            move.Start();
-            move = new Thread(() => MakeMove("a7", "a8", 3000));
-            move.Start();
-            move = new Thread(() => MakeMove("a2", "a1", 3500));
-            move.Start();
-            move = new Thread(() => MakeMove("a8", "b8", 4000));
-            move.Start();
-            move = new Thread(() => MakeMove("a1", "b1", 4500));
-            move.Start();
-            move = new Thread(() => MakeMove("b8", "c8", 5000));
-            move.Start();
-            move = new Thread(() => MakeMove("d8", "e7", 5500));
-            move.Start();
-            move = new Thread(() => MakeMove("c8", "b7", 6000));
-            move.Start();
-            move = new Thread(() => MakeMove("b1", "b2", 6500));
-            move.Start();
-            move = new Thread(() => MakeMove("b7", "c7", 7000));
-            move.Start();
-            move = new Thread(() => MakeMove("b2", "c2", 7500));
-            move.Start();
-            move = new Thread(() => MakeMove("d1", "e1", 8000));
-            move.Start();
-            move = new Thread(() => MakeMove("c2", "c1", 8500));
-            move.Start();
-            move = new Thread(() => MakeMove("e1", "e2", 9000));
-            move.Start();
-            move = new Thread(() => MakeMove("c1", "d2", 9500));
-            move.Start();
-            move = new Thread(() => MakeMove("e2", "f3", 10000));
-            move.Start();
-            move = new Thread(() => MakeMove("d2", "e1", 10500));
-            move.Start();
-            move = new Thread(() => MakeMove("c7", "d7", 11000));
-            move.Start();
-            move = new Thread(() => MakeMove("e7", "f6", 11500));
-            move.Start();
-            move = new Thread(() => MakeMove("d7", "e8", 12000));
-            move.Start();
-            move = new Thread(() => MakeMove("e1", "f1", 12500));
-            move.Start();
-            move = new Thread(() => MakeMove("e8", "f8", 13000));
-            move.Start();
-            move = new Thread(() => MakeMove("f1", "g1", 13500));
-            move.Start();
-            move = new Thread(() => MakeMove("f8", "g8", 14000));
-            move.Start();
-            move = new Thread(() => MakeMove("g1", "h1", 14500));
-            move.Start();
-            move = new Thread(() => MakeMove("g8", "h8", 15000));
-            move.Start();
-            move = new Thread(() => MakeMove("h1", "h2", 15500));
-            move.Start();
-            move = new Thread(() => MakeMove("h8", "h7", 16000));
-            move.Start();
-            move = new Thread(() => MakeMove("h2", "g2", 16500));
-            move.Start();
-            move = new Thread(() => MakeMove("f3", "e3", 17000));
-            move.Start();
-            move = new Thread(() => MakeMove("g2", "f2", 17500));
-            move.Start();
-            move = new Thread(() => MakeMove("e3", "d3", 18000));
-            move.Start();
-            move = new Thread(() => MakeMove("f2", "f4", 18500));
-            move.Start();
-            move = new Thread(() => MakeMove("h7", "g7", 19000));
-            move.Start();
-            move = new Thread(() => MakeMove("f6", "e6", 19500));
-            move.Start();
-            move = new Thread(() => MakeMove("g7", "f7", 20000));
-            move.Start();
-            move = new Thread(() => MakeMove("e6", "d6", 20500));
-            move.Start();
-            move = new Thread(() => MakeMove("f7", "h5", 21000));
-            move.Start();
-            move = new Thread(() => MakeMove("f4", "e4", 21500));
-            move.Start();
-            move = new Thread(() => MakeMove("d3", "c3", 22000));
-            move.Start();
-            move = new Thread(() => MakeMove("e4", "h4", 22500));
-            move.Start();
-            move = new Thread(() => MakeMove("h5", "e5", 23000));
-            move.Start();
-            move = new Thread(() => MakeMove("d6", "c6", 23500));
-            move.Start();
-            move = new Thread(() => MakeMove("e5", "h5", 24000));
-            move.Start();
-            move = new Thread(() => MakeMove("h4", "e4", 24500));
-            move.Start();
-            move = new Thread(() => MakeMove("h5", "h4", 25000));
-            move.Start();
-            move = new Thread(() => MakeMove("e4", "a4", 25500));
-            move.Start();
-            move = new Thread(() => MakeMove("h4", "a4", 26000));
-            move.Start();
-            move = new Thread(() => MakeMove("c6", "c5", 26500));
-            move.Start();
-            move = new Thread(() => MakeMove("a4", "b5", 27000));
-            move.Start();
-            move = new Thread(() => MakeMove("c5", "b5", 27500));
-            move.Start();
+            MakeMoves("e2e4e7e5e1e3e8e6e3a7e6a2a7a8a2a1a8b8a1b1b8c8d8e7c8b7b1b2b7c7b2c2d1e1c2c1e1e2c1d2e2f3d2e1c7d7e7f6d7e8e1f1e8f8f1g1f8g8g1h1g8h8h1h2h8h7h2g2f3e3g2f2e3d3f2f4h7g7f6e6g7f7e6d6f7h5f4e4d3c3e4h4h5e5d6c6e5h5h4e4h5h4e4a4h4a4c6c5a4b5c5b5"
+                , delay);
         }
 
-        void StalemateTest()
+        private void StalemateTest(int delay)
         {
-            Thread move;
-
-            move = new Thread(() => MakeMove("e2", "e4", 0));
-            move.Start();
-            move = new Thread(() => MakeMove("a7", "a5", 500));
-            move.Start();
-            move = new Thread(() => MakeMove("e1", "e3", 1000));
-            move.Start();
-            move = new Thread(() => MakeMove("a5", "a4", 1500));
-            move.Start();
-            move = new Thread(() => MakeMove("e3", "a3", 2000));
-            move.Start();
-            move = new Thread(() => MakeMove("b7", "b6", 2500));
-            move.Start();
-            move = new Thread(() => MakeMove("a3", "a4", 3000));
-            move.Start();
-            move = new Thread(() => MakeMove("b6", "b5", 3500));
-            move.Start();
-            move = new Thread(() => MakeMove("a4", "b5", 4000));
-            move.Start();
-            move = new Thread(() => MakeMove("a8", "a7", 4500));
-            move.Start();
-            move = new Thread(() => MakeMove("b5", "b8", 5000));
-            move.Start();
-            move = new Thread(() => MakeMove("a7", "a8", 5500));
-            move.Start();
-            move = new Thread(() => MakeMove("b8", "a8", 6000));
-            move.Start();
-            move = new Thread(() => MakeMove("c7", "c6", 6500));
-            move.Start();
-            move = new Thread(() => MakeMove("a8", "c6", 7000));
-            move.Start();
-            move = new Thread(() => MakeMove("c8", "b7", 7500));
-            move.Start();
-            move = new Thread(() => MakeMove("c6", "b7", 8000));
-            move.Start();
-            move = new Thread(() => MakeMove("d7", "d6", 8500));
-            move.Start();
-            move = new Thread(() => MakeMove("b7", "e7", 9000));
-            move.Start();
-            move = new Thread(() => MakeMove("d8", "c8", 9500));
-            move.Start();
-            move = new Thread(() => MakeMove("e7", "d6", 10000));
-            move.Start();
-            move = new Thread(() => MakeMove("e8", "d8", 10500));
-            move.Start();
-            move = new Thread(() => MakeMove("d6", "d8", 11000));
-            move.Start();
-            move = new Thread(() => MakeMove("c8", "b7", 11500));
-            move.Start();
-            move = new Thread(() => MakeMove("d8", "f8", 12000));
-            move.Start();
-            move = new Thread(() => MakeMove("b7", "c7", 12500));
-            move.Start();
-            move = new Thread(() => MakeMove("f8", "g8", 13000));
-            move.Start();
-            move = new Thread(() => MakeMove("h7", "h6", 13500));
-            move.Start();
-            move = new Thread(() => MakeMove("g8", "h8", 14000));
-            move.Start();
-            move = new Thread(() => MakeMove("g7", "g6", 14500));
-            move.Start();
-            move = new Thread(() => MakeMove("h8", "h6", 15000));
-            move.Start();
-            move = new Thread(() => MakeMove("c7", "c8", 15500));
-            move.Start();
-            move = new Thread(() => MakeMove("h6", "g6", 16000));
-            move.Start();
-            move = new Thread(() => MakeMove("f7", "f6", 16500));
-            move.Start();
-            move = new Thread(() => MakeMove("g6", "f6", 17000));
-            move.Start();
-            move = new Thread(() => MakeMove("c8", "b8", 17500));
-            move.Start();
-            move = new Thread(() => MakeMove("f6", "d4", 18000));
-            move.Start();
-            move = new Thread(() => MakeMove("b8", "a8", 18500));
-            move.Start();
-            move = new Thread(() => MakeMove("d2", "d3", 19000));
-            move.Start();
-            move = new Thread(() => MakeMove("a8", "b8", 19500));
-            move.Start();
-            move = new Thread(() => MakeMove("c1", "f4", 20000));
-            move.Start();
-            move = new Thread(() => MakeMove("f4", "b8", 20500));
-            move.Start();
-            move = new Thread(() => MakeMove("a8", "b8", 21000));
-            move.Start();
-            move = new Thread(() => MakeMove("b8", "a8", 21500));
-            move.Start();
-            move = new Thread(() => MakeMove("f4", "e5", 22000));
-            move.Start();
-            move = new Thread(() => MakeMove("a8", "b7", 22500));
-            move.Start();
-            move = new Thread(() => MakeMove("d4", "d5", 23000));
-            move.Start();
-            move = new Thread(() => MakeMove("b7", "c8", 23500));
-            move.Start();
-            move = new Thread(() => MakeMove("h2", "h4", 24000));
-            move.Start();
+            MakeMoves("e2e4a7a5e1e3a5a4e3a3b7b6a3a4b6b5a4b5a8a7b5b8a7a8b8a8c7c6a8c6c8b7c6b7d7d6b7e7d8c8e7d6e8d8d6d8c8b7d8f8b7c7f8g8h7h6g8h8g7g6h8h6c7c8h6g6f7f6g6f6c8b8f6d4b8a8d2d3a8b8c1f4f4b8a8b8b8a8f4e5a8b7d4d5b7c8h2h4"
+                , delay);
         }
-        
+
+        private bool IsValidMoves(string moves)
+        {
+            bool isValid = true;
+            string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
+
+            if (moves.Length < 4)
+            {
+                isValid = false;
+            }
+            else
+            {
+                for (int i = 0; i < movesArray.Length - 1; i++)
+                {
+                    string src = movesArray[i].Substring(0, 2);
+                    string dst = movesArray[i].Substring(2);
+
+                    if (!(src.Length == 2 && dst.Length == 2))
+                    {
+                        isValid = false;
+                    }
+                }
+            }
+
+            return isValid;
+        }
+        private void LoadMoves_Click(object sender, EventArgs e)
+        {
+            string movesInput = "";
+            string speedInput = "";
+            int delay = 0;
+
+            while (!IsValidMoves(movesInput))
+            {
+                movesInput = Interaction.InputBox("Please enter the moves you wish to run.",
+                    "Auto Move Maker", "", this.ClientSize.Width / 2, this.ClientSize.Height / 2);
+            }
+
+            do
+            {
+                speedInput = Interaction.InputBox("Please enter the delay in ms before executing each move (recommended min: 250).", 
+                    "Auto Move Maker", "", this.ClientSize.Width / 2, this.ClientSize.Height / 2);
+            } while (!int.TryParse(speedInput, out delay));
+
+            MakeMoves(movesInput, delay);
+        }
     }
 }
