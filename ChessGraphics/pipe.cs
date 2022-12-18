@@ -77,17 +77,19 @@ namespace chessGraphics
         public string getStringFromEngine()
         {
             // protocol:
-            // 0 - valid move
-            // 1 - valid move (you made chess)
-            // 2 - invalid move (not your player)
-            // 3 - invalid move (destination is not free)
-            // 4 - invalid move (chess will occur)
-            // 5 - invalid move (out of bounds)
-            // 6 - invalid move (illegal movement with piece)
-            // 7 - Invalid move - source and dest are equal
-            // 8 - check mate
-            // 9 - valid move, pawn should get promoted
-            // 10 - prevoius promotion was valid and approved
+            // 0  - valid move
+            // 1  - valid move (you made chess)
+            // 2  - valid move, pawn should get promoted
+            // 3  - invalid move (not your player)
+            // 4  - invalid move (destination is not free)
+            // 5  - invalid move (chess will occur)
+            // 6  - invalid move (out of bounds)
+            // 7  - invalid move (illegal movement with piece)
+            // 8  - invalid move - source and dest are equal
+            // 9  - check mate
+            // 10 - stale mate (tie)
+            // 11 - insufficient material (tie)
+            // 12 - prevoius pawn promotion was valid and approved
 
             byte[] inBuffer = new byte[1024];
             ioStream.Read(inBuffer, 0, 1024);
