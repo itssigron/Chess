@@ -19,6 +19,7 @@ class Board
 private:
 	string _board;
 	Player* _players[CHESS_PLAYERS]; // array of player pointers
+	string _moves; // store all moves of the game in order to be able to dump them later
 	int _currentPlayer; // index of current player
 
 public:
@@ -100,6 +101,10 @@ public:
 	*/
 	Player** getPlayers();
 
+	string& getAllMoves();
+
+	void pushMove(string move);
+
 	/*
 	* Gets the current player
 	* input: none
@@ -117,7 +122,19 @@ public:
 	*/
 	bool madeChess(Player* player);
 
-	bool madeCheckmate(Player* player);
+	/*
+	* Checks if the player made a check(mate) or a stalemate
+	* input: the player to check for
+	* output: result code
+	*/
+	int checkmateOrStalemate(Player* player);
+
+	/*
+	* Checks if the board is in an insufficient material state
+	* input: none
+	* output: true if is in an insufficient material state, false otherwise
+	*/
+	bool isInsufficientMaterial();
 
 	/*
 	* Moves the source piece into the destination piece,

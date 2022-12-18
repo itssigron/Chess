@@ -38,21 +38,9 @@ int main()
 	string ans;
 	while (!isConnect)
 	{
-		cout << "cant connect to graphics" << endl;
-		cout << "Do you try to connect again or exit? (0-try again, 1-exit)" << endl;
-		std::cin >> ans;
-
-		if (ans == "0")
-		{
-			cout << "trying connect again.." << endl;
-			Sleep(1000);
-			isConnect = p.connect();
-		}
-		else
-		{
-			p.close();
-			return 0;
-		}
+		cout << "cant connect to graphics... trying to re-connect..." << endl;
+		Sleep(1000);
+		isConnect = p.connect();
 	}
 
 	ans.clear();
@@ -72,7 +60,7 @@ int main()
 		// source piece selection, meaning we want to send all of its possible moves to graphics
 		if (msgFromGraphics.length() == 2)
 		{
-			Piece *srcPiece = board.getPiece(msgFromGraphics);
+			Piece* srcPiece = board.getPiece(msgFromGraphics);
 			strcpy_s(msgToGraphics, board.getAllPossibleMoves(*srcPiece).c_str());
 
 			// free piece's memory after use incase needed
@@ -91,8 +79,10 @@ int main()
 		else
 		{
 			// access src and dest pieces using the information from the client
-			Piece *srcPiece = board.getPiece(msgFromGraphics.substr(0, 2));
-			Piece *destPiece = board.getPiece(msgFromGraphics.substr(2, 2));
+			Piece* srcPiece = board.getPiece(msgFromGraphics.substr(0, 2));
+			Piece* destPiece = board.getPiece(msgFromGraphics.substr(2, 2));
+
+			board.pushMove(msgFromGraphics); // push current move to history
 
 			// make basic checks, if all basic checks passed, make
 			// further checks with the current piece, and send result to graphics
@@ -135,6 +125,9 @@ int main()
 		// get message from graphics
 		msgFromGraphics = p.getMessageFromGraphics();
 	}
+
+	// dump history to terminal
+	std::cout << board.getAllMoves() << std::endl;
 
 	// free program's used memory
 	p.close();

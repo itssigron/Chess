@@ -143,6 +143,7 @@ Board::Board(const string& board)
 	_currentPlayer = board[BOARD_SIZE * BOARD_SIZE] - '0';
 	_board = board;
 	_board.pop_back(); // remove the starting player char
+	_moves = "";
 
 	// initiate our 2 players's objects
 	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
@@ -167,6 +168,16 @@ string& Board::getBoard()
 Player** Board::getPlayers()
 {
 	return _players;
+}
+
+string& Board::getAllMoves()
+{
+	return _moves;
+}
+
+void Board::pushMove(string move)
+{
+	_moves += move;
 }
 
 Player& Board::getCurrentPlayer() const
@@ -225,24 +236,31 @@ bool Board::madeChess(Player* player)
 	return didChess;
 }
 
-bool Board::madeCheckmate(Player* player)
+int Board::checkmateOrStalemate(Player* player)
 {
 	int i = 0, j = 0;
-	bool didCheckmate = true;
+	bool didCheckmate = false;
+	bool isStalemate = false;
+	bool isCheck = false;
 	bool whitePlayer = player->getType() == WHITE_PLAYER;
 	Player* enemy = _players[whitePlayer ? BLACK_PLAYER : WHITE_PLAYER];
 	Piece* src = nullptr, * dest = nullptr;
 	std::vector<Piece*> pieces = player->getPieces();
 	std::vector<Piece*> enemyPieces = enemy->getPieces();
 
-	// First, check if the player has made a chess
-	if (!madeChess(player))
+	// First, check if the player has made a chess and update flags accordingly
+	if (madeChess(player))
 	{
-		return false;
+		didCheckmate = true;
+		isCheck = true;
+	}
+	else
+	{
+		isStalemate = true;
 	}
 
 	// loop through the board to get the enemey king's piece
-	for (i = 0; i < enemyPieces.size() && didCheckmate; i++)
+	for (i = 0; i < enemyPieces.size() && (didCheckmate || isStalemate); i++)
 	{
 		src = enemyPieces[i];
 		if (!src->isCaptured())
@@ -252,47 +270,16 @@ bool Board::madeCheckmate(Player* player)
 			string boardCopy = _board;
 			string location = src->getLocation();
 
-			for (j = 0; j < _board.length() && didCheckmate; j++)
+			// set and restore current player so moves for enemy will be valid
+			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+			string locations = getAllPossibleMoves(*src);
+			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+			if (locations.length() > 0)
 			{
-				dest = getPiece(getLocation(j));
-
-				// set current player to enemey, so it can check if enemey's king can move out of chess
-				_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-
-				// make basic checks, if all basic checks passed, make
-				//// further checks with the current piece, and send result to graphics
-				int result = src->basicValidateMove(getCurrentPlayer(), *dest);
-				if (result == VALID_MOVE)
-					result = src->validateMove(*dest);
-				if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
-				{
-					_board[src->getIndex()] = '#';
-
-					// move source to desired destination
-					_board[dest->getIndex()] = src->getIdentifier();
-					src->setLocation(dest->getLocation());
-
-					// restore current player to check for chess
-					_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-
-					// if madeChess will return false, meaning the king has escaped.
-					// and therefore, didCheckmate should be false aswell
-					didCheckmate = madeChess(player);
-
-					// restore board
-					_board = boardCopy;
-					src->setLocation(location);
-				}
-				else
-				{
-					// current player should get restored to its original state
-					_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
-				}
-
-				if (dest->getType() == EMPTY_PIECE)
-				{
-					delete dest; // free Piece's memory after use
-				}
+				// if he has atleast one valid move, it cant be a stale mate or checkmate
+				didCheckmate = false;
+				isStalemate = false;
 			}
 		}
 	}
@@ -300,8 +287,50 @@ bool Board::madeCheckmate(Player* player)
 	// If none of the player's moves allow them to escape the chess,
 	// then the player has made a checkmate and the function should
 	// return true
-	return didCheckmate;
+	return didCheckmate ? VALID_CHECKMATE : isStalemate ? VALID_STALEMATE : isCheck ? VALID_CHESS : INVALID_CHECKMATE_STALEMATE;
 }
+
+bool Board::isInsufficientMaterial()
+{
+	Player *whitePlayer = _players[WHITE_PLAYER], *blackPlayer = _players[BLACK_PLAYER];
+	Piece *piece = nullptr;
+	std::vector<Piece*> whitePieces = whitePlayer->getPieces(), blackPieces = blackPlayer->getPieces();
+	bool whiteKingFound = false, blackKingFound = false;
+	int whitePiecesAmount = 0, blackPiecesAmount = 0;
+	int i = 0;
+
+	for (i = 0; i < whitePieces.size(); i++)
+	{
+		piece = whitePieces[i];
+		if (!piece->isCaptured())
+		{
+			whitePiecesAmount++;
+			if (piece->getType() == KING)
+			{
+				whiteKingFound = true;
+			}
+		}
+	}
+
+	for (i = 0; i < blackPieces.size(); i++)
+	{
+		piece = blackPieces[i];
+		if (!piece->isCaptured())
+		{
+			blackPiecesAmount++;
+			if (piece->getType() == KING)
+			{
+				blackKingFound = true;
+			}
+		}
+	}
+
+	// todo - check for more possible insufficient material cases
+
+	// check if only kings left on the board - its a tie
+	return whiteKingFound && blackKingFound && whitePiecesAmount == 1 && blackPiecesAmount == 1;
+}
+
 
 int Board::movePiece(Piece& src, Piece& dest)
 {
@@ -338,9 +367,16 @@ int Board::movePiece(Piece& src, Piece& dest)
 		return INVALID_SELF_CHESS;
 	}
 
-	if (madeCheckmate(&getCurrentPlayer()))
+	// check if game is over by either checkmate, stalemate or insufficient material draw
+	int endgameStatus = isInsufficientMaterial() ? VALID_INSUFFICIENT_MATERIAL : VALID_MOVE;
+	if (endgameStatus == VALID_MOVE)
 	{
-		return VALID_CHECKMATE;
+		endgameStatus = checkmateOrStalemate(&getCurrentPlayer());
+	}
+
+	if(endgameStatus == VALID_INSUFFICIENT_MATERIAL  || endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE)
+	{
+		return endgameStatus;
 	}
 
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
@@ -392,14 +428,12 @@ int Board::promotePiece(Piece* promoted, char newType)
 	pieces[i] = newPiece;									  // assign our new promoted piece to the pieces vector
 	_board[newPiece->getIndex()] = newPiece->getIdentifier(); // update the board
 
-	// check if promotion caused check/checkmate
-	if (madeCheckmate(&getCurrentPlayer()))
+	// check if promotion caused check/checkmate/stalemate
+
+	int endgameStatus = checkmateOrStalemate(&getCurrentPlayer());
+	if (endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE || endgameStatus == VALID_CHESS)
 	{
-		result = VALID_CHECKMATE;
-	}
-	else if (madeChess(player))
-	{
-		result = VALID_CHESS;
+		result = endgameStatus;
 	}
 	else
 	{

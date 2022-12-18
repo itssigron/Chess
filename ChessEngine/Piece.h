@@ -19,17 +19,25 @@
 // valid moves
 #define VALID_MOVE 0 // valid move
 #define VALID_CHESS 1 // valid move, current player made a chess
-#define VALID_CHECKMATE 8 // valid move, current player made a checkmate
-#define VALID_PAWN_PROMOTION 9
-#define SUCCESSFUL_PROMOTION 10
+#define VALID_PAWN_PROMOTION 2 // valid move, current pawn should get promoted
 
 // invalid moves
-#define INVALID_SRC_MISSING_PIECE 2 // current player is *not* in src piece
-#define INVALID_DEST_PLAYER 3 // current player is *in* dest piece (cant kill his own piece)
-#define INVALID_SELF_CHESS 4 // move will cause enemy to chess current player
-#define INVALID_INDEX 5 // index is out of valid range
-#define INVALID_PIECE_MOVE 6 // the rules of the current piece doesnt allow such move
-#define INVALID_SAME_LOCATION 7 // src piece and dest piece are on the same location
+#define INVALID_SRC_MISSING_PIECE 3 // current player is *not* in src piece
+#define INVALID_DEST_PLAYER 4 // current player is *in* dest piece (cant kill his own piece)
+#define INVALID_SELF_CHESS 5 // move will cause enemy to chess current player
+#define INVALID_INDEX 6 // index is out of valid range
+#define INVALID_PIECE_MOVE 7 // the rules of the current piece doesnt allow such move
+#define INVALID_SAME_LOCATION 8 // src piece and dest piece are on the same location
+
+// endgame moves
+#define VALID_CHECKMATE 9 // valid move, current player made a checkmate
+#define VALID_STALEMATE 10 // valid move, a stale mate has occurred
+#define VALID_INSUFFICIENT_MATERIAL 11 // valid move, onsufficient material draw has occurred
+
+// other
+#define SUCCESSFUL_PROMOTION 12 // a successful pawn promotion
+
+#define INVALID_CHECKMATE_STALEMATE -1 // its neither a checkmate nor stalemate
 
 using std::string;
 
