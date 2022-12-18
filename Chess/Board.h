@@ -39,6 +39,13 @@ public:
 	static string getLocation(const int row, const int col);
 
 	/*
+	* gets a string with all the locations of all possible moves this src can make
+	input: the src piece
+	output: all possible locations, i.e: "e3e4e5"
+	*/
+	string getAllPossibleMoves(Piece& src);
+
+	/*
 	* Prints the board with src colored in red and all valid moves colored in green
 	* input: the src piece to check all locations against
 	* output: none

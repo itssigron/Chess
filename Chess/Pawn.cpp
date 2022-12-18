@@ -33,11 +33,11 @@ int Pawn::validateMove(Piece& dest)
 		// make sure user cannot "kill" a piece 1 square forward
 		if (!(srcCol == destCol && !emptyPiece))
 		{
-			if (whitePlayer && (whiteDiff == 1 || whiteDiff == 2 && srcRow == WHITE_PAWNS_INDEX))
+			if (whitePlayer && (whiteDiff == 1 || (srcCol == destCol && whiteDiff == 2 && srcRow == WHITE_PAWNS_INDEX)))
 			{
 				result = VALID_MOVE;
 			}
-			else if (blackPlayer && (blackDiff == 1 || blackDiff == 2 && srcRow == BLACK_PAWNS_INDEX))
+			else if (blackPlayer && (blackDiff == 1 || (srcCol == destCol && blackDiff == 2 && srcRow == BLACK_PAWNS_INDEX)))
 			{
 				result = VALID_MOVE;
 			}

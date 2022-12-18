@@ -14,7 +14,6 @@ using std::cout;
 using std::endl;
 using std::string;
 
-
 int main()
 {
 	Pipe p;
@@ -27,9 +26,9 @@ int main()
 	SetConsoleMode(hOut, dwMode);
 
 	// start the client
-	//system("start ChessClient.exe");
+	// system("start ChessClient.exe");
 
-	//Sleep(1000); // wait for client to start
+	// Sleep(1000); // wait for client to start
 
 	srand(time_t(NULL));
 	bool isConnect = p.connect();
@@ -58,36 +57,48 @@ int main()
 
 	ans.clear();
 
-
 	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
 	char msgToGraphics[1024] = "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR0";
-	Board board = Board(string(msgToGraphics)); //initialize our Board class
+	Board board = Board(string(msgToGraphics)); // initialize our Board class
 	int result = 0;
-	
-	p.sendMessageToGraphics(msgToGraphics);   // send the board string
+
+	p.sendMessageToGraphics(msgToGraphics); // send the board string
 
 	// get message from graphics
 	string msgFromGraphics = p.getMessageFromGraphics();
 
 	while (msgFromGraphics != "quit")
 	{
-		if (msgFromGraphics.length() == 3) // result for pawn promotion (format = "{file}{rank}{type}")
+		// source piece selection, meaning we want to send all of its possible moves to graphics
+		if (msgFromGraphics.length() == 2)
+		{
+			Piece *srcPiece = board.getPiece(msgFromGraphics);
+			strcpy_s(msgToGraphics, board.getAllPossibleMoves(*srcPiece).c_str());
+
+			// free piece's memory after use incase needed
+			if (srcPiece->getType() == EMPTY_PIECE)
+			{
+				delete srcPiece;
+			}
+		}
+		else if (msgFromGraphics.length() == 3) // result for pawn promotion (format = "{file}{rank}{type}")
 		{
 			result = board.promotePiece(board.getPiece(msgFromGraphics.substr(0, 2)), msgFromGraphics[2]);
+			// send the result code to graphics
+			// constants for the codes can be found in Piece.h
+			strcpy_s(msgToGraphics, std::to_string(result).c_str());
 		}
 		else
 		{
-			//access src and dest pieces using the information from the client
-			Piece* srcPiece = board.getPiece(msgFromGraphics.substr(0, 2));
-			Piece* destPiece = board.getPiece(msgFromGraphics.substr(2, 2));
-
-			// print all valid moves this src can do to console for debugging
-			board.printAllValidLocations(*srcPiece);
+			// access src and dest pieces using the information from the client
+			Piece *srcPiece = board.getPiece(msgFromGraphics.substr(0, 2));
+			Piece *destPiece = board.getPiece(msgFromGraphics.substr(2, 2));
 
 			// make basic checks, if all basic checks passed, make
 			// further checks with the current piece, and send result to graphics
 			result = srcPiece->basicValidateMove(board.getCurrentPlayer(), *destPiece);
-			if (result == VALID_MOVE) result = srcPiece->validateMove(*destPiece);
+			if (result == VALID_MOVE)
+				result = srcPiece->validateMove(*destPiece);
 			int newResult = 0;
 
 			// perform the actual "move"
@@ -96,14 +107,14 @@ int main()
 				// update source piece location + update result incase of "chess"
 				newResult = board.movePiece(*srcPiece, *destPiece);
 
-				//Board::movePiece doesnt check for pawn promotion, so this condition fixes this bug
+				// Board::movePiece doesnt check for pawn promotion, so this condition fixes this bug
 				if (newResult != VALID_MOVE)
 				{
 					result = newResult;
 				}
 			}
 
-			// free pieces's memory after use
+			// free pieces's memory after use incase needed
 			if (srcPiece->getType() == EMPTY_PIECE)
 			{
 				delete srcPiece;
@@ -112,13 +123,13 @@ int main()
 			{
 				delete destPiece;
 			}
+
+			// send the result code to graphics
+			// constants for the codes can be found in Piece.h
+			strcpy_s(msgToGraphics, std::to_string(result).c_str());
 		}
 
-		// send the result code to graphics
-		// constants for the codes can be found in Piece.h
-		strcpy_s(msgToGraphics, std::to_string(result).c_str());
-
-		// return result to graphics		
+		// return result to graphics
 		p.sendMessageToGraphics(msgToGraphics);
 
 		// get message from graphics

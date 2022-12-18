@@ -1,7 +1,7 @@
-#pragma warning(disable:6011)
+#pragma warning(disable : 6011)
 
 #include "EmptyPiece.h"
-#include <windows.h>   // WinApi header
+#include <windows.h> // WinApi header
 #include "Board.h"
 #include "Queen.h"
 #include "Rook.h"
@@ -24,10 +24,74 @@ string Board::getLocation(int row, int col)
 	return getLocation(getIndex(row, col));
 }
 
+string Board::getAllPossibleMoves(Piece& src)
+{
+	Piece* dest;
+	int i = 0, j = 0;
+	string locations = "";
+	string boardCopy = _board;
+	string oldLocation = src.getLocation();
+	Player* enemy = _players[WHITE_PLAYER] == src.getOwner() ? _players[BLACK_PLAYER] : _players[WHITE_PLAYER];
+
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			dest = getPiece(getLocation(i, j));
+
+			// make basic checks, if all basic checks passed, make
+			// further checks with the current piece
+			int result = src.basicValidateMove(getCurrentPlayer(), *dest);
+			if (result == VALID_MOVE)
+			{
+				result = src.validateMove(*dest);
+			}
+			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
+			{
+				// empty out source
+				_board[src.getIndex()] = '#';
+
+				// move source to desired destination
+				_board[dest->getIndex()] = src.getIdentifier();
+
+				src.setLocation(dest->getLocation()); // update piece location
+
+				// if a capture was made, then perform the action on the player's pieces
+				if (dest->getType() != EMPTY_PIECE)
+				{
+					dest->setCaptured(true);
+				}
+
+				bool enemyDidChess = madeChess(enemy);
+
+				// restore our board state
+				_board = boardCopy;
+				src.setLocation(oldLocation);
+				dest->setCaptured(false);
+
+				// if its not a self-chess
+				if (!enemyDidChess)
+				{
+					// push valid move's location
+					locations += dest->getLocation();
+				}
+			}
+
+			if (dest->getType() == EMPTY_PIECE)
+			{
+				delete dest; // free Piece's memory after use
+			}
+		}
+	}
+
+	return locations;
+}
+
 void Board::printAllValidLocations(Piece& src)
 {
 	Piece* dest;
 	int i = 0, j = 0;
+	string validMovesLocations = getAllPossibleMoves(src);
 
 	for (i = 0; i < BOARD_SIZE; i++)
 	{
@@ -42,11 +106,7 @@ void Board::printAllValidLocations(Piece& src)
 			}
 			else
 			{
-				// make basic checks, if all basic checks passed, make
-				// further checks with the current piece, and send result to graphics
-				int result = src.basicValidateMove(getCurrentPlayer(), *dest);
-				if (result == VALID_MOVE) result = src.validateMove(*dest);
-				if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
+				if (validMovesLocations.find(dest->getLocation()) != string::npos)
 				{
 					// all valid moves should be printed in green (or blue if its a capture move)
 					std::cout << (dest->getType() == EMPTY_PIECE ? "\033[0;32m" : "\033[0;34m") << *dest << "\033[0m";
@@ -137,7 +197,6 @@ bool Board::madeChess(Player* player)
 		}
 	}
 
-
 	// loop through the board to check if any of the player's pieces
 	// can make a valid move against the enemy king, if yes, its a chess.
 	for (i = 0; i < pieces.size() && !didChess; i++)
@@ -155,7 +214,8 @@ bool Board::madeChess(Player* player)
 			}
 
 			// if all checks passed, its a chess!
-			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION) {
+			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION)
+			{
 				didChess = true;
 			}
 		}
@@ -165,17 +225,19 @@ bool Board::madeChess(Player* player)
 	return didChess;
 }
 
-bool Board::madeCheckmate(Player* player) {
+bool Board::madeCheckmate(Player* player)
+{
 	int i = 0, j = 0;
 	bool didCheckmate = true;
 	bool whitePlayer = player->getType() == WHITE_PLAYER;
 	Player* enemy = _players[whitePlayer ? BLACK_PLAYER : WHITE_PLAYER];
-	Piece *src = nullptr, *dest = nullptr;
+	Piece* src = nullptr, * dest = nullptr;
 	std::vector<Piece*> pieces = player->getPieces();
 	std::vector<Piece*> enemyPieces = enemy->getPieces();
 
 	// First, check if the player has made a chess
-	if (!madeChess(player)) {
+	if (!madeChess(player))
+	{
 		return false;
 	}
 
@@ -200,7 +262,8 @@ bool Board::madeCheckmate(Player* player) {
 				// make basic checks, if all basic checks passed, make
 				//// further checks with the current piece, and send result to graphics
 				int result = src->basicValidateMove(getCurrentPlayer(), *dest);
-				if (result == VALID_MOVE) result = src->validateMove(*dest);
+				if (result == VALID_MOVE)
+					result = src->validateMove(*dest);
 				if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
 				{
 					_board[src->getIndex()] = '#';
@@ -233,7 +296,6 @@ bool Board::madeCheckmate(Player* player) {
 			}
 		}
 	}
-
 
 	// If none of the player's moves allow them to escape the chess,
 	// then the player has made a checkmate and the function should
@@ -276,12 +338,10 @@ int Board::movePiece(Piece& src, Piece& dest)
 		return INVALID_SELF_CHESS;
 	}
 
-
 	if (madeCheckmate(&getCurrentPlayer()))
 	{
 		return VALID_CHECKMATE;
 	}
-
 
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
 	// switch turn from black to white and vice versa
@@ -307,7 +367,6 @@ int Board::promotePiece(Piece* promoted, char newType)
 		foundPiece = pieces[i]->getLocation() == location;
 	}
 
-
 	i--; // to get the index of pieces in which "promoted" is in
 
 	switch (newType)
@@ -329,8 +388,8 @@ int Board::promotePiece(Piece* promoted, char newType)
 		newPiece = new Pawn(player, location);
 	}
 
-	delete promoted; // we dont need this piece anymore
-	pieces[i] = newPiece; // assign our new promoted piece to the pieces vector
+	delete promoted;										  // we dont need this piece anymore
+	pieces[i] = newPiece;									  // assign our new promoted piece to the pieces vector
 	_board[newPiece->getIndex()] = newPiece->getIdentifier(); // update the board
 
 	// check if promotion caused check/checkmate
@@ -356,7 +415,7 @@ int Board::promotePiece(Piece* promoted, char newType)
 Piece* Board::getPiece(const string location) const
 {
 	int i = 0;
-	int index = getIndex(location); //get numeric location
+	int index = getIndex(location); // get numeric location
 	Piece* piece = nullptr;
 	Player* player = isupper(_board[index]) ? _players[WHITE_PLAYER] : _players[BLACK_PLAYER];
 	std::vector<Piece*> pieces = player->getPieces();
