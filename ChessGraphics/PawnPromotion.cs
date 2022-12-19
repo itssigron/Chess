@@ -29,7 +29,7 @@ namespace ChessGraphics
         }
         private void ListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            result = listBox1.SelectedItem.ToString();
+            result = listBox1.SelectedItem?.ToString();
         }
 
         private void Confirm_Click(object sender, EventArgs e)

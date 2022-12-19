@@ -57,8 +57,13 @@ int main()
 
 	while (msgFromGraphics != "quit" && msgFromGraphics != "") // an empty string can be considered as a "quit"
 	{
+		if (msgFromGraphics == "print-history") // graphics wants to print game history, lets both print and send back history as well
+		{
+			std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
+			strcpy_s(msgToGraphics, board.getAllMoves().c_str());
+		}
 		// source piece selection, meaning we want to send all of its possible moves to graphics
-		if (msgFromGraphics.length() == 2)
+		else if (msgFromGraphics.length() == 2)
 		{
 			Piece* srcPiece = board.getPiece(msgFromGraphics);
 			strcpy_s(msgToGraphics, board.getAllPossibleMoves(*srcPiece).c_str());

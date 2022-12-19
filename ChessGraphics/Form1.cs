@@ -44,6 +44,7 @@ namespace chessGraphics
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
                 LoadMoves.Visible = true;
+                LogHistory.Visible = true;
 
 
 
@@ -483,6 +484,19 @@ namespace chessGraphics
             LoadMovesResult result = prompt.GetResult();
 
             if(result.cancel != true) MakeMoves(result.moves, result.delay);
+        }
+
+        private void LogHistory_Click(object sender, EventArgs e)
+        {
+            enginePipe.sendEngineMove("print-history"); // ask engine to print game history
+            string gameHistory = enginePipe.getEngineMessage(); // game history, currently unused but it is on the todo list
+            HistorySuccessLbl.Visible = true;
+
+            // hide success message after 4 seconds
+            System.Threading.Tasks.Task.Delay(4000).ContinueWith(_ =>
+            {
+                Invoke(new MethodInvoker(() => { HistorySuccessLbl.Visible = false; }));
+            });
         }
     }
 }

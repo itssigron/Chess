@@ -70,6 +70,8 @@
             this.label33 = new System.Windows.Forms.Label();
             this.label34 = new System.Windows.Forms.Label();
             this.LoadMoves = new System.Windows.Forms.Button();
+            this.LogHistory = new System.Windows.Forms.Button();
+            this.HistorySuccessLbl = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnBoard
@@ -496,7 +498,7 @@
             // 
             this.LoadMoves.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.LoadMoves.Location = new System.Drawing.Point(990, 15);
-            this.LoadMoves.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.LoadMoves.Margin = new System.Windows.Forms.Padding(2);
             this.LoadMoves.Name = "LoadMoves";
             this.LoadMoves.Size = new System.Drawing.Size(85, 34);
             this.LoadMoves.TabIndex = 50;
@@ -505,11 +507,36 @@
             this.LoadMoves.Visible = false;
             this.LoadMoves.Click += new System.EventHandler(this.LoadMoves_Click);
             // 
+            // LogHistory
+            // 
+            this.LogHistory.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            this.LogHistory.Location = new System.Drawing.Point(990, 53);
+            this.LogHistory.Name = "LogHistory";
+            this.LogHistory.Size = new System.Drawing.Size(85, 34);
+            this.LogHistory.TabIndex = 51;
+            this.LogHistory.Text = "Log History";
+            this.LogHistory.UseVisualStyleBackColor = true;
+            this.LogHistory.Visible = false;
+            this.LogHistory.Click += new System.EventHandler(this.LogHistory_Click);
+            // 
+            // HistorySuccessLbl
+            // 
+            this.HistorySuccessLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold);
+            this.HistorySuccessLbl.ForeColor = System.Drawing.Color.Green;
+            this.HistorySuccessLbl.Location = new System.Drawing.Point(932, 100);
+            this.HistorySuccessLbl.Name = "HistorySuccessLbl";
+            this.HistorySuccessLbl.Size = new System.Drawing.Size(140, 59);
+            this.HistorySuccessLbl.TabIndex = 52;
+            this.HistorySuccessLbl.Text = "Successfully sent game history to engine\'s console";
+            this.HistorySuccessLbl.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1084, 601);
+            this.Controls.Add(this.HistorySuccessLbl);
+            this.Controls.Add(this.LogHistory);
             this.Controls.Add(this.LoadMoves);
             this.Controls.Add(this.label27);
             this.Controls.Add(this.label28);
@@ -604,6 +631,8 @@
         private System.Windows.Forms.Label label33;
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.Button LoadMoves;
+        private System.Windows.Forms.Button LogHistory;
+        private System.Windows.Forms.Label HistorySuccessLbl;
     }
 }
 
