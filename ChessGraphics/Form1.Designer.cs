@@ -82,7 +82,7 @@
             this.btnBoard.FlatAppearance.BorderSize = 3;
             this.btnBoard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBoard.Location = new System.Drawing.Point(65, 58);
-            this.btnBoard.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnBoard.Margin = new System.Windows.Forms.Padding(4);
             this.btnBoard.Name = "btnBoard";
             this.btnBoard.Size = new System.Drawing.Size(89, 76);
             this.btnBoard.TabIndex = 2;
@@ -589,7 +589,7 @@
             this.Controls.Add(this.lblResult);
             this.Controls.Add(this.lblMove);
             this.Controls.Add(this.btnBoard);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Chess Graphics";
