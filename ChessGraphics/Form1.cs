@@ -9,8 +9,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
-using Microsoft.VisualBasic;
 using System.Diagnostics;
+using ChessGraphics;
 
 namespace chessGraphics
 {
@@ -30,6 +30,7 @@ namespace chessGraphics
         public Form1()
         {
             InitializeComponent();
+            CenterToScreen();
         }
 
         private void InitForm()
@@ -42,6 +43,7 @@ namespace chessGraphics
                 lblWaiting.Visible = false;
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
+                LoadMoves.Visible = true;
 
 
 
@@ -272,6 +274,7 @@ namespace chessGraphics
             "Game over - Check mate ({0} won)",
             "Game over - Stale mate (Tie)",
             "Game over - Insufficient material (Tie)",
+            "{0} pawn at {1} promoted to a {2}",
             "Unknown message"
             };
 
@@ -332,7 +335,10 @@ namespace chessGraphics
 
                     this.Refresh();
 
-
+                    if(srcSquare == null || dstSquare == null)
+                    {
+                        Thread.Sleep(200);
+                    }
                     // should send pipe to engine
                     enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
 
@@ -347,7 +353,7 @@ namespace chessGraphics
                         return;
                     }
 
-                    string res = String.Format(ConvertEngineToText(m), isCurPlWhite ? "White" : "Black");
+                    string res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text);
 
                     if (res.ToLower().StartsWith("game over"))
                     {
@@ -365,7 +371,7 @@ namespace chessGraphics
                     }
                     else if (res.ToLower().StartsWith("valid"))
                     {
-                        if (m == "9")
+                        if (res.ToLower().Contains("promotion"))
                         {
                             string[] promptions =
                             {
@@ -375,17 +381,11 @@ namespace chessGraphics
                             "knight"
                             };
 
-                            string input = "";
                             char type = ' ';
+                            PawnPromotion prompt = new PawnPromotion();
+                            string result = prompt.GetResult();
 
-                            // ask user for which piece to promote their pawn until a valid input is provided
-                            while (Array.IndexOf(promptions, input.ToLower()) == -1)
-                            {
-                                input = Interaction.InputBox("Please enter the new piece you wish to get promoted to: (queen/rook/bishop/knight)",
-                                    "Pawn Promotion", "", this.ClientSize.Width / 2, this.ClientSize.Height / 2);
-                            }
-
-                            switch (input.ToLower())
+                            switch (result.ToLower())
                             {
                                 case "queen":
                                     type = isCurPlWhite ? 'Q' : 'q';
@@ -404,7 +404,7 @@ namespace chessGraphics
                             matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type);
                             enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
                             m = enginePipe.getEngineMessage(); // get the confirmation message from engine
-                            res = ConvertEngineToText(m);
+                            res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), result);
                         }
                         else
                         {
@@ -477,51 +477,12 @@ namespace chessGraphics
             MakeMoves("e2e4a7a5e1e3a5a4e3a3b7b6a3a4b6b5a4b5a8a7b5b8a7a8b8a8c7c6a8c6c8b7c6b7d7d6b7e7d8c8e7d6e8d8d6d8c8b7d8f8b7c7f8g8h7h6g8h8g7g6h8h6c7c8h6g6f7f6g6f6c8b8f6d4b8a8d2d3a8b8c1f4f4b8a8b8b8a8f4e5a8b7d4d5b7c8h2h4"
                 , delay);
         }
-
-        private bool IsValidMoves(string moves)
-        {
-            bool isValid = true;
-            string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
-
-            if (moves.Length < 4)
-            {
-                isValid = false;
-            }
-            else
-            {
-                for (int i = 0; i < movesArray.Length - 1; i++)
-                {
-                    string src = movesArray[i].Substring(0, 2);
-                    string dst = movesArray[i].Substring(2);
-
-                    if (!(src.Length == 2 && dst.Length == 2))
-                    {
-                        isValid = false;
-                    }
-                }
-            }
-
-            return isValid;
-        }
         private void LoadMoves_Click(object sender, EventArgs e)
         {
-            string movesInput = "";
-            string speedInput = "";
-            int delay = 0;
+            LoadMoves prompt = new LoadMoves();
+            LoadMovesResult result = prompt.GetResult();
 
-            while (!IsValidMoves(movesInput))
-            {
-                movesInput = Interaction.InputBox("Please enter the moves you wish to run.",
-                    "Auto Move Maker", "", this.ClientSize.Width / 2, this.ClientSize.Height / 2);
-            }
-
-            do
-            {
-                speedInput = Interaction.InputBox("Please enter the delay in ms before executing each move (recommended min: 250).", 
-                    "Auto Move Maker", "", this.ClientSize.Width / 2, this.ClientSize.Height / 2);
-            } while (!int.TryParse(speedInput, out delay));
-
-            MakeMoves(movesInput, delay);
+            if(result.cancel != true) MakeMoves(result.moves, result.delay);
         }
     }
 }
