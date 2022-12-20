@@ -228,7 +228,7 @@ namespace chessGraphics
                     dstSquare = (Square)b.Tag;
                     matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.DarkGreen;
 
-                    Thread t = new Thread(PlayMove);
+                    Thread t = new Thread(() => PlayMove(false));
                     t.Start();
                     //   t.IsBackground = true;
                     //playMove();
@@ -314,7 +314,7 @@ namespace chessGraphics
             PlayMove();
         }
 
-        void PlayMove()
+        void PlayMove(bool standalone = false, Image img = null) // if true, graphics will not contact engine for the move
         {
             if (isGameOver)
                 return;
@@ -341,11 +341,11 @@ namespace chessGraphics
                         Thread.Sleep(200);
                     }
                     // should send pipe to engine
-                    enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
-
+                    if(!standalone) enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
+                    string m = "Move restored";
 
                     // should get pipe from engine
-                    string m = enginePipe.getEngineMessage();
+                    if(!standalone) m = enginePipe.getEngineMessage();
 
                     if (!enginePipe.isConnected())
                     {
@@ -354,7 +354,8 @@ namespace chessGraphics
                         return;
                     }
 
-                    string res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text);
+                    string res = m;
+                    if (!standalone) res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text);
 
                     if (res.ToLower().StartsWith("game over"))
                     {
@@ -370,7 +371,7 @@ namespace chessGraphics
                         enginePipe.sendEngineMove("quit");
                         enginePipe.close();
                     }
-                    else if (res.ToLower().StartsWith("valid"))
+                    else if (res.ToLower().StartsWith("valid") || res.ToLower().Contains("restored"))
                     {
                         if (res.ToLower().Contains("promotion"))
                         {
@@ -412,7 +413,7 @@ namespace chessGraphics
                             matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
                         }
 
-                        matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = null;
+                        matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = img ?? null;
 
                         matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
                         matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
@@ -490,6 +491,8 @@ namespace chessGraphics
         {
             enginePipe.sendEngineMove("print-history"); // ask engine to print game history
             string gameHistory = enginePipe.getEngineMessage(); // game history, currently unused but it is on the todo list
+
+            MovesRestoreError.Visible = false;
             HistorySuccessLbl.Visible = true;
 
             // hide success message after 4 seconds
@@ -497,6 +500,57 @@ namespace chessGraphics
             {
                 Invoke(new MethodInvoker(() => { HistorySuccessLbl.Visible = false; }));
             });
+        }
+
+        private void ShowRestoreError()
+        {
+            HistorySuccessLbl.Visible = false;
+            MovesRestoreError.Visible = true;
+
+            // hide success message after 4 seconds
+            System.Threading.Tasks.Task.Delay(4000).ContinueWith(_ =>
+            {
+                Invoke(new MethodInvoker(() => { MovesRestoreError.Visible = false; }));
+            });
+        }
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Modifiers == Keys.Control)
+            {
+                if (e.KeyCode == Keys.Z) // undo
+                {
+                    enginePipe.sendEngineMove("undo");
+                    string move = enginePipe.getEngineMessage();
+                    if (move == "")
+                    {
+                        ShowRestoreError();
+                        return;
+                    }
+                    string src = move.Substring(0, 2), dest = move.Substring(2, 2);
+                    char identifier = move[move.Length - 1];
+                    int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
+                    int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
+                    srcSquare = new Square(srcRow, srcCol);
+                    dstSquare = new Square(destRow, destCol);
+                    PlayMove(true, GetImageBySign(identifier)); // play move without contacting engine
+                }
+                else if (e.KeyCode == Keys.Y) // redo
+                {
+                    enginePipe.sendEngineMove("redo");
+                    string move = enginePipe.getEngineMessage();
+                    if (move == "")
+                    {
+                        ShowRestoreError();
+                        return;
+                    }
+                    string src = move.Substring(0, 2), dest = move.Substring(2, 2);
+                    int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
+                    int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
+                    srcSquare = new Square(srcRow, srcCol);
+                    dstSquare = new Square(destRow, destCol);
+                    PlayMove(true);
+                }
+            }
         }
     }
 }
