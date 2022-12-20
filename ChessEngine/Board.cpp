@@ -143,7 +143,6 @@ Board::Board(const string& board)
 	_currentPlayer = board[BOARD_SIZE * BOARD_SIZE] - '0';
 	_board = board;
 	_board.pop_back(); // remove the starting player char
-	_moves = "";
 
 	// initiate our 2 players's objects
 	_players[WHITE_PLAYER] = new Player(this, WHITE_PLAYER);
@@ -170,14 +169,67 @@ Player** Board::getPlayers()
 	return _players;
 }
 
-string& Board::getAllMoves()
+std::stack<Move*>& Board::getAllMoves()
 {
-	return _moves;
+	return _movesHistory;
 }
 
-void Board::pushMove(string move)
+void Board::pushMove(Move* move)
 {
-	_moves += move;
+	_movesHistory.push(move);
+}
+
+Move* Board::undoMove()
+{
+	if (_movesHistory.size() == 0)
+	{
+		return nullptr;
+	}
+	Move* lastMove = _movesHistory.top();
+	Piece* capturedPiece = lastMove->getCaptured();
+	
+	// update their location and restore board to its last state
+	lastMove->getDestPiece()->setLocation(lastMove->getSrc());
+	_board[getIndex(lastMove->getSrc())] = _board[getIndex(lastMove->getDest())];
+	_board[getIndex(lastMove->getDest())] = capturedPiece == nullptr ? EMPTY_PIECE : capturedPiece->getIdentifier();
+	if (capturedPiece != nullptr)
+	{
+		capturedPiece->setCaptured(false); // un-capture this piece
+		capturedPiece->setLocation(lastMove->getDest()); // sets his updated location
+	}
+	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+	// remove move from history
+	_movesHistory.pop();
+	// push "undo"ed move into the "redo" stack so user will be able to redo aswell
+	_movesRedo.push(lastMove);
+	return lastMove;
+}
+Move* Board::redoMove()
+{
+	if (_movesRedo.size() == 0)
+	{
+		return nullptr;
+	}
+	Move* lastMove = _movesRedo.top();
+	Piece* capturedPiece = lastMove->getCaptured();
+	char identifier = lastMove->getSrcPiece()->getIdentifier();
+	if (_board[getIndex(lastMove->getDest())] != EMPTY_PIECE)
+	{
+		lastMove->setCaptured(lastMove->getDestPiece());
+		getPiece(lastMove->getDest())->setCaptured(true);
+	}
+	lastMove->getSrcPiece()->setLocation(lastMove->getDest()); // update piece location
+	_board[getIndex(lastMove->getDest())] = identifier;
+	_board[getIndex(lastMove->getSrc())] = EMPTY_PIECE;
+
+	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+
+	// remove move from "redo" history and transfer it into normal moves history
+	_movesRedo.pop();
+	_movesHistory.push(lastMove);
+
+	return lastMove;
 }
 
 Player& Board::getCurrentPlayer() const
@@ -338,7 +390,7 @@ int Board::movePiece(Piece& src, Piece& dest)
 	string boardCopy = _board;
 	string oldLocation = src.getLocation();
 	// empty out source
-	_board[src.getIndex()] = '#';
+	_board[src.getIndex()] = EMPTY_PIECE;
 
 	// move source to desired destination
 	_board[dest.getIndex()] = src.getIdentifier();
@@ -365,6 +417,12 @@ int Board::movePiece(Piece& src, Piece& dest)
 		src.setLocation(oldLocation);
 		dest.setCaptured(false);
 		return INVALID_SELF_CHESS;
+	}
+
+	// a move has occured, therefore clear the "redo" stack
+	while (!_movesRedo.empty())
+	{
+		_movesRedo.pop();
 	}
 
 	// check if game is over by either checkmate, stalemate or insufficient material draw

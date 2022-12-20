@@ -124,7 +124,7 @@ public:
 	* input: the location to set
 	* output: none
 	*/
-	void setLocation(string& location);
+	void setLocation(const string& location);
 	
 	/*
 	* Sets the type of this piece

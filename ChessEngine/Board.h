@@ -3,6 +3,8 @@
 #include <iostream>
 #include "Player.h"
 #include "Piece.h"
+#include "Move.h"
+#include <stack>
 
 #define BOARD_SIZE 8
 #define CHESS_PLAYERS 2
@@ -11,6 +13,7 @@
 using std::string;
 
 // protect against circular reference
+class Move;
 class Piece;
 class Player;
 
@@ -19,7 +22,8 @@ class Board
 private:
 	string _board;
 	Player* _players[CHESS_PLAYERS]; // array of player pointers
-	string _moves; // store all moves of the game in order to be able to dump them later
+	std::stack<Move*> _movesHistory; // store all moves of the game in order to be able to go "undo" moves
+	std::stack<Move*> _movesRedo; // store "undo" moves in order to be able to "redo" them in case of a mistake
 	int _currentPlayer; // index of current player
 
 public:
@@ -101,9 +105,12 @@ public:
 	*/
 	Player** getPlayers();
 
-	string& getAllMoves();
+	std::stack<Move*>& getAllMoves();
 
-	void pushMove(string move);
+	void pushMove(Move* move);
+
+	Move* undoMove();
+	Move* redoMove();
 
 	/*
 	* Gets the current player

@@ -9,6 +9,7 @@ in order to read and write information from and to the Backend
 #include <thread>
 #include "Board.h"
 #include "Queen.h"
+#include "Move.h"
 
 using std::cout;
 using std::endl;
@@ -59,8 +60,26 @@ int main()
 	{
 		if (msgFromGraphics == "print-history") // graphics wants to print game history, lets both print and send back history as well
 		{
-			std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
-			strcpy_s(msgToGraphics, board.getAllMoves().c_str());
+			//std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
+			//strcpy_s(msgToGraphics, board.getAllMoves().c_str());
+		}
+		else if (msgFromGraphics == "undo")
+		{
+			Move* move = board.undoMove();
+			char identifier = move == nullptr ? ' ' :
+				move->getCaptured() == nullptr ? EMPTY_PIECE : move->getCaptured()->getIdentifier();
+
+			// format is {dest}{src}{captured identifier if any} will undo move in graphics
+			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getDest() + move->getSrc() + identifier).c_str());
+			if (move != nullptr && move->getCaptured() != nullptr)
+			{
+				move->setCaptured(nullptr); // un-capture
+			}
+		}
+		else if (msgFromGraphics == "redo")
+		{
+			Move* move = board.redoMove();
+			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getSrc() + move->getDest()).c_str());
 		}
 		// source piece selection, meaning we want to send all of its possible moves to graphics
 		else if (msgFromGraphics.length() == 2)
@@ -84,10 +103,10 @@ int main()
 		else
 		{
 			// access src and dest pieces using the information from the client
-			Piece* srcPiece = board.getPiece(msgFromGraphics.substr(0, 2));
-			Piece* destPiece = board.getPiece(msgFromGraphics.substr(2, 2));
-
-			board.pushMove(msgFromGraphics); // push current move to history
+			Move* move = new Move(msgFromGraphics.substr(0, 2), msgFromGraphics.substr(2, 2), &board);
+			Piece* srcPiece = move->getSrcPiece();
+			Piece* destPiece = move->getDestPiece();
+			bool isEmpty = destPiece->getType() == EMPTY_PIECE;
 
 			// make basic checks, if all basic checks passed, make
 			// further checks with the current piece, and send result to graphics
@@ -101,7 +120,14 @@ int main()
 			{
 				// update source piece location + update result incase of "chess"
 				newResult = board.movePiece(*srcPiece, *destPiece);
-
+				if (newResult == VALID_MOVE || newResult == VALID_CHESS)
+				{
+					if (!isEmpty)
+					{
+						move->setCaptured(destPiece);
+					}
+					board.pushMove(move);
+				}
 				// Board::movePiece doesnt check for pawn promotion, so this condition fixes this bug
 				if (newResult != VALID_MOVE)
 				{
@@ -132,7 +158,7 @@ int main()
 	}
 
 	// dump history to terminal
-	std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
+	//std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
 
 	std::cout << "Goodbye!" << std::endl;
 

@@ -43,7 +43,7 @@ const char& Piece::getIdentifier() const
 	return _identifier;
 }
 
-void Piece::setLocation(string& location)
+void Piece::setLocation(const string& location)
 {
 	_location = location;
 }
