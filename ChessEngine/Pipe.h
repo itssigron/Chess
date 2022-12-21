@@ -86,7 +86,9 @@ public:
 			return false;
 		}
 
-		_tprintf(_T("The named pipe, %s, is connected.\n"), strPipeName);
+		#ifdef _DEBUG
+			_tprintf(_T("The named pipe, %s, is connected.\n"), strPipeName);
+		#endif	
 		return true;
 
 	}
@@ -109,11 +111,15 @@ public:
 
 		if (!bResult/*Failed*/ || cbRequestBytes != cbBytesWritten/*Failed*/)
 		{
-			_tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
+			#ifdef _DEBUG
+				_tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
+			#endif		
 			return false;
 		}
 
-		_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"),
+		#ifdef _DEBUG
+			_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"),
+		#endif
 			cbBytesWritten, chRequest);
 
 		return true;
@@ -136,12 +142,16 @@ public:
 
 		if (!bResult && GetLastError() != ERROR_MORE_DATA)
 		{
-			_tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
+			#ifdef _DEBUG:
+				_tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
+			#endif
 			return "";
 		}
 
-		_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"),
+		#ifdef _DEBUG:
+			_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"),
 			cbBytesRead, chReply);
+		#endif	
 		std::string s = chReply;
 		return s;
 
