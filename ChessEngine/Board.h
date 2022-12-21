@@ -105,11 +105,33 @@ public:
 	*/
 	Player** getPlayers();
 
-	std::stack<Move*>& getAllMoves();
+	/*
+	* Gets the moves's history by order (only valid moves which played during the game)
+	* for example if a2 moved to a4 and then h7 moved to h5, the result will be "a2a4h7h5"
+	* input: none
+	* output: moves's history string
+	*/
+	string getMoveHistory();
 
+	/*
+	* Pushes a Move object to the history of moves
+	* input: the move to push
+	* output: none
+	*/
 	void pushMove(Move* move);
 
+	/*
+	* Undo the last move
+	* input: none
+	* output: the move which "undo" applied to
+	*/
 	Move* undoMove();
+
+	/*
+	* Undo the last move
+	* input: none
+	* output: the move which "redo" applied to
+	*/
 	Move* redoMove();
 
 	/*

@@ -169,9 +169,22 @@ Player** Board::getPlayers()
 	return _players;
 }
 
-std::stack<Move*>& Board::getAllMoves()
+string Board::getMoveHistory()
 {
-	return _movesHistory;
+	string result = "";
+	Move* cur = nullptr;
+	std::stack<Move*> copy = _movesHistory;
+
+	while (!copy.empty())
+	{
+		cur = copy.top();
+
+		// + result at the end because a stack is last in first out (reversed)
+		result = cur->getSrc() + cur->getDest() + result;
+		copy.pop();
+	}
+
+	return result;
 }
 
 void Board::pushMove(Move* move)

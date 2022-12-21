@@ -60,8 +60,9 @@ int main()
 	{
 		if (msgFromGraphics == "print-history") // graphics wants to print game history, lets both print and send back history as well
 		{
-			//std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
-			//strcpy_s(msgToGraphics, board.getAllMoves().c_str());
+			string history = board.getMoveHistory();
+			std::cout << "Game's moves history: " << history << std::endl;
+			strcpy_s(msgToGraphics, history.c_str());
 		}
 		else if (msgFromGraphics == "undo")
 		{
@@ -158,7 +159,7 @@ int main()
 	}
 
 	// dump history to terminal
-	//std::cout << "Game's moves history: " << board.getAllMoves() << std::endl;
+	std::cout << "Game's moves history: " << board.getMoveHistory() << std::endl;
 
 	std::cout << "Goodbye!" << std::endl;
 
