@@ -119,8 +119,8 @@ public:
 
 		#ifdef _DEBUG
 			_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"),
-		#endif
 			cbBytesWritten, chRequest);
+		#endif
 
 		return true;
 
