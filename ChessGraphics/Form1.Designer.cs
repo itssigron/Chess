@@ -73,6 +73,8 @@
             this.LogHistory = new System.Windows.Forms.Button();
             this.HistorySuccessLbl = new System.Windows.Forms.Label();
             this.MovesRestoreError = new System.Windows.Forms.Label();
+            this.UndoBtn = new System.Windows.Forms.Button();
+            this.RedoBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnBoard
@@ -584,11 +586,37 @@
             this.MovesRestoreError.Text = "No moves left to restore";
             this.MovesRestoreError.Visible = false;
             // 
+            // UndoBtn
+            // 
+            this.UndoBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            this.UndoBtn.Location = new System.Drawing.Point(1172, 18);
+            this.UndoBtn.Name = "UndoBtn";
+            this.UndoBtn.Size = new System.Drawing.Size(142, 42);
+            this.UndoBtn.TabIndex = 54;
+            this.UndoBtn.Text = "Undo (Ctrl + Z)";
+            this.UndoBtn.UseVisualStyleBackColor = true;
+            this.UndoBtn.Visible = false;
+            this.UndoBtn.Click += new System.EventHandler(this.UndoBtn_Click);
+            // 
+            // RedoBtn
+            // 
+            this.RedoBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
+            this.RedoBtn.Location = new System.Drawing.Point(1172, 64);
+            this.RedoBtn.Name = "RedoBtn";
+            this.RedoBtn.Size = new System.Drawing.Size(141, 42);
+            this.RedoBtn.TabIndex = 55;
+            this.RedoBtn.Text = "Redo (Ctrl + Y)";
+            this.RedoBtn.UseVisualStyleBackColor = true;
+            this.RedoBtn.Visible = false;
+            this.RedoBtn.Click += new System.EventHandler(this.RedoBtn_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1445, 740);
+            this.Controls.Add(this.RedoBtn);
+            this.Controls.Add(this.UndoBtn);
             this.Controls.Add(this.MovesRestoreError);
             this.Controls.Add(this.HistorySuccessLbl);
             this.Controls.Add(this.LogHistory);
@@ -692,6 +720,8 @@
         private System.Windows.Forms.Button LogHistory;
         private System.Windows.Forms.Label HistorySuccessLbl;
         private System.Windows.Forms.Label MovesRestoreError;
+        private System.Windows.Forms.Button UndoBtn;
+        private System.Windows.Forms.Button RedoBtn;
     }
 }
 

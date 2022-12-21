@@ -45,6 +45,8 @@ namespace chessGraphics
                 label1.Visible = true;
                 LoadMoves.Visible = true;
                 LogHistory.Visible = true;
+                UndoBtn.Visible = true;
+                RedoBtn.Visible = true;
 
 
 
@@ -551,6 +553,16 @@ namespace chessGraphics
                     PlayMove(true);
                 }
             }
+        }
+
+        private void UndoBtn_Click(object sender, EventArgs e)
+        {
+            Form1_KeyDown(null, new KeyEventArgs(Keys.Control | Keys.Z)); // trigger ctrl + z
+        }
+
+        private void RedoBtn_Click(object sender, EventArgs e)
+        {
+            Form1_KeyDown(null, new KeyEventArgs(Keys.Control | Keys.Y)); // trigger ctrl + y
         }
     }
 }
