@@ -368,8 +368,15 @@ namespace chessGraphics
                         matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
                         matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
 
-                        // quit engine, close pipe and remove the load moves button since its un-useable at that point
+
+                        // quit engine, close pipe and remove the load moves/undo/redo buttons,
+                        // since its un-useable at that point + set the "log history" button to the same location
+                        // as the now-deleted "load moves" button
+
+                        LogHistory.Location = LoadMoves.Location;
                         this.Controls.Remove(LoadMoves);
+                        this.Controls.Remove(UndoBtn);
+                        this.Controls.Remove(RedoBtn);
                         enginePipe.sendEngineMove("quit");
                         enginePipe.close();
                     }
@@ -519,6 +526,11 @@ namespace chessGraphics
         {
             if (e.Modifiers == Keys.Control)
             {
+                if(isGameOver)
+                {
+                    return;
+                }
+
                 if (e.KeyCode == Keys.Z) // undo
                 {
                     enginePipe.sendEngineMove("undo");
