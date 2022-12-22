@@ -142,13 +142,13 @@ public:
 
 		if (!bResult && GetLastError() != ERROR_MORE_DATA)
 		{
-			#ifdef _DEBUG:
+			#ifdef _DEBUG
 				_tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
 			#endif
 			return "";
 		}
 
-		#ifdef _DEBUG:
+		#ifdef _DEBUG
 			_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"),
 			cbBytesRead, chReply);
 		#endif	
