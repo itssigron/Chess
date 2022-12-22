@@ -8,6 +8,7 @@ Move::Move(string source, string destination, Board* board)
 	_dest = destination;
 	_captured = nullptr;
 	_board = board;
+	_isEnPassant = false;
 }
 
 const string Move::getSrc() const
@@ -35,7 +36,17 @@ Piece* Move::getCaptured()
 	return _captured;
 }
 
+bool Move::isEnPassant()
+{
+	return _isEnPassant;
+}
+
 void Move::setCaptured(Piece* piece)
 {
 	_captured = piece;
+}
+
+void Move::setEnPassant(bool enPassant)
+{
+	_isEnPassant = true;
 }

@@ -268,6 +268,7 @@ namespace chessGraphics
             "Valid move",
             "Valid move - you made chess",
             "Valid move - pawn promotion",
+            "Valid move - en passant capture",
             "Invalid move - not your player",
             "Invalid move - destination is not free",
             "Invalid move - chess wil occure",
@@ -316,7 +317,8 @@ namespace chessGraphics
             PlayMove();
         }
 
-        void PlayMove(bool standalone = false, Image img = null) // if true, graphics will not contact engine for the move
+        // if standalone=true, graphics will perform the move only on the form and will not contact engine
+        void PlayMove(bool standalone = false, Image img = null, bool isEnPassant = false)
         {
             if (isGameOver)
                 return;
@@ -338,16 +340,16 @@ namespace chessGraphics
 
                     this.Refresh();
 
-                    if(srcSquare == null || dstSquare == null)
+                    if (srcSquare == null || dstSquare == null)
                     {
                         Thread.Sleep(200);
                     }
                     // should send pipe to engine
-                    if(!standalone) enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
+                    if (!standalone) enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
                     string m = "Move restored";
 
                     // should get pipe from engine
-                    if(!standalone) m = enginePipe.getEngineMessage();
+                    if (!standalone) m = enginePipe.getEngineMessage();
 
                     if (!enginePipe.isConnected())
                     {
@@ -417,12 +419,33 @@ namespace chessGraphics
                             m = enginePipe.getEngineMessage(); // get the confirmation message from engine
                             res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), result);
                         }
+                        else if (res.ToLower().Contains("en passant"))
+                        {
+                            int rowOffset = isCurPlWhite ? 1 : -1;
+                            matBoard[dstSquare.Row + rowOffset, dstSquare.Col].BackgroundImage = null;
+                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
+                        }
+                        else if (isEnPassant)
+                        {
+                            int rowOffset = isCurPlWhite ? -1 : 1;
+                            matBoard[srcSquare.Row + rowOffset, srcSquare.Col].BackgroundImage = img;
+                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
+                            matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = null;
+                        }
                         else
                         {
                             matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
                         }
 
-                        matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = img ?? null;
+                        // only possible case for this conditon is a "redo"
+                        if (standalone && !isEnPassant)
+                        {
+                            int rowOffset = isCurPlWhite ? 1 : -1;
+                            matBoard[dstSquare.Row + rowOffset, dstSquare.Col].BackgroundImage = null;
+                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
+                        }
+
+                        if (!isEnPassant) matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = img ?? null;
 
                         matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
                         matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
@@ -493,7 +516,7 @@ namespace chessGraphics
             LoadMoves prompt = new LoadMoves();
             LoadMovesResult result = prompt.GetResult();
 
-            if(result.cancel != true) MakeMoves(result.moves, result.delay);
+            if (result.cancel != true) MakeMoves(result.moves, result.delay);
         }
 
         private void LogHistory_Click(object sender, EventArgs e)
@@ -526,7 +549,7 @@ namespace chessGraphics
         {
             if (e.Modifiers == Keys.Control)
             {
-                if(isGameOver)
+                if (isGameOver)
                 {
                     return;
                 }
@@ -541,12 +564,13 @@ namespace chessGraphics
                         return;
                     }
                     string src = move.Substring(0, 2), dest = move.Substring(2, 2);
-                    char identifier = move[move.Length - 1];
+                    char identifier = move[4];
+                    bool isEnPassant = move[move.Length - 1] == '1';
                     int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
                     int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
                     srcSquare = new Square(srcRow, srcCol);
                     dstSquare = new Square(destRow, destCol);
-                    PlayMove(true, GetImageBySign(identifier)); // play move without contacting engine
+                    PlayMove(true, GetImageBySign(identifier), isEnPassant); // play move without contacting engine
                 }
                 else if (e.KeyCode == Keys.Y) // redo
                 {

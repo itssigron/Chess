@@ -14,6 +14,7 @@ private:
 	string _dest;
 	Board* _board;
 	Piece* _captured;
+	bool _isEnPassant;
 public:
 	static int id;
 	Move(string source, string destination, Board* board);
@@ -24,6 +25,8 @@ public:
 	Piece* getDestPiece() const;
 
 	Piece* getCaptured();
+	bool isEnPassant();
 	void setCaptured(Piece* piece);
+	void setEnPassant(bool enPassant);
 };
 

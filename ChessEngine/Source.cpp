@@ -69,9 +69,10 @@ int main()
 			Move* move = board.undoMove();
 			char identifier = move == nullptr ? ' ' :
 				move->getCaptured() == nullptr ? EMPTY_PIECE : move->getCaptured()->getIdentifier();
+			char isEnPassant = move->isEnPassant() + '0'; // '0' for false and '1' for true
 
 			// format is {dest}{src}{captured identifier if any} will undo move in graphics
-			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getDest() + move->getSrc() + identifier).c_str());
+			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getDest() + move->getSrc() + identifier + isEnPassant).c_str());
 			if (move != nullptr && move->getCaptured() != nullptr)
 			{
 				move->setCaptured(nullptr); // un-capture
@@ -80,7 +81,8 @@ int main()
 		else if (msgFromGraphics == "redo")
 		{
 			Move* move = board.redoMove();
-			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getSrc() + move->getDest()).c_str());
+			char isEnPassant = move->isEnPassant() + '0'; // '0' for false and '1' for true
+			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getSrc() + move->getDest() + isEnPassant).c_str());
 		}
 		// source piece selection, meaning we want to send all of its possible moves to graphics
 		else if (msgFromGraphics.length() == 2)
@@ -108,7 +110,7 @@ int main()
 			Piece* srcPiece = move->getSrcPiece();
 			Piece* destPiece = move->getDestPiece();
 			bool isEmpty = destPiece->getType() == EMPTY_PIECE;
-
+			bool whitePlayer = board.getCurrentPlayer().getType() == WHITE_PLAYER;
 			// make basic checks, if all basic checks passed, make
 			// further checks with the current piece, and send result to graphics
 			result = srcPiece->basicValidateMove(board.getCurrentPlayer(), *destPiece);
@@ -117,19 +119,26 @@ int main()
 			int newResult = 0;
 
 			// perform the actual "move"
-			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
+			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT)
 			{
-				// update source piece location + update result incase of "chess"
-				newResult = board.movePiece(*srcPiece, *destPiece);
+				// update source piece location + update result incase of "chess"/"self chess"
+				newResult = board.movePiece(*srcPiece, *destPiece, *move);
+
 				if (newResult == VALID_MOVE || newResult == VALID_CHESS)
 				{
-					if (!isEmpty)
+					if (result == VALID_EN_PASSANT)
 					{
-						move->setCaptured(destPiece);
+						char destCol = destPiece->getLocation()[0];
+						int rowOffset = whitePlayer ? -1 : 1;
+						string capturedPieceLocation = destPiece->getLocation();
+						capturedPieceLocation[1] += rowOffset;
+						Piece* capturedPiece = board.getPiece(capturedPieceLocation);
+						capturedPiece->setCaptured(true);
+						move->setCaptured(capturedPiece);
+						move->setEnPassant(true);
+						board.getBoard()[Board::getIndex(capturedPieceLocation)] = EMPTY_PIECE;
 					}
-					board.pushMove(move);
 				}
-				// Board::movePiece doesnt check for pawn promotion, so this condition fixes this bug
 				if (newResult != VALID_MOVE)
 				{
 					result = newResult;

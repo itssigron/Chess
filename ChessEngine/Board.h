@@ -106,6 +106,13 @@ public:
 	Player** getPlayers();
 
 	/*
+	* Gets the stack of the move's history
+	* input: none
+	* output: the stack of the game's moves history
+	*/
+	const std::stack<Move*>& getMovesStack() const;
+
+	/*
 	* Gets the moves's history by order (only valid moves which played during the game)
 	* for example if a2 moved to a4 and then h7 moved to h5, the result will be "a2a4h7h5"
 	* input: none
@@ -174,7 +181,7 @@ public:
 	* input: Source Piece, Destination Piece
 	* output: result move code (possible "chess")
 	*/
-	int movePiece(Piece& src, Piece& dest);
+	int movePiece(Piece& src, Piece& dest, Move& move);
 
 	/*
 	* Promotes a piece (usually a pawn) to a better one (queen/rook/bishop/knight)

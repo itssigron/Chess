@@ -46,7 +46,7 @@ string Board::getAllPossibleMoves(Piece& src)
 			{
 				result = src.validateMove(*dest);
 			}
-			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION)
+			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT)
 			{
 				// empty out source
 				_board[src.getIndex()] = '#';
@@ -169,6 +169,11 @@ Player** Board::getPlayers()
 	return _players;
 }
 
+const std::stack<Move*>& Board::getMovesStack() const
+{
+	return _movesHistory;
+}
+
 string Board::getMoveHistory()
 {
 	string result = "";
@@ -194,21 +199,28 @@ void Board::pushMove(Move* move)
 
 Move* Board::undoMove()
 {
+	Move* lastMove = nullptr;
+	Piece* capturedPiece = nullptr;
+
 	if (_movesHistory.size() == 0)
 	{
 		return nullptr;
 	}
-	Move* lastMove = _movesHistory.top();
-	Piece* capturedPiece = lastMove->getCaptured();
-	
+
+	lastMove = _movesHistory.top();
+	capturedPiece = lastMove->getCaptured();
+
 	// update their location and restore board to its last state
 	lastMove->getDestPiece()->setLocation(lastMove->getSrc());
 	_board[getIndex(lastMove->getSrc())] = _board[getIndex(lastMove->getDest())];
-	_board[getIndex(lastMove->getDest())] = capturedPiece == nullptr ? EMPTY_PIECE : capturedPiece->getIdentifier();
+	_board[getIndex(lastMove->getDest())] = (capturedPiece == nullptr || lastMove->isEnPassant()) ? EMPTY_PIECE : capturedPiece->getIdentifier();
 	if (capturedPiece != nullptr)
 	{
 		capturedPiece->setCaptured(false); // un-capture this piece
-		capturedPiece->setLocation(lastMove->getDest()); // sets his updated location
+		if (lastMove->isEnPassant())
+		{
+			_board[capturedPiece->getIndex()] = capturedPiece->getIdentifier();
+		}
 	}
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
 
@@ -226,13 +238,24 @@ Move* Board::redoMove()
 	}
 	Move* lastMove = _movesRedo.top();
 	Piece* capturedPiece = lastMove->getCaptured();
-	char identifier = lastMove->getSrcPiece()->getIdentifier();
+	Piece* srcPiece = lastMove->getSrcPiece(), * destPiece = lastMove->getDestPiece();
+	char identifier = srcPiece->getIdentifier();
 	if (_board[getIndex(lastMove->getDest())] != EMPTY_PIECE)
 	{
-		lastMove->setCaptured(lastMove->getDestPiece());
+		lastMove->setCaptured(destPiece);
 		getPiece(lastMove->getDest())->setCaptured(true);
 	}
-	lastMove->getSrcPiece()->setLocation(lastMove->getDest()); // update piece location
+	else if (lastMove->isEnPassant())
+	{
+		int rowOffset = srcPiece->getOwner()->getType() == WHITE_PLAYER ? -1 : 1;
+		string capturedPieceLocation = destPiece->getLocation();
+		capturedPieceLocation[1] += rowOffset;
+		capturedPiece = getPiece(capturedPieceLocation);
+		capturedPiece->setCaptured(true);
+		lastMove->setCaptured(capturedPiece);
+		_board[getIndex(capturedPieceLocation)] = EMPTY_PIECE;
+	}
+	srcPiece->setLocation(lastMove->getDest()); // update piece location
 	_board[getIndex(lastMove->getDest())] = identifier;
 	_board[getIndex(lastMove->getSrc())] = EMPTY_PIECE;
 
@@ -290,7 +313,7 @@ bool Board::madeChess(Player* player)
 			}
 
 			// if all checks passed, its a chess!
-			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION)
+			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT)
 			{
 				didChess = true;
 			}
@@ -357,8 +380,8 @@ int Board::checkmateOrStalemate(Player* player)
 
 bool Board::isInsufficientMaterial()
 {
-	Player *whitePlayer = _players[WHITE_PLAYER], *blackPlayer = _players[BLACK_PLAYER];
-	Piece *piece = nullptr;
+	Player* whitePlayer = _players[WHITE_PLAYER], * blackPlayer = _players[BLACK_PLAYER];
+	Piece* piece = nullptr;
 	std::vector<Piece*> whitePieces = whitePlayer->getPieces(), blackPieces = blackPlayer->getPieces();
 	bool whiteKingFound = false, blackKingFound = false;
 	int whitePiecesAmount = 0, blackPiecesAmount = 0;
@@ -397,7 +420,7 @@ bool Board::isInsufficientMaterial()
 }
 
 
-int Board::movePiece(Piece& src, Piece& dest)
+int Board::movePiece(Piece& src, Piece& dest, Move& move)
 {
 	// save a copy of our board incase of a self-chess
 	string boardCopy = _board;
@@ -414,13 +437,14 @@ int Board::movePiece(Piece& src, Piece& dest)
 	if (dest.getType() != EMPTY_PIECE)
 	{
 		dest.setCaptured(true);
+		move.setCaptured(&dest);
 	}
 
 	// check if either one of sides did chess
 	// and whether they made a self chess or not
 	bool whiteDidChess = madeChess(_players[WHITE_PLAYER]);
 	bool blackDidChess = madeChess(_players[BLACK_PLAYER]);
-	bool whitePlayer = src.getOwner()->getType() == WHITE_PLAYER;
+	bool whitePlayer = getCurrentPlayer().getType() == WHITE_PLAYER;
 
 	// if its a self-chess
 	if ((whiteDidChess && !whitePlayer) || (blackDidChess && whitePlayer))
@@ -429,6 +453,7 @@ int Board::movePiece(Piece& src, Piece& dest)
 		_board = boardCopy;
 		src.setLocation(oldLocation);
 		dest.setCaptured(false);
+		move.setCaptured(nullptr);
 		return INVALID_SELF_CHESS;
 	}
 
@@ -445,10 +470,12 @@ int Board::movePiece(Piece& src, Piece& dest)
 		endgameStatus = checkmateOrStalemate(&getCurrentPlayer());
 	}
 
-	if(endgameStatus == VALID_INSUFFICIENT_MATERIAL  || endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE)
+	if (endgameStatus == VALID_INSUFFICIENT_MATERIAL || endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE)
 	{
 		return endgameStatus;
 	}
+
+	pushMove(&move); // push move to history
 
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
 	// switch turn from black to white and vice versa
