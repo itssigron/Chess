@@ -26,10 +26,10 @@ int main()
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(hOut, dwMode);
 
-	// start the client
-	// system("start ChessClient.exe");
-
-	// Sleep(1000); // wait for client to start
+	//start the client
+	system("start ChessClient.exe");
+	::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
+	Sleep(1000); // wait for client to start
 
 	srand(time_t(NULL));
 	bool isConnect = p.connect();
@@ -67,7 +67,7 @@ int main()
 			Move* move = board.undoMove();
 			char identifier = move == nullptr ? ' ' :
 				move->getCaptured() == nullptr ? EMPTY_PIECE : move->getCaptured()->getIdentifier();
-			char isEnPassant = move->isEnPassant() + '0'; // '0' for false and '1' for true
+			char isEnPassant = move == nullptr ? ' ' : move->isEnPassant() + '0'; // '0' for false and '1' for true
 
 			// format is {dest}{src}{captured identifier if any} will undo move in graphics
 			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getDest() + move->getSrc() + identifier + isEnPassant).c_str());
@@ -79,7 +79,7 @@ int main()
 		else if (msgFromGraphics == "redo")
 		{
 			Move* move = board.redoMove();
-			char isEnPassant = move->isEnPassant() + '0'; // '0' for false and '1' for true
+			char isEnPassant = move == nullptr ? ' ' : move->isEnPassant() + '0'; // '0' for false and '1' for true
 			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getSrc() + move->getDest() + isEnPassant).c_str());
 		}
 		// source piece selection, meaning we want to send all of its possible moves to graphics
@@ -166,19 +166,14 @@ int main()
 	}
 
 
-	// send history to graphics + console
+	// send history to graphics
 	string history = board.getMoveHistory();
-	std::cout << "Game's moves history: " << history << std::endl;
 	strcpy_s(msgToGraphics, history.c_str());
 	p.sendMessageToGraphics(msgToGraphics);
-
-	std::cout << "Goodbye!" << std::endl;
 
 	// free program's used memory
 	p.close();
 	msgFromGraphics.clear();
-
-	system("pause"); // wait until user presses a key
 
 	return 0;
 }
