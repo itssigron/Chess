@@ -58,11 +58,9 @@ int main()
 
 	while (msgFromGraphics != "quit" && msgFromGraphics != "") // an empty string can be considered as a "quit"
 	{
-		if (msgFromGraphics == "print-history") // graphics wants to print game history, lets both print and send back history as well
+		if (msgFromGraphics == "history") // graphics wants to get history, give it over
 		{
-			string history = board.getMoveHistory();
-			std::cout << "Game's moves history: " << history << std::endl;
-			strcpy_s(msgToGraphics, history.c_str());
+			strcpy_s(msgToGraphics, board.getMoveHistory().c_str());
 		}
 		else if (msgFromGraphics == "undo")
 		{
@@ -167,8 +165,12 @@ int main()
 		msgFromGraphics = p.getMessageFromGraphics();
 	}
 
-	// dump history to terminal
-	std::cout << "Game's moves history: " << board.getMoveHistory() << std::endl;
+
+	// send history to graphics + console
+	string history = board.getMoveHistory();
+	std::cout << "Game's moves history: " << history << std::endl;
+	strcpy_s(msgToGraphics, history.c_str());
+	p.sendMessageToGraphics(msgToGraphics);
 
 	std::cout << "Goodbye!" << std::endl;
 

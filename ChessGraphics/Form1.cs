@@ -26,11 +26,14 @@ namespace chessGraphics
         bool isGameOver = false;
 
         const int BOARD_SIZE = 8;
+        string gameHistory = "";
 
         public Form1()
         {
             InitializeComponent();
             CenterToScreen();
+            label25.SendToBack();
+            lblWaiting.BringToFront();
         }
 
         private void InitForm()
@@ -380,6 +383,7 @@ namespace chessGraphics
                         this.Controls.Remove(UndoBtn);
                         this.Controls.Remove(RedoBtn);
                         enginePipe.sendEngineMove("quit");
+                        gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
                         enginePipe.close();
                     }
                     else if (res.ToLower().StartsWith("valid") || res.ToLower().Contains("restored"))
@@ -521,26 +525,20 @@ namespace chessGraphics
 
         private void LogHistory_Click(object sender, EventArgs e)
         {
-            enginePipe.sendEngineMove("print-history"); // ask engine to print game history
-            string gameHistory = enginePipe.getEngineMessage(); // game history, currently unused but it is on the todo list
+            enginePipe.sendEngineMove("history"); // ask engine to give game's history
+            gameHistory = gameHistory != "" ? gameHistory : enginePipe.getEngineMessage();
 
-            MovesRestoreError.Visible = false;
-            HistorySuccessLbl.Visible = true;
-
-            // hide success message after 4 seconds
-            System.Threading.Tasks.Task.Delay(4000).ContinueWith(_ =>
-            {
-                Invoke(new MethodInvoker(() => { HistorySuccessLbl.Visible = false; }));
-            });
+            GameHistory historyDiaglog = new GameHistory(gameHistory);
+            historyDiaglog.ShowDialog();
+            if(!isGameOver) gameHistory = "";
         }
 
         private void ShowRestoreError()
         {
-            HistorySuccessLbl.Visible = false;
             MovesRestoreError.Visible = true;
 
             // hide success message after 4 seconds
-            System.Threading.Tasks.Task.Delay(4000).ContinueWith(_ =>
+            Task.Delay(4000).ContinueWith(_ =>
             {
                 Invoke(new MethodInvoker(() => { MovesRestoreError.Visible = false; }));
             });

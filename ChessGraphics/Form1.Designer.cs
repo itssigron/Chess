@@ -71,7 +71,6 @@
             this.label34 = new System.Windows.Forms.Label();
             this.LoadMoves = new System.Windows.Forms.Button();
             this.LogHistory = new System.Windows.Forms.Button();
-            this.HistorySuccessLbl = new System.Windows.Forms.Label();
             this.MovesRestoreError = new System.Windows.Forms.Label();
             this.UndoBtn = new System.Windows.Forms.Button();
             this.RedoBtn = new System.Windows.Forms.Button();
@@ -169,7 +168,7 @@
             this.lblWaiting.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblWaiting.Name = "lblWaiting";
             this.lblWaiting.Size = new System.Drawing.Size(761, 69);
-            this.lblWaiting.TabIndex = 9;
+            this.lblWaiting.TabIndex = 100;
             this.lblWaiting.Text = "Waiting for engine to connect...";
             // 
             // lblEngineCalc
@@ -563,23 +562,11 @@
             this.LogHistory.Visible = false;
             this.LogHistory.Click += new System.EventHandler(this.LogHistory_Click);
             // 
-            // HistorySuccessLbl
-            // 
-            this.HistorySuccessLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Bold);
-            this.HistorySuccessLbl.ForeColor = System.Drawing.Color.Green;
-            this.HistorySuccessLbl.Location = new System.Drawing.Point(1243, 123);
-            this.HistorySuccessLbl.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.HistorySuccessLbl.Name = "HistorySuccessLbl";
-            this.HistorySuccessLbl.Size = new System.Drawing.Size(187, 73);
-            this.HistorySuccessLbl.TabIndex = 52;
-            this.HistorySuccessLbl.Text = "Successfully sent game history to engine\'s console";
-            this.HistorySuccessLbl.Visible = false;
-            // 
             // MovesRestoreError
             // 
             this.MovesRestoreError.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.MovesRestoreError.ForeColor = System.Drawing.Color.Red;
-            this.MovesRestoreError.Location = new System.Drawing.Point(1186, 121);
+            this.MovesRestoreError.Location = new System.Drawing.Point(1183, 126);
             this.MovesRestoreError.Name = "MovesRestoreError";
             this.MovesRestoreError.Size = new System.Drawing.Size(265, 75);
             this.MovesRestoreError.TabIndex = 53;
@@ -618,7 +605,6 @@
             this.Controls.Add(this.RedoBtn);
             this.Controls.Add(this.UndoBtn);
             this.Controls.Add(this.MovesRestoreError);
-            this.Controls.Add(this.HistorySuccessLbl);
             this.Controls.Add(this.LogHistory);
             this.Controls.Add(this.LoadMoves);
             this.Controls.Add(this.label27);
@@ -718,7 +704,6 @@
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.Button LoadMoves;
         private System.Windows.Forms.Button LogHistory;
-        private System.Windows.Forms.Label HistorySuccessLbl;
         private System.Windows.Forms.Label MovesRestoreError;
         private System.Windows.Forms.Button UndoBtn;
         private System.Windows.Forms.Button RedoBtn;

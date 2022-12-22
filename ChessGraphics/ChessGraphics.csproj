@@ -53,6 +53,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="GameHistory.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GameHistory.Designer.cs">
+      <DependentUpon>GameHistory.cs</DependentUpon>
+    </Compile>
     <Compile Include="LoadMoves.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -71,6 +77,9 @@
     </Compile>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GameHistory.resx">
+      <DependentUpon>GameHistory.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LoadMoves.resx">
       <DependentUpon>LoadMoves.cs</DependentUpon>

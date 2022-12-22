@@ -463,6 +463,8 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 		_movesRedo.pop();
 	}
 
+	pushMove(&move); // push move to history
+
 	// check if game is over by either checkmate, stalemate or insufficient material draw
 	int endgameStatus = isInsufficientMaterial() ? VALID_INSUFFICIENT_MATERIAL : VALID_MOVE;
 	if (endgameStatus == VALID_MOVE)
@@ -474,8 +476,6 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 	{
 		return endgameStatus;
 	}
-
-	pushMove(&move); // push move to history
 
 	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
 	// switch turn from black to white and vice versa
