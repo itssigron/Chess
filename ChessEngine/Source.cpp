@@ -26,10 +26,13 @@ int main()
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(hOut, dwMode);
 
-	//start the client
-	system("start ChessClient.exe");
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
-	Sleep(1000); // wait for client to start
+	#ifndef _DEBUG
+		//start the client
+		system("start ChessClient.exe");
+		::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
+		Sleep(1000); // wait for client to start
+	#endif // !_DEBUG
+
 
 	srand(time_t(NULL));
 	bool isConnect = p.connect();
