@@ -1,4 +1,5 @@
 #include "King.h"
+#pragma warning (disable : 6001)
 
 King::King(Player* owner, string location) : Piece(owner, location, KING)
 {
@@ -7,9 +8,9 @@ King::King(Player* owner, string location) : Piece(owner, location, KING)
 
 int King::validateMove(Piece& dest)
 {
-	Piece* rook1;
-	Piece* rook2;
-	
+	Piece* rook;
+
+	Board& board = _owner->getBoard();
 	// src row and col
 	int x1 = _location[0] - 'a', y1 = _location[1] - '0';
 	// dest row and col
@@ -22,62 +23,63 @@ int King::validateMove(Piece& dest)
 
 	bool foundPiece = false;
 	int usedCastleRow = 0;
-	
+	int usedCastleCol = 0;
+
+	// a king can move 1 square to any direction,
+	// so as long the difference between src col, dest col and src row, dest row isnt above 1, its a valid move
+	if ((abs(x1 - x2) <= 1 && abs(y1 - y2) <= 1))
+	{
+
+	}
 	// check if king wants and can castle
-	if (y1 == y2 && _hasntMoved && (x1 == POSSIBLE_CASTLE_COL1 || x2 == POSSIBLE_CASTLE_COL2))
+	else if (y1 == y2 && !_hasMoved && (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL || x2 == POSSIBLE_KINGSIDE_CASTLE_COL))
 	{
 		// Check player color
-		if (_owner->getType() == WHITE_PLAYER)
-			usedCastleRow = POSSIBLE_CASTLE_ROW1;
+		usedCastleRow = _owner->getType() == WHITE_PLAYER ? POSSIBLE_WHITE_CASTLE_ROW : POSSIBLE_BLACK_CASTLE_ROW;
+		usedCastleCol = x2 == POSSIBLE_QUEENSIDE_CASTLE_COL ? QUEENSIDE_ROOK_COL : KINGSIDE_ROOK_COL;
 
-		else if (_owner->getType() == BLACK_PLAYER)
-			usedCastleRow = POSSIBLE_CASTLE_ROW2;
+		rook = board.getPiece(board.getLocation(usedCastleRow, usedCastleCol));
+		char pieceType = rook->getType();
 
-		rook1 = _owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK1_COL));
-		rook2 = _owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK2_COL));
-		
-		// Check if rooks on the back rank are found and haven't moved yet
-		if ((rook1->getType() == ROOK && rook1->_hasntMoved) || (rook2->getType() == ROOK && rook2->_hasntMoved))
+		if (pieceType != ROOK)
 		{
+			if (pieceType == EMPTY_PIECE)
+			{
+				delete rook;
+			}
+			return INVALID_PIECE_MOVE;
+		}
+
+		// Check if rook hasnt moved yet
+		if (!rook->hasMoved())
+		{
+			isValid = VALID_CASTLE;
 			// Check no pieces are on the way
 			/* DOESNT WORK
-			while ((row != x2) && !foundPiece) 
+			while ((row != x2) && !foundPiece)
 			{
 				// if theres a piece in the king's path, update flag accordingly
 				foundPiece = _owner->getBoard().getBoard()[Board::getIndex(string(1, usedCastleRow + 'a') + (char)(row + '0'))] != EMPTY_PIECE;
 
 				// go on to the next square in the king's path
 				row += rowOffset;
-			}*/
+			}
 			foundPiece = 0; // assume no pieces 
-
+			
 			// Piece was not found which means castle is possible
 			if (!foundPiece)
 			{
 				// Check which rook to move
-				if (x2 == POSSIBLE_CASTLE_COL1)
+				if (x2 == POSSIBLE_KINGSIDE_CASTLE_COL)
 					//_owner->_board->movePiece(*rook1, *_owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK1_COL + 2)), ?));
 
-				if (x2 == POSSIBLE_CASTLE_COL2)
-					//_owner->_board->movePiece(*rook1, *_owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK2_COL - 4)), ?));
-				
-				isValid = VALID_MOVE;
-			}
+					if (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL)
+						//_owner->_board->movePiece(*rook1, *_owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK2_COL - 4)), ?));
 
+						isValid = VALID_MOVE;
+			}*/
 		}
-		if (rook1->getType() == EMPTY_PIECE)
-			delete rook1;
-		if (rook2->getType() == EMPTY_PIECE)
-			delete rook2;
 	}
-	// a king can move 1 square to any direction,
-	// so as long the difference between src col, dest col and src row, dest row isnt above 1, its a valid move
-	else if (abs(x1 - x2) <= 1 && abs(y1 - y2) <= 1)
-		isValid = VALID_MOVE;
-
-	if (isValid == VALID_MOVE && !_hasntMoved) // If piece makes first valid move, make sure it marks it in the variable
-		_hasntMoved = 0;
-	
 
 	return isValid;
 }

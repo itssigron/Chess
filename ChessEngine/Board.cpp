@@ -46,7 +46,7 @@ string Board::getAllPossibleMoves(Piece& src)
 			{
 				result = src.validateMove(*dest);
 			}
-			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT)
+			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT || result == VALID_CASTLE)
 			{
 				// empty out source
 				_board[src.getIndex()] = '#';
@@ -313,7 +313,7 @@ bool Board::madeChess(Player* player)
 			}
 
 			// if all checks passed, its a chess!
-			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT)
+			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT || moveCode == VALID_CASTLE)
 			{
 				didChess = true;
 			}
@@ -462,6 +462,9 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 	{
 		_movesRedo.pop();
 	}
+
+	// piece moved, therefore it should be true
+	src.setMoved(true);
 
 	pushMove(&move); // push move to history
 

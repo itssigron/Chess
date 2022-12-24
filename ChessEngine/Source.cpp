@@ -46,11 +46,11 @@ int main()
 		Sleep(1000);
 		isConnect = p.connect();
 	}
-
+	
 	ans.clear();
 
 	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
-	char msgToGraphics[1024] = "rnbkqbnrpppppppp################################PPPPPPPPRNBKQBNR0";
+	char msgToGraphics[1024] = "rnbqkbnrpppppppp################################PPPPPPPPRNBQKBNR0";
 	Board board = Board(string(msgToGraphics)); // initialize our Board class
 	int result = 0;
 
@@ -120,7 +120,7 @@ int main()
 			int newResult = 0;
 
 			// perform the actual "move"
-			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT)
+			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT || result == VALID_CASTLE)
 			{
 				// update source piece location + update result incase of "chess"/"self chess"
 				newResult = board.movePiece(*srcPiece, *destPiece, *move);

@@ -21,6 +21,7 @@
 #define VALID_CHESS 1 // valid move, current player made a chess
 #define VALID_PAWN_PROMOTION 2 // valid move, current pawn should get promoted
 #define VALID_EN_PASSANT 3 // valid move, en passant capture 
+#define VALID_CASTLE 4 // valid castle move
 
 // invalid moves
 #define INVALID_SRC_MISSING_PIECE 5 // current player is *not* in src piece
@@ -54,9 +55,9 @@ protected:
 	char _type; // type of the piece
 	char _identifier; //capital letter for white and small for black
 	bool _captured; // whether piece is captured or not 
+	bool _hasMoved; // if piece moved already or not (used to check mainly for castling)
 
 public:
-	bool _hasntMoved; // if piece moved already or not (for rook and king only in order to castle)
 	// Constructor
 
 	/*
@@ -113,6 +114,13 @@ public:
 	const bool& isCaptured() const;
 
 	/*
+	* Check if piece has moved atleast once in the game
+	* input: none
+	* output: true if it did moved, false otherwise
+	*/
+	const bool& hasMoved() const;
+
+	/*
 	* Gets the identifier of this piece
 	* input: none
 	* output: the piece's identifier char
@@ -141,6 +149,13 @@ public:
 	* output: none
 	*/
 	void setCaptured(bool isCaptured);
+
+	/*
+	* sets the "hasMoved" state accordingly
+	* input: whether it moved or not
+	* output: none
+	*/
+	void setMoved(bool hasMoved);
 
 	// methods
 

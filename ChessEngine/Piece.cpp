@@ -5,7 +5,7 @@ Piece::Piece(Player* owner, string location, char type)
 	_owner = owner;
 	_location = location;
 	_type = type;
-	_hasntMoved = true;
+	_hasMoved = false;
 	_identifier = owner == nullptr ? EMPTY_PIECE : owner->getType() == WHITE_PLAYER ? toupper(type) : type;
 }
 
@@ -39,6 +39,11 @@ const bool& Piece::isCaptured() const
 	return _captured;
 }
 
+const bool& Piece::hasMoved() const
+{
+	return _hasMoved;
+}
+
 const char& Piece::getIdentifier() const
 {
 	return _identifier;
@@ -57,6 +62,11 @@ void Piece::setType(char& type)
 void Piece::setCaptured(bool isCaptured)
 {
 	_captured = isCaptured;
+}
+
+void Piece::setMoved(bool hasMoved)
+{
+	_hasMoved = hasMoved;
 }
 
 int Piece::basicValidateMove(Player& currentPlayer, Piece& dest)
