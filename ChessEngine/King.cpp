@@ -76,7 +76,7 @@ int King::validateMove(Piece& dest)
 				isValid = VALID_CASTLE;
 
 				//todo: check if both pieces arent under attack by any of the enemy's pieces
-				//board.shiftCurrentPlayer();
+				board.shiftCurrentPlayer();
 				// make basic checks, if all basic checks passed, make
 				// further checks with the current piece
 				int result = basicValidateMove(*_owner, *firstSquare);
@@ -94,12 +94,6 @@ int King::validateMove(Piece& dest)
 
 					setLocation(firstSquare->getLocation()); // update piece location
 
-					// if a capture was made, then perform the action on the player's pieces
-					if (firstSquare->getType() != EMPTY_PIECE)
-					{
-						firstSquare->setCaptured(true);
-					}
-
 					bool enemyDidChess = board.madeChess(enemy);
 					if (enemyDidChess)
 					{
@@ -107,12 +101,11 @@ int King::validateMove(Piece& dest)
 					}
 
 					// restore our board state
-					board = boardCopy;
+					boardStr = boardCopy;
 					setLocation(oldLocation);
-					firstSquare->setCaptured(false);
 				}
 
-				//board.shiftCurrentPlayer();
+				board.shiftCurrentPlayer();
 
 				// free memory after use
 				if (firstSquareEmpty)
@@ -125,7 +118,6 @@ int King::validateMove(Piece& dest)
 				}
 			}
 		}
-
-		return isValid;
 	}
+	return isValid;
 }

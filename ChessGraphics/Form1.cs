@@ -273,6 +273,7 @@ namespace chessGraphics
             "Valid move - you made chess",
             "Valid move - pawn promotion",
             "Valid move - en passant capture",
+            "Valid move - king has castled",
             "Invalid move - not your player",
             "Invalid move - destination is not free",
             "Invalid move - chess wil occure",
