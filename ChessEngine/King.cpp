@@ -8,7 +8,11 @@ King::King(Player* owner, string location) : Piece(owner, location, KING)
 
 int King::validateMove(Piece& dest)
 {
-	Piece* rook;
+	Piece* rook = nullptr;
+	Piece* firstSquare = nullptr;
+	Piece* secondSquare = nullptr;
+	bool firstSquareEmpty = false;
+	bool secondSquareEmpty = false;
 
 	Board& board = _owner->getBoard();
 	// src row and col
@@ -17,11 +21,11 @@ int King::validateMove(Piece& dest)
 	int x2 = dest.getLocation()[0] - 'a', y2 = dest.getLocation()[1] - '0';
 	int isValid = INVALID_PIECE_MOVE;
 
-	// Calculate offset for row and col (whether we move horizontally left/right or vertically up/down)
-	int rowOffset = (x1 < x2) ? 1 : ((x1 > x2) ? -1 : 0);
-	int row = x1 + rowOffset;
+	// Calculate offset for row and col (whether we move left or right)
+	int colOffset = (x1 < x2) ? 1 : -1;
+	int firstSquareCol = x1 + colOffset;
+	int secondSquareCol = firstSquareCol + colOffset;
 
-	bool foundPiece = false;
 	int usedCastleRow = 0;
 	int usedCastleCol = 0;
 
@@ -29,7 +33,7 @@ int King::validateMove(Piece& dest)
 	// so as long the difference between src col, dest col and src row, dest row isnt above 1, its a valid move
 	if ((abs(x1 - x2) <= 1 && abs(y1 - y2) <= 1))
 	{
-
+		isValid = VALID_MOVE;
 	}
 	// check if king wants and can castle
 	else if (y1 == y2 && !_hasMoved && (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL || x2 == POSSIBLE_KINGSIDE_CASTLE_COL))
@@ -53,31 +57,28 @@ int King::validateMove(Piece& dest)
 		// Check if rook hasnt moved yet
 		if (!rook->hasMoved())
 		{
-			isValid = VALID_CASTLE;
-			// Check no pieces are on the way
-			/* DOESNT WORK
-			while ((row != x2) && !foundPiece)
-			{
-				// if theres a piece in the king's path, update flag accordingly
-				foundPiece = _owner->getBoard().getBoard()[Board::getIndex(string(1, usedCastleRow + 'a') + (char)(row + '0'))] != EMPTY_PIECE;
+			// Now we need to check if: 1. both squares are empty and 2. both squares arent under attack
+			firstSquare = board.getPiece(board.getLocation(usedCastleRow, firstSquareCol));
+			secondSquare = board.getPiece(board.getLocation(usedCastleRow, secondSquareCol));
+			firstSquareEmpty = firstSquare->getType() == EMPTY_PIECE;
+			secondSquareEmpty = secondSquare->getType() == EMPTY_PIECE;
 
-				// go on to the next square in the king's path
-				row += rowOffset;
+			if (firstSquareEmpty && secondSquareEmpty)
+			{
+				isValid = true;
 			}
-			foundPiece = 0; // assume no pieces 
 			
-			// Piece was not found which means castle is possible
-			if (!foundPiece)
+			//todo: check if both pieces arent under attack by any of the enemy's pieces
+
+			// free memory after use
+			if (firstSquareEmpty)
 			{
-				// Check which rook to move
-				if (x2 == POSSIBLE_KINGSIDE_CASTLE_COL)
-					//_owner->_board->movePiece(*rook1, *_owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK1_COL + 2)), ?));
-
-					if (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL)
-						//_owner->_board->movePiece(*rook1, *_owner->_board->getPiece(_owner->_board->getLocation(usedCastleRow, ROOK2_COL - 4)), ?));
-
-						isValid = VALID_MOVE;
-			}*/
+				delete firstSquare;
+			}
+			if (secondSquareEmpty)
+			{
+				delete secondSquare;
+			}
 		}
 	}
 
