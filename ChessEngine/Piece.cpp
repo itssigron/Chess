@@ -5,6 +5,7 @@ Piece::Piece(Player* owner, string location, char type)
 	_owner = owner;
 	_location = location;
 	_type = type;
+	_hasntMoved = true;
 	_identifier = owner == nullptr ? EMPTY_PIECE : owner->getType() == WHITE_PLAYER ? toupper(type) : type;
 }
 

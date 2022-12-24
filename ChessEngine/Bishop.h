@@ -10,5 +10,10 @@ public:
 	*/
 	Bishop(Player* owner, string location);
 
+	/*
+	* Validate bishop move
+	* Input: destination bishop wants to go to
+	* Output: Valid or not
+	*/
 	int validateMove(Piece& dest) override;
 };

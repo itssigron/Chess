@@ -23,20 +23,20 @@
 #define VALID_EN_PASSANT 3 // valid move, en passant capture 
 
 // invalid moves
-#define INVALID_SRC_MISSING_PIECE 4 // current player is *not* in src piece
-#define INVALID_DEST_PLAYER 5 // current player is *in* dest piece (cant kill his own piece)
-#define INVALID_SELF_CHESS 6 // move will cause enemy to chess current player
-#define INVALID_INDEX 7 // index is out of valid range
-#define INVALID_PIECE_MOVE 8 // the rules of the current piece doesnt allow such move
-#define INVALID_SAME_LOCATION 9 // src piece and dest piece are on the same location
+#define INVALID_SRC_MISSING_PIECE 5 // current player is *not* in src piece
+#define INVALID_DEST_PLAYER 6 // current player is *in* dest piece (cant kill his own piece)
+#define INVALID_SELF_CHESS 7 // move will cause enemy to chess current player
+#define INVALID_INDEX 8 // index is out of valid range
+#define INVALID_PIECE_MOVE 9 // the rules of the current piece doesnt allow such move
+#define INVALID_SAME_LOCATION 10 // src piece and dest piece are on the same location
 
 // endgame moves
-#define VALID_CHECKMATE 10 // valid move, current player made a checkmate
-#define VALID_STALEMATE 11 // valid move, a stale mate has occurred
-#define VALID_INSUFFICIENT_MATERIAL 12 // valid move, onsufficient material draw has occurred
+#define VALID_CHECKMATE 11 // valid move, current player made a checkmate
+#define VALID_STALEMATE 12 // valid move, a stale mate has occurred
+#define VALID_INSUFFICIENT_MATERIAL 13 // valid move, onsufficient material draw has occurred
 
 // other
-#define SUCCESSFUL_PROMOTION 13 // a successful pawn promotion
+#define SUCCESSFUL_PROMOTION 14 // a successful pawn promotion
 
 #define INVALID_CHECKMATE_STALEMATE -1 // its neither a checkmate nor stalemate
 
@@ -56,6 +56,7 @@ protected:
 	bool _captured; // whether piece is captured or not 
 
 public:
+	bool _hasntMoved; // if piece moved already or not (for rook and king only in order to castle)
 	// Constructor
 
 	/*

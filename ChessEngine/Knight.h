@@ -10,6 +10,11 @@ public:
 	*/
 	Knight(Player* owner, string location);
 
+	/*
+	* Validate knight's move
+	* Input: Destination knight wants to go to
+	* Output: Valid or not
+	*/
 	int validateMove(Piece& dest) override;
 };
 

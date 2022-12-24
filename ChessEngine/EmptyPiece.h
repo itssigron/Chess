@@ -10,6 +10,11 @@ public:
 	*/
 	EmptyPiece(Player* owner, string location);
 
+	/*
+		Validate move
+		Input: Destination piece wants to go to
+		Output: Valid
+	*/
 	int validateMove(Piece& dest) override;
 };
 

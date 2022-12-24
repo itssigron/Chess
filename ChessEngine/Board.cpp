@@ -11,7 +11,7 @@
 
 string Board::getLocation(int index)
 {
-	// calculate row and col by the index
+	// Calculate row and col by the index
 	int row = index / BOARD_SIZE;
 	int col = index % BOARD_SIZE;
 

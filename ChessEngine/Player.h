@@ -13,9 +13,10 @@ class Player
 {
 private:
 	int _type; // either WHITE_PLAYER or BLACK_PLAYER
-	Board* _board; // the board in which this player belongs to
-	std::vector<Piece*> _pieces; // all player's pieces
+	std::vector<Piece*> _pieces; // all player's pieces:
+	
 public:
+	Board* _board; // the board in which this player belongs to
 	/*
 	* Initiates our Player object
 	* input: The pointer to the board where this player belongs to, and the player's types

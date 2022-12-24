@@ -35,5 +35,8 @@ int Rook::validateMove(Piece& dest)
 		col += colOffset;
 	}
 
+	if (foundPiece && !_hasntMoved) // If piece makes first valid move, make sure it marks it in the variable 
+		_hasntMoved = 0;
+
 	return foundPiece ? INVALID_PIECE_MOVE : VALID_MOVE;
 }
