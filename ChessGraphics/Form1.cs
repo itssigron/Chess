@@ -65,9 +65,10 @@ namespace chessGraphics
                 {
                     isCurPlWhite = (s[s.Length - 1] == '0');
                     PaintBoard(s);
-                    //CheckMateTest(400);
-                    //TieTest(400);
-                    //StalemateTest(400);
+                    //Tests tests = new Tests(this);
+                    //tests.CheckMate(400);
+                    //tests.Tie(400);
+                    //tests.Stalemate(400);
                 }
 
             });
@@ -296,7 +297,7 @@ namespace chessGraphics
             return messages[res];
         }
 
-        void MakeMoves(string moves, int delay)
+        public void MakeMoves(string moves, int delay)
         {
             string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
 

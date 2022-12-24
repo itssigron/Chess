@@ -93,6 +93,7 @@
     <Compile Include="PawnPromotion.Designer.cs">
       <DependentUpon>PawnPromotion.cs</DependentUpon>
     </Compile>
+    <Compile Include="Tests.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
