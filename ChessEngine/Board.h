@@ -136,6 +136,13 @@ public:
 	void pushMove(Move* move);
 
 	/*
+	* Shifts the current player
+	* input: none
+	* output: none
+	*/
+	void shiftCurrentPlayer();
+
+	/*
 	* Undo the last move
 	* input: none
 	* output: the move which "undo" applied to

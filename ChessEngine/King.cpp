@@ -14,7 +14,15 @@ int King::validateMove(Piece& dest)
 	bool firstSquareEmpty = false;
 	bool secondSquareEmpty = false;
 
+	bool whitePlayer = _owner->getType() == WHITE_PLAYER;
 	Board& board = _owner->getBoard();
+	string& boardStr = board.getBoard();
+	Player* enemy = whitePlayer ? board.getPlayers()[BLACK_PLAYER] : board.getPlayers()[WHITE_PLAYER];
+	string boardCopy;
+	boardCopy.assign(boardStr);
+
+	string oldLocation = getLocation();
+
 	// src row and col
 	int x1 = _location[0] - 'a', y1 = _location[1] - '0';
 	// dest row and col
@@ -39,7 +47,7 @@ int King::validateMove(Piece& dest)
 	else if (y1 == y2 && !_hasMoved && (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL || x2 == POSSIBLE_KINGSIDE_CASTLE_COL))
 	{
 		// Check player color
-		usedCastleRow = _owner->getType() == WHITE_PLAYER ? POSSIBLE_WHITE_CASTLE_ROW : POSSIBLE_BLACK_CASTLE_ROW;
+		usedCastleRow = whitePlayer ? POSSIBLE_WHITE_CASTLE_ROW : POSSIBLE_BLACK_CASTLE_ROW;
 		usedCastleCol = x2 == POSSIBLE_QUEENSIDE_CASTLE_COL ? QUEENSIDE_ROOK_COL : KINGSIDE_ROOK_COL;
 
 		rook = board.getPiece(board.getLocation(usedCastleRow, usedCastleCol));
@@ -65,22 +73,59 @@ int King::validateMove(Piece& dest)
 
 			if (firstSquareEmpty && secondSquareEmpty)
 			{
-				isValid = true;
-			}
-			
-			//todo: check if both pieces arent under attack by any of the enemy's pieces
+				isValid = VALID_CASTLE;
 
-			// free memory after use
-			if (firstSquareEmpty)
-			{
-				delete firstSquare;
-			}
-			if (secondSquareEmpty)
-			{
-				delete secondSquare;
+				//todo: check if both pieces arent under attack by any of the enemy's pieces
+				//board.shiftCurrentPlayer();
+				// make basic checks, if all basic checks passed, make
+				// further checks with the current piece
+				int result = basicValidateMove(*_owner, *firstSquare);
+				if (result == VALID_MOVE)
+				{
+					result = validateMove(*firstSquare);
+				}
+				if (result == VALID_MOVE)
+				{
+					// empty out source
+					boardStr[getIndex()] = '#';
+
+					// move source to desired destination
+					boardStr[firstSquare->getIndex()] = getIdentifier();
+
+					setLocation(firstSquare->getLocation()); // update piece location
+
+					// if a capture was made, then perform the action on the player's pieces
+					if (firstSquare->getType() != EMPTY_PIECE)
+					{
+						firstSquare->setCaptured(true);
+					}
+
+					bool enemyDidChess = board.madeChess(enemy);
+					if (enemyDidChess)
+					{
+						isValid = INVALID_PIECE_MOVE;
+					}
+
+					// restore our board state
+					board = boardCopy;
+					setLocation(oldLocation);
+					firstSquare->setCaptured(false);
+				}
+
+				//board.shiftCurrentPlayer();
+
+				// free memory after use
+				if (firstSquareEmpty)
+				{
+					delete firstSquare;
+				}
+				if (secondSquareEmpty)
+				{
+					delete secondSquare;
+				}
 			}
 		}
-	}
 
-	return isValid;
+		return isValid;
+	}
 }

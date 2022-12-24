@@ -197,6 +197,11 @@ void Board::pushMove(Move* move)
 	_movesHistory.push(move);
 }
 
+void Board::shiftCurrentPlayer()
+{
+	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+}
+
 Move* Board::undoMove()
 {
 	Move* lastMove = nullptr;
@@ -222,7 +227,7 @@ Move* Board::undoMove()
 			_board[capturedPiece->getIndex()] = capturedPiece->getIdentifier();
 		}
 	}
-	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+	shiftCurrentPlayer();
 
 	// remove move from history
 	_movesHistory.pop();
@@ -259,7 +264,7 @@ Move* Board::redoMove()
 	_board[getIndex(lastMove->getDest())] = identifier;
 	_board[getIndex(lastMove->getSrc())] = EMPTY_PIECE;
 
-	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+	shiftCurrentPlayer();
 
 	// remove move from "redo" history and transfer it into normal moves history
 	_movesRedo.pop();
@@ -359,9 +364,9 @@ int Board::checkmateOrStalemate(Player* player)
 			string location = src->getLocation();
 
 			// set and restore current player so moves for enemy will be valid
-			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+			shiftCurrentPlayer();
 			string locations = getAllPossibleMoves(*src);
-			_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+			shiftCurrentPlayer();
 
 			if (locations.length() > 0)
 			{
@@ -480,7 +485,7 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 		return endgameStatus;
 	}
 
-	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+	shiftCurrentPlayer();
 	// switch turn from black to white and vice versa
 
 	return (whiteDidChess || blackDidChess) ? VALID_CHESS : VALID_MOVE;
@@ -490,7 +495,7 @@ int Board::promotePiece(Piece* promoted, char newType)
 {
 	// since this function is called after the move has been complete, we should "switch" the turn to get the previous player
 	// which was promoted
-	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+	shiftCurrentPlayer();
 	Player* player = &getCurrentPlayer();
 	std::vector<Piece*>& pieces = player->getPieces();
 	string location = promoted->getLocation();
@@ -542,7 +547,7 @@ int Board::promotePiece(Piece* promoted, char newType)
 	}
 
 	// reset current player's state
-	_currentPlayer = (_currentPlayer + 1) % CHESS_PLAYERS;
+	shiftCurrentPlayer();
 
 	return result;
 }
