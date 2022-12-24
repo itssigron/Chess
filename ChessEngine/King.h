@@ -10,6 +10,7 @@ public:
 	*/
 	King(Player* owner, string location);
 
+	bool kingMoveWillCauseCheck(Piece& dest);
 	int validateMove(Piece& dest) override;
 };
 

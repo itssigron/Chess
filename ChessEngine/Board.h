@@ -18,6 +18,9 @@
 #define POSSIBLE_BLACK_CASTLE_ROW 0
 #define POSSIBLE_WHITE_CASTLE_ROW 7
 
+#define AFTER_KINGSIDE_CASTLE_ROOK 5
+#define AFTER_QUEENSIDE_CASTLE_ROOK 3
+
 using std::string;
 
 // protect against circular reference

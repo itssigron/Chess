@@ -390,7 +390,16 @@ namespace chessGraphics
                     }
                     else if (res.ToLower().StartsWith("valid") || res.ToLower().Contains("restored"))
                     {
-                        if (res.ToLower().Contains("promotion"))
+                        if(res.ToLower().Contains("castle"))
+                        {
+                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
+                            int row = dstSquare.Row;
+                            int srcCol = dstSquare.Col == 6 ? 7 : 0;
+                            int dstCol = srcCol == 7 ? 5 : 3;
+                            matBoard[row, dstCol].BackgroundImage = matBoard[row, srcCol].BackgroundImage;
+                            matBoard[row, srcCol].BackgroundImage = null;
+                        }
+                        else if (res.ToLower().Contains("promotion"))
                         {
                             string[] promptions =
                             {

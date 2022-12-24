@@ -139,6 +139,17 @@ int main()
 						move->setEnPassant(true);
 						board.getBoard()[Board::getIndex(capturedPieceLocation)] = EMPTY_PIECE;
 					}
+					else if (result == VALID_CASTLE)
+					{
+						char row = move->getDest()[1];
+						int srcCol = (move->getDest()[0] - 'a') == POSSIBLE_KINGSIDE_CASTLE_COL ? KINGSIDE_ROOK_COL : QUEENSIDE_ROOK_COL;
+						int destCol = srcCol == KINGSIDE_ROOK_COL ? AFTER_KINGSIDE_CASTLE_ROOK : AFTER_QUEENSIDE_CASTLE_ROOK;
+						string destLocation = string(1, (char)(destCol + 'a')) + row;
+						Piece* rook = board.getPiece(string(1, (char)(srcCol + 'a')) + row);
+						board.getBoard()[rook->getIndex()] = EMPTY_PIECE;
+						board.getBoard()[Board::getIndex(destLocation)] = rook->getIdentifier();
+						rook->setLocation(destLocation);
+					}
 				}
 				if (newResult != VALID_MOVE)
 				{
