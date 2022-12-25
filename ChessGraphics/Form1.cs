@@ -11,6 +11,8 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Diagnostics;
 using ChessGraphics;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace chessGraphics
 {
@@ -24,8 +26,11 @@ namespace chessGraphics
 
         bool isCurPlWhite = true;
         bool isGameOver = false;
+        int DesignVersion = 1;
 
         const int BOARD_SIZE = 8;
+        Color YELLOW_SQUARE = Color.FromArgb(238, 238, 210);
+        Color GREEN_SQUARE = Color.FromArgb(118, 150, 86);
         string gameHistory = "";
 
         public Form1()
@@ -50,6 +55,7 @@ namespace chessGraphics
                 LogHistory.Visible = true;
                 UndoBtn.Visible = true;
                 RedoBtn.Visible = true;
+                DesignVerBtn.Visible = true;
 
 
 
@@ -89,8 +95,169 @@ namespace chessGraphics
             //initForm();
 
         }
+        private byte[] ToByteArray(Image image)
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                ((Bitmap)image).Save(stream, ImageFormat.Png);
+                return stream.ToArray();
+            }
+        }
 
-        Image GetImageBySign(char sign)
+        char GetSignByImageV1(Image image)
+        {
+            if (image != null)
+            {
+                // Convert the image to a byte array
+                byte[] imageData;
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    image.Save(stream, ImageFormat.Png);
+                    imageData = stream.ToArray();
+                }
+
+                if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.q_black)))
+                {
+                    return 'q';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.q_white)))
+                {
+                    return 'Q';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.k_black)))
+                {
+                    return 'k';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.k_white)))
+                {
+                    return 'K';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.p_black)))
+                {
+                    return 'p';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.p_white)))
+                {
+                    return 'P';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.r_black)))
+                {
+                    return 'r';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.r_white)))
+                {
+                    return 'R';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.n_black)))
+                {
+                    return 'n';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.n_white)))
+                {
+                    return 'N';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.b_black)))
+                {
+                    return 'b';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.b_white)))
+                {
+                    return 'B';
+                }
+                else
+                {
+                    return 'x';
+                }
+            }
+            else
+            {
+                return '#';
+            }
+        }
+
+        char GetSignByImageV2(Image image)
+        {
+            if (image != null)
+            {
+                // Convert the image to a byte array
+                byte[] imageData;
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    image.Save(stream, ImageFormat.Png);
+                    imageData = stream.ToArray();
+                }
+
+                if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_queen)))
+                {
+                    return 'q';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_queen)))
+                {
+                    return 'Q';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_king)))
+                {
+                    return 'k';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_king)))
+                {
+                    return 'K';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_pawn)))
+                {
+                    return 'p';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_pawn)))
+                {
+                    return 'P';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_rook)))
+                {
+                    return 'r';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_rook)))
+                {
+                    return 'R';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_knight)))
+                {
+                    return 'n';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_knight)))
+                {
+                    return 'N';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_bishop)))
+                {
+                    return 'b';
+                }
+                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_bishop)))
+                {
+                    return 'B';
+                }
+                else
+                {
+                    return 'x';
+                }
+            }
+            else
+            {
+                return '#';
+            }
+        }
+
+        char GetSignByImage(Image image)
+        {
+            if (DesignVersion == 2)
+            {
+                return GetSignByImageV1(image);
+            }
+            else
+            {
+                return GetSignByImageV2(image);
+            }
+        }
+        Image GetImageBySignV1(char sign)
         {
             switch (sign)
             {
@@ -122,8 +289,70 @@ namespace chessGraphics
                     return null;
                 default:
                     return ChessGraphics.Properties.Resources.x;
+            }
+        }
+
+        Image GetImageBySignV2(char sign)
+        {
+            switch (sign)
+            {
+                case 'q':
+                    return ChessGraphics.Properties.Resources.black_queen;
+                case 'Q':
+                    return ChessGraphics.Properties.Resources.white_queen;
+                case 'k':
+                    return ChessGraphics.Properties.Resources.black_king;
+                case 'K':
+                    return ChessGraphics.Properties.Resources.white_king;
+                case 'p':
+                    return ChessGraphics.Properties.Resources.black_pawn;
+                case 'P':
+                    return ChessGraphics.Properties.Resources.white_pawn;
+                case 'r':
+                    return ChessGraphics.Properties.Resources.black_rook;
+                case 'R':
+                    return ChessGraphics.Properties.Resources.white_rook;
+                case 'n':
+                    return ChessGraphics.Properties.Resources.black_knight;
+                case 'N':
+                    return ChessGraphics.Properties.Resources.white_knight;
+                case 'b':
+                    return ChessGraphics.Properties.Resources.black_bishop;
+                case 'B':
+                    return ChessGraphics.Properties.Resources.white_bishop;
+                case '#':
+                    return null;
+                default:
+                    return ChessGraphics.Properties.Resources.x;
 
             }
+        }
+
+        Image GetImageBySign(char sign)
+        {
+            if(DesignVersion == 1)
+            {
+                return GetImageBySignV1(sign);
+            }
+            else
+            {
+                return GetImageBySignV2(sign);
+            }
+        }
+
+        Color GetWhiteColor()
+        {
+            return DesignVersion == 1 ? Color.White : YELLOW_SQUARE; 
+        }
+
+        Color GetGrayColor()
+        {
+            return DesignVersion == 1 ? Color.Gray : GREEN_SQUARE;
+        }
+
+        Color GetDefaultBorderColor()
+        {
+            return DesignVersion == 1 ? Color.Blue : Color.Black;
         }
 
         private void PaintBoard(string board)
@@ -158,8 +387,8 @@ namespace chessGraphics
                     matBoard[i, j] = newBtn;
 
                     newBtn.FlatAppearance.MouseOverBackColor = btnBoard.FlatAppearance.MouseOverBackColor;
-                    newBtn.BackColor = isColBlack ? Color.Gray : Color.White;
-                    newBtn.FlatAppearance.BorderColor = btnBoard.FlatAppearance.BorderColor;
+                    newBtn.BackColor = isColBlack ? GetWhiteColor() : GetGrayColor();
+                    newBtn.FlatAppearance.BorderColor = GetDefaultBorderColor();
                     newBtn.FlatAppearance.BorderSize = btnBoard.FlatAppearance.BorderSize;
                     newBtn.FlatStyle = btnBoard.FlatStyle;
 
@@ -214,19 +443,19 @@ namespace chessGraphics
                     // un-highlight (restore backColor and borderColor) each possible move's border
                     if ((row % 2 == 0 && col % 2 == 0) || (row % 2 == 1 && col % 2 == 1))
                     {
-                        matBoard[row, col].BackColor = Color.Gray;
+                        matBoard[row, col].BackColor = GetWhiteColor();
                     }
                     else
                     {
-                        matBoard[row, col].BackColor = Color.White;
+                        matBoard[row, col].BackColor = GetGrayColor();
                     }
-                    matBoard[row, col].FlatAppearance.BorderColor = Color.Blue;
+                    matBoard[row, col].FlatAppearance.BorderColor = GetDefaultBorderColor();
                 }
                 // unselected
                 if (matBoard[srcSquare.Row, srcSquare.Col] == b)
                 {
 
-                    matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
+                    matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
                     srcSquare = null;
                 }
                 else
@@ -257,8 +486,12 @@ namespace chessGraphics
                     int col = location[0] - 'a';
 
                     // highlight each possible move, and if its a captureable piece, color its border in red
-                    matBoard[row, col].BackColor = Color.Chartreuse;
-                    if (matBoard[row, col].BackgroundImage != null) matBoard[row, col].FlatAppearance.BorderColor = Color.Red;
+                    matBoard[row, col].BackColor = Color.DarkOrange;
+                    if (matBoard[row, col].BackgroundImage != null)
+                    {
+                        matBoard[row, col].BackColor = Color.Red;
+                        matBoard[row, col].FlatAppearance.BorderColor = Color.DarkOrange;
+                    }
                 }
 
                 matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.DarkGreen;
@@ -372,8 +605,8 @@ namespace chessGraphics
                         matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
                         matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = null;
 
-                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
-                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
+                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
+                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
 
                         // quit engine, close pipe and remove the load moves/undo/redo buttons,
@@ -462,8 +695,8 @@ namespace chessGraphics
 
                         if (!isEnPassant) matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = img ?? null;
 
-                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
-                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
+                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
+                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
                         isCurPlWhite = !isCurPlWhite;
                         lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
@@ -487,10 +720,10 @@ namespace chessGraphics
                 Invoke((MethodInvoker)delegate
                 {
                     if (srcSquare != null)
-                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.Blue;
+                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
                     if (dstSquare != null)
-                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.Blue;
+                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
                     dstSquare = null;
                     srcSquare = null;
@@ -608,6 +841,48 @@ namespace chessGraphics
         private void RedoBtn_Click(object sender, EventArgs e)
         {
             Form1_KeyDown(null, new KeyEventArgs(Keys.Control | Keys.Y)); // trigger ctrl + y
+        }
+
+        private void DesignVerBtn_Click(object sender, EventArgs e)
+        {
+            DesignVersion = 2 - ((DesignVersion + 1) % 2);
+            DesignVerBtn.Text = DesignVerBtn.Text.Substring(0, DesignVerBtn.Text.Length - 1);
+            DesignVerBtn.Text += (char)(DesignVersion + '0');
+
+            int i, j;
+
+            Button btn;
+            bool isRowBlack = true;
+
+            this.SuspendLayout();
+
+            for (i = 0; i < BOARD_SIZE; i++)
+            {
+                bool isColBlack = isRowBlack;
+
+                for (j = 0; j < BOARD_SIZE; j++)
+                {
+                    btn = matBoard[i, j];
+
+                    btn.BackColor = isColBlack ? GetWhiteColor() : GetGrayColor();
+                    btn.FlatAppearance.BorderColor = GetDefaultBorderColor();
+
+                    btn.BackgroundImage = GetImageBySign(GetSignByImage(btn.BackgroundImage));
+
+                    isColBlack = !isColBlack;
+                }
+                isRowBlack = !isRowBlack;
+            }
+
+            if(srcSquare != null)
+            {
+                i = srcSquare.Row;
+                j = srcSquare.Col;
+                srcSquare = null;
+                matBoard[i, j].PerformClick();
+            }
+
+            this.ResumeLayout();
         }
     }
 }
