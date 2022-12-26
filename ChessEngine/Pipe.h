@@ -48,21 +48,25 @@ class Pipe
 {
 private:
 	HANDLE hPipe;
-	LPTSTR  strPipeName;
+	wchar_t strPipeName[20];
+	int pipeNumber;
 
 public:
 
 	Pipe()
 	{
 		// Prepare the pipe name
-		strPipeName = (LPTSTR)TEXT("\\\\.\\pipe\\chessPipe");
-
+		pipeNumber = 1;
+		lstrcpyW(strPipeName, (LPWSTR)TEXT("\\\\.\\pipe\\chessPipe"));
+		lstrcatW(strPipeName, (LPWSTR)std::to_string(pipeNumber).c_str());
 	}
 
 	bool connect()
 	{
+		bool result = true;
+
 		hPipe = CreateFile(
-			strPipeName,			// Pipe name 
+			(LPCSTR)strPipeName,			// Pipe name 
 			GENERIC_READ |			// Read and write access 
 			GENERIC_WRITE,
 			0,						// No sharing 
@@ -71,25 +75,32 @@ public:
 			0,						// Default attributes 
 			NULL);					// No template file 
 
-		// Break if the pipe handle is valid. 
-		if (hPipe != INVALID_HANDLE_VALUE)
-			return true;
 
-		if (// Exit if an error other than ERROR_PIPE_BUSY occurs
-			GetLastError() != ERROR_PIPE_BUSY
-			||
-			// All pipe instances are busy, so wait for 5 seconds
-			!WaitNamedPipe(strPipeName, 5000))
+		if (GetLastError() == ERROR_PIPE_BUSY)
 		{
-			_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"),
-				strPipeName, GetLastError());
-			return false;
+			lstrcpyW(strPipeName, (LPWSTR)TEXT("\\\\.\\pipe\\chessPipe"));
+			lstrcatW(strPipeName, (LPWSTR)std::to_string(++pipeNumber).c_str());
+
+			result = false;
+		}
+		// Break if the pipe handle is valid. 
+		else if (hPipe != INVALID_HANDLE_VALUE)
+		{
+			result = true;
+		}
+		else if (GetLastError() != ERROR_PIPE_BUSY || !WaitNamedPipe((LPCSTR)strPipeName, 5000))
+		{
+			_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"), strPipeName, GetLastError());
+			result = false;
+		}
+		else
+		{
+			#ifdef _DEBUG
+				_tprintf(_T("The named pipe, %s, is connected.\n"), strPipeName);
+			#endif	
 		}
 
-		#ifdef _DEBUG
-			_tprintf(_T("The named pipe, %s, is connected.\n"), strPipeName);
-		#endif	
-		return true;
+		return result;
 
 	}
 
@@ -166,6 +177,5 @@ public:
 	{
 		CloseHandle(hPipe);
 	}
-
 
 };

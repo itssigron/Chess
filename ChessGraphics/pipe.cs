@@ -17,13 +17,24 @@ namespace chessGraphics
 {
     public class pipe
     {
-        NamedPipeServerStream pipeServer;
+        NamedPipeServerStream pipeServer = null;
         StreamString ss;
+        int pipeNumber;
 
         public pipe()
         {
-            pipeServer =
-                new NamedPipeServerStream("chessPipe", PipeDirection.InOut, 1);
+            pipeNumber = 1;
+            while(pipeServer == null)
+            {
+                try
+                {
+                    pipeServer = new NamedPipeServerStream("chessPipe" + pipeNumber++, PipeDirection.InOut, 1);
+                }
+                catch (Exception)
+                {
+
+                }
+            }
             ss = new StreamString(pipeServer);
 
 
