@@ -170,9 +170,9 @@ public:
 	// ---------------------- METHODS ----------------------
 
 	/*
-	* Check if a player made a chess over the other player
+	* Check if a player made a "check" over the other player
 	* input: Player pointer
-	* output: whether a chess occured over the other player or not
+	* output: whether a "check" occured over the other player or not
 	*/
 	bool madeChess(Player* player);
 
@@ -194,10 +194,10 @@ public:
 	* Moves the source piece into the destination piece,
 	* if destination doesnt contain a piece in it, then
 	* source piece will be the piece at that location
-	* otherwise, free the destination piece and set source piece
+	* otherwise, capture the destination piece and set source piece
 	* as its piece at that location
 	* input: Source Piece, Destination Piece
-	* output: result move code (possible "chess")
+	* output: result move code (possible one of our end-game move codes)
 	*/
 	int movePiece(Piece& src, Piece& dest, Move& move);
 

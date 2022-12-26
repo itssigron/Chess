@@ -503,13 +503,13 @@ namespace chessGraphics
         // index is the message number in the protocol
         readonly string[] messages =  {
             "Valid move",
-            "Valid move - you made chess",
+            "Valid move - you made \"check\"",
             "Valid move - pawn promotion",
             "Valid move - en passant capture",
             "Valid move - king has castled",
             "Invalid move - not your player",
             "Invalid move - destination is not free",
-            "Invalid move - chess wil occure",
+            "Invalid move - \"check\" wil occure",
             "Invalid move - out of bounds",
             "Invalid move - illegeal movement with piece",
             "Invalid move - source and dest are equal",

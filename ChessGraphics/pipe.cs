@@ -79,11 +79,11 @@ namespace chessGraphics
         {
             // protocol:
             // 0  - valid move
-            // 1  - valid move (you made chess)
+            // 1  - valid move (you made check)
             // 2  - valid move, pawn should get promoted
             // 3  - invalid move (not your player)
             // 4  - invalid move (destination is not free)
-            // 5  - invalid move (chess will occur)
+            // 5  - invalid move (check will occur)
             // 6  - invalid move (out of bounds)
             // 7  - invalid move (illegal movement with piece)
             // 8  - invalid move - source and dest are equal

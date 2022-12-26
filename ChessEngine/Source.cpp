@@ -122,10 +122,10 @@ int main()
 			// perform the actual "move"
 			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT || result == VALID_CASTLE)
 			{
-				// update source piece location + update result incase of "chess"/"self chess"
+				// update source piece location + update result incase of "check"/"self-check"
 				newResult = board.movePiece(*srcPiece, *destPiece, *move);
 
-				if (newResult == VALID_MOVE || newResult == VALID_CHESS)
+				if (newResult == VALID_MOVE || newResult == VALID_CHECK)
 				{
 					if (result == VALID_EN_PASSANT)
 					{

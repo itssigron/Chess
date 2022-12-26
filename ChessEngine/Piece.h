@@ -18,7 +18,7 @@
 
 // valid moves
 #define VALID_MOVE 0 // valid move
-#define VALID_CHESS 1 // valid move, current player made a chess
+#define VALID_CHECK 1 // valid move, current player made a check
 #define VALID_PAWN_PROMOTION 2 // valid move, current pawn should get promoted
 #define VALID_EN_PASSANT 3 // valid move, en passant capture 
 #define VALID_CASTLE 4 // valid castle move
@@ -26,7 +26,7 @@
 // invalid moves
 #define INVALID_SRC_MISSING_PIECE 5 // current player is *not* in src piece
 #define INVALID_DEST_PLAYER 6 // current player is *in* dest piece (cant kill his own piece)
-#define INVALID_SELF_CHESS 7 // move will cause enemy to chess current player
+#define INVALID_SELF_CHECK 7 // move will cause enemy to chess current player
 #define INVALID_INDEX 8 // index is out of valid range
 #define INVALID_PIECE_MOVE 9 // the rules of the current piece doesnt allow such move
 #define INVALID_SAME_LOCATION 10 // src piece and dest piece are on the same location

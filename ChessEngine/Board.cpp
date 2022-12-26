@@ -69,7 +69,7 @@ string Board::getAllPossibleMoves(Piece& src)
 				src.setLocation(oldLocation);
 				dest->setCaptured(false);
 
-				// if its not a self-chess
+				// if its not a "self-check"
 				if (!enemyDidChess)
 				{
 					// push valid move's location
@@ -302,7 +302,7 @@ bool Board::madeChess(Player* player)
 	}
 
 	// loop through the board to check if any of the player's pieces
-	// can make a valid move against the enemy king, if yes, its a chess.
+	// can make a valid move against the enemy king, if yes, its a check.
 	for (i = 0; i < pieces.size() && !didChess; i++)
 	{
 		// we found one of our player's pieces, lets save it
@@ -317,7 +317,7 @@ bool Board::madeChess(Player* player)
 				moveCode = src->validateMove(*king);
 			}
 
-			// if all checks passed, its a chess!
+			// if all checks passed, its a "check"!
 			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT || moveCode == VALID_CASTLE)
 			{
 				didChess = true;
@@ -341,7 +341,7 @@ int Board::checkmateOrStalemate(Player* player)
 	std::vector<Piece*> pieces = player->getPieces();
 	std::vector<Piece*> enemyPieces = enemy->getPieces();
 
-	// First, check if the player has made a chess and update flags accordingly
+	// First, check if the player has made a "check" and update flags accordingly
 	if (madeChess(player))
 	{
 		didCheckmate = true;
@@ -359,7 +359,7 @@ int Board::checkmateOrStalemate(Player* player)
 		if (!src->isCaptured())
 		{
 
-			// save a copy of our board incase of a self-chess
+			// save a copy of our board incase of a "self-check"
 			string boardCopy = _board;
 			string location = src->getLocation();
 
@@ -377,10 +377,10 @@ int Board::checkmateOrStalemate(Player* player)
 		}
 	}
 
-	// If none of the player's moves allow them to escape the chess,
+	// If none of the player's moves allow them to escape the "check",
 	// then the player has made a checkmate and the function should
 	// return true
-	return didCheckmate ? VALID_CHECKMATE : isStalemate ? VALID_STALEMATE : isCheck ? VALID_CHESS : INVALID_CHECKMATE_STALEMATE;
+	return didCheckmate ? VALID_CHECKMATE : isStalemate ? VALID_STALEMATE : isCheck ? VALID_CHECK : INVALID_CHECKMATE_STALEMATE;
 }
 
 bool Board::isInsufficientMaterial()
@@ -427,7 +427,7 @@ bool Board::isInsufficientMaterial()
 
 int Board::movePiece(Piece& src, Piece& dest, Move& move)
 {
-	// save a copy of our board incase of a self-chess
+	// save a copy of our board incase of a "self-check"
 	string boardCopy = _board;
 	string oldLocation = src.getLocation();
 	// empty out source
@@ -445,13 +445,13 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 		move.setCaptured(&dest);
 	}
 
-	// check if either one of sides did chess
-	// and whether they made a self chess or not
+	// check if either one of sides did "check"
+	// and whether they made a self "check" or not
 	bool whiteDidChess = madeChess(_players[WHITE_PLAYER]);
 	bool blackDidChess = madeChess(_players[BLACK_PLAYER]);
 	bool whitePlayer = getCurrentPlayer().getType() == WHITE_PLAYER;
 
-	// if its a self-chess
+	// if its a "self-check"
 	if ((whiteDidChess && !whitePlayer) || (blackDidChess && whitePlayer))
 	{
 		// restore our board state and return an invalid move
@@ -459,7 +459,7 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 		src.setLocation(oldLocation);
 		dest.setCaptured(false);
 		move.setCaptured(nullptr);
-		return INVALID_SELF_CHESS;
+		return INVALID_SELF_CHECK;
 	}
 
 	// a move has occured, therefore clear the "redo" stack
@@ -488,7 +488,7 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 	shiftCurrentPlayer();
 	// switch turn from black to white and vice versa
 
-	return (whiteDidChess || blackDidChess) ? VALID_CHESS : VALID_MOVE;
+	return (whiteDidChess || blackDidChess) ? VALID_CHECK : VALID_MOVE;
 }
 
 int Board::promotePiece(Piece* promoted, char newType)
@@ -537,7 +537,7 @@ int Board::promotePiece(Piece* promoted, char newType)
 	// check if promotion caused check/checkmate/stalemate
 
 	int endgameStatus = checkmateOrStalemate(&getCurrentPlayer());
-	if (endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE || endgameStatus == VALID_CHESS)
+	if (endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE || endgameStatus == VALID_CHECK)
 	{
 		result = endgameStatus;
 	}
