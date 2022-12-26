@@ -19,7 +19,7 @@ namespace chessGraphics
     {
         NamedPipeServerStream pipeServer = null;
         StreamString ss;
-        int pipeNumber;
+        public int pipeNumber;
 
         public pipe()
         {

@@ -88,7 +88,7 @@ public:
 		{
 			result = true;
 		}
-		else if (GetLastError() != ERROR_PIPE_BUSY || !WaitNamedPipe((LPCSTR)strPipeName, 5000))
+		else if (GetLastError() != ERROR_PIPE_BUSY || !WaitNamedPipe((LPCSTR)strPipeName, 0))
 		{
 			_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"), strPipeName, GetLastError());
 			result = false;

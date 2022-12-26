@@ -33,24 +33,20 @@ int main()
 		//start the client
 		system("start ChessClient.exe");
 		::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
-		Sleep(1000); // wait for client to start
 	#endif // !_DEBUG
 
 
 	srand(time_t(NULL));
 	bool isConnect = p.connect();
 
-	// if connection failed, ask the user if he wants to re-connect or not,
-	// until theres either a successful reconnection or the user chose not to.
-	string ans;
+
+	// loop until an available pipe has been found
 	while (!isConnect)
 	{
 		cout << "cant connect to graphics... trying to re-connect..." << endl;
-		Sleep(1000);
+		Sleep(500);
 		isConnect = p.connect();
 	}
-	
-	ans.clear();
 
 	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
 	char msgToGraphics[1024] = "rnbqkbnrpppppppp################################PPPPPPPPRNBQKBNR0";

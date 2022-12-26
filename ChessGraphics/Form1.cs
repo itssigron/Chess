@@ -50,6 +50,7 @@ namespace chessGraphics
             Invoke((MethodInvoker)delegate
             {
 
+                Text = "Chess Graphics instance #" + (enginePipe.pipeNumber - 1).ToString();
                 lblWaiting.Visible = false;
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
