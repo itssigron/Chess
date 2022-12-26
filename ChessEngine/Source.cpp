@@ -10,10 +10,13 @@ in order to read and write information from and to the Backend
 #include "Board.h"
 #include "Queen.h"
 #include "Move.h"
+#include "Pawn.h"
+#include "globalVars.h"
 
 using std::cout;
 using std::endl;
 using std::string;
+bool moveRedone = false;
 
 int main()
 {
@@ -52,6 +55,7 @@ int main()
 	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
 	char msgToGraphics[1024] = "rnbqkbnrpppppppp################################PPPPPPPPRNBQKBNR0";
 	Board board = Board(string(msgToGraphics)); // initialize our Board class
+	string& boardStr = board.getBoard();
 	int result = 0;
 
 	p.sendMessageToGraphics(msgToGraphics); // send the board string
@@ -61,35 +65,83 @@ int main()
 
 	while (msgFromGraphics != "quit" && msgFromGraphics != "") // an empty string can be considered as a "quit"
 	{
-		if (msgFromGraphics == "history") // graphics wants to get history, give it over
+		if (msgFromGraphics == "history") // graphics wants to get history
 		{
-			strcpy_s(msgToGraphics, board.getMoveHistory().c_str());
+			p.sendMessageToGraphics(board.getMoveHistory());
 		}
 		else if (msgFromGraphics == "undo")
 		{
 			Move* move = board.undoMove();
-			char identifier = move == nullptr ? ' ' :
-				move->getCaptured() == nullptr ? EMPTY_PIECE : move->getCaptured()->getIdentifier();
-			char isEnPassant = move == nullptr ? ' ' : move->isEnPassant() + '0'; // '0' for false and '1' for true
-
-			// format is {dest}{src}{captured identifier if any} will undo move in graphics
-			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getDest() + move->getSrc() + identifier + isEnPassant).c_str());
-			if (move != nullptr && move->getCaptured() != nullptr)
+			if (move != nullptr)
 			{
-				move->setCaptured(nullptr); // un-capture
+				char identifier = move->getCaptured() == nullptr ? EMPTY_PIECE : move->getCaptured()->getIdentifier();
+				char isEnPassant = move->isEnPassant() + '0'; // '0' for false and '1' for true
+				char isCastling = move->isCastling() + '0';
+				char isPromoted = move->isPromoted() + '0';
+				Piece* srcPiece = move->getSrcPiece();
+
+				// format is {dest}{src}{captured identifier if any} will undo move in graphics
+				p.sendMessageToGraphics(move->getDest() + move->getSrc() + identifier + isEnPassant + isCastling + isPromoted);
+
+				if (move->isCastling())
+				{
+					string srcLocation = move->getSrc(), destLocation = move->getDest();
+					char srcCol = srcLocation[0], destCol = destLocation[0];
+					int colOffset = srcCol - destCol > 0 ? 1 : -1;
+					char rookCol = destCol + colOffset;
+					string rookLocation = string(1, rookCol) + destLocation[1];
+					string rookOriginalLocation = string(1, colOffset == 1 ? 'a' : 'h') + destLocation[1];
+					Piece* rook = board.getPiece(rookLocation);
+
+					// update rook to its original location before the castle
+					boardStr[Board::getIndex(rookOriginalLocation)] = rook->getIdentifier();
+					boardStr[Board::getIndex(rookLocation)] = EMPTY_PIECE;
+					rook->setLocation(rookOriginalLocation);
+
+					// set their movement state to false so they will be able to re-castle
+					rook->setMoved(false);
+					srcPiece->setMoved(false);
+					// apply rook location restore in graphics
+					p.sendMessageToGraphics(rookLocation + rookOriginalLocation);
+
+				}
+
+				if (move->isPromoted())
+				{
+					/*
+					Piece* newPawn = new Pawn(srcPiece->getOwner(), srcPiece->getLocation());
+					std::vector<Piece*>& pieces = srcPiece->getOwner()->getPieces();
+					pieces[find(pieces.begin(), pieces.end(), srcPiece) - pieces.begin()] = newPawn;									  // assign our new promoted piece to the pieces vector
+					delete srcPiece;										  // we dont need this piece anymore
+					_board[newPiece->getIndex()] = newPiece->getIdentifier(); // update the board*/
+					board.shiftCurrentPlayer();
+					board.promotePiece(srcPiece, PAWN); // demote back to pawn
+					board.shiftCurrentPlayer();
+				}
+
+				if (move->getCaptured() != nullptr)
+				{
+					move->setCaptured(nullptr); // un-capture
+				}
+			}
+			else
+			{
+				p.sendMessageToGraphics("");
 			}
 		}
 		else if (msgFromGraphics == "redo")
 		{
 			Move* move = board.redoMove();
 			char isEnPassant = move == nullptr ? ' ' : move->isEnPassant() + '0'; // '0' for false and '1' for true
-			strcpy_s(msgToGraphics, move == nullptr ? "" : (move->getSrc() + move->getDest() + isEnPassant).c_str());
+			p.sendMessageToGraphics(move == nullptr ? "" : (move->getSrc() + move->getDest() + isEnPassant));
+			if(move != nullptr) moveRedone = true;
 		}
 		// source piece selection, meaning we want to send all of its possible moves to graphics
 		else if (msgFromGraphics.length() == 2)
 		{
 			Piece* srcPiece = board.getPiece(msgFromGraphics);
-			strcpy_s(msgToGraphics, board.getAllPossibleMoves(*srcPiece).c_str());
+			p.sendMessageToGraphics(board.getAllPossibleMoves(*srcPiece));
+
 
 			// free piece's memory after use incase needed
 			if (srcPiece->getType() == EMPTY_PIECE)
@@ -97,17 +149,11 @@ int main()
 				delete srcPiece;
 			}
 		}
-		else if (msgFromGraphics.length() == 3) // result for pawn promotion (format = "{file}{rank}{type}")
-		{
-			result = board.promotePiece(board.getPiece(msgFromGraphics.substr(0, 2)), msgFromGraphics[2]);
-			// send the result code to graphics
-			// constants for the codes can be found in Piece.h
-			strcpy_s(msgToGraphics, std::to_string(result).c_str());
-		}
 		else
 		{
 			// access src and dest pieces using the information from the client
-			Move* move = new Move(msgFromGraphics.substr(0, 2), msgFromGraphics.substr(2, 2), &board);
+			string srcLocation = msgFromGraphics.substr(0, 2), destLocation = msgFromGraphics.substr(2, 2);
+			Move* move = moveRedone ? board.getMovesStack().top() : new Move(srcLocation, destLocation, &board);
 			Piece* srcPiece = move->getSrcPiece();
 			Piece* destPiece = move->getDestPiece();
 			bool isEmpty = destPiece->getType() == EMPTY_PIECE;
@@ -125,6 +171,14 @@ int main()
 				// update source piece location + update result incase of "check"/"self-check"
 				newResult = board.movePiece(*srcPiece, *destPiece, *move);
 
+				moveRedone = false; // restore state
+
+				if (newResult != INVALID_SELF_CHECK)
+				{
+					// apply move in graphics
+					p.sendMessageToGraphics(srcLocation + destLocation);
+				}
+
 				if (newResult == VALID_MOVE || newResult == VALID_CHECK)
 				{
 					if (result == VALID_EN_PASSANT)
@@ -138,19 +192,37 @@ int main()
 						move->setCaptured(capturedPiece);
 						move->setEnPassant(true);
 						board.getBoard()[Board::getIndex(capturedPieceLocation)] = EMPTY_PIECE;
+
+						// capture piece in graphics
+						p.sendMessageToGraphics(capturedPieceLocation);
 					}
 					else if (result == VALID_CASTLE)
 					{
 						char row = move->getDest()[1];
 						int srcCol = (move->getDest()[0] - 'a') == POSSIBLE_KINGSIDE_CASTLE_COL ? KINGSIDE_ROOK_COL : QUEENSIDE_ROOK_COL;
 						int destCol = srcCol == KINGSIDE_ROOK_COL ? AFTER_KINGSIDE_CASTLE_ROOK : AFTER_QUEENSIDE_CASTLE_ROOK;
-						string destLocation = string(1, (char)(destCol + 'a')) + row;
-						Piece* rook = board.getPiece(string(1, (char)(srcCol + 'a')) + row);
+						string rookSrcLocation = string(1, (char)(srcCol + 'a')) + row;
+						string rookDestLocation = string(1, (char)(destCol + 'a')) + row;
+						Piece* rook = board.getPiece(rookSrcLocation);
 						board.getBoard()[rook->getIndex()] = EMPTY_PIECE;
-						board.getBoard()[Board::getIndex(destLocation)] = rook->getIdentifier();
-						rook->setLocation(destLocation);
+						board.getBoard()[Board::getIndex(rookDestLocation)] = rook->getIdentifier();
+						rook->setLocation(rookDestLocation);
+						move->setCastling(true);
+
+						// apply rook's move in graphics
+						p.sendMessageToGraphics(rookSrcLocation + rookDestLocation);
+					}
+					else if (result == VALID_PAWN_PROMOTION)
+					{
+						// promote the piece to whatever the user chose in graphics
+						p.sendMessageToGraphics(std::to_string(result));
+
+						msgFromGraphics = p.getMessageFromGraphics();
+						result = board.promotePiece(board.getPiece(msgFromGraphics.substr(0, 2)), msgFromGraphics[2]);
+						move->setPromoted(true);
 					}
 				}
+
 				if (newResult != VALID_MOVE)
 				{
 					result = newResult;
@@ -169,21 +241,29 @@ int main()
 
 			// send the result code to graphics
 			// constants for the codes can be found in Piece.h
-			strcpy_s(msgToGraphics, std::to_string(result).c_str());
+			p.sendMessageToGraphics(std::to_string(result));
+
+			// game over, send end-game history to graphics
+			if (newResult == VALID_CHECKMATE || newResult == VALID_STALEMATE || newResult == VALID_INSUFFICIENT_MATERIAL)
+			{
+				msgFromGraphics = p.getMessageFromGraphics(); // get the quit message
+				p.sendMessageToGraphics(board.getMoveHistory());
+			}
+
+			// finish current move
+			p.sendMessageToGraphics("done");
 		}
 
-		// return result to graphics
-		p.sendMessageToGraphics(msgToGraphics);
-
 		// get message from graphics
-		msgFromGraphics = p.getMessageFromGraphics();
+		if(msgFromGraphics != "quit") msgFromGraphics = p.getMessageFromGraphics();
 	}
 
-
+	/*
 	// send history to graphics
 	string history = board.getMoveHistory();
 	strcpy_s(msgToGraphics, history.c_str());
-	p.sendMessageToGraphics(msgToGraphics);
+	p.sendMessageToGraphics(msgToGraphics);*/
+
 
 	// free program's used memory
 	p.close();

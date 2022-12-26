@@ -72,9 +72,10 @@ namespace chessGraphics
                     isCurPlWhite = (s[s.Length - 1] == '0');
                     PaintBoard(s);
                     //Tests tests = new Tests(this);
-                    //tests.CheckMate(400);
-                    //tests.Tie(400);
-                    //tests.Stalemate(400);
+                    //tests.CheckMateWithPromotions();
+                    //tests.CheckMate();
+                    //tests.Stalemate();
+                    //tests.Tie();
                 }
 
             });
@@ -330,7 +331,7 @@ namespace chessGraphics
 
         Image GetImageBySign(char sign)
         {
-            if(DesignVersion == 1)
+            if (DesignVersion == 1)
             {
                 return GetImageBySignV1(sign);
             }
@@ -342,7 +343,7 @@ namespace chessGraphics
 
         Color GetWhiteColor()
         {
-            return DesignVersion == 1 ? Color.White : YELLOW_SQUARE; 
+            return DesignVersion == 1 ? Color.White : YELLOW_SQUARE;
         }
 
         Color GetGrayColor()
@@ -463,10 +464,7 @@ namespace chessGraphics
                     dstSquare = (Square)b.Tag;
                     matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.DarkGreen;
 
-                    Thread t = new Thread(() => PlayMove(false));
-                    t.Start();
-                    //   t.IsBackground = true;
-                    //playMove();
+                    new Thread(PlayMove).Start();
                 }
             }
             else
@@ -531,7 +529,7 @@ namespace chessGraphics
             return messages[res];
         }
 
-        public void MakeMoves(string moves, int delay)
+        public void MakeMoves(string moves, int delay = 0)
         {
             string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
 
@@ -540,11 +538,11 @@ namespace chessGraphics
                 string src = movesArray[i].Substring(0, 2);
                 string dst = movesArray[i].Substring(2);
                 int copy = i; // we must save a copy, otherwise it could run a thread with a different iteration of i
-                new Thread(() => MakeMove(src, dst, (copy + 1) * delay)).Start();
+                MakeMove(src, dst, delay);
             }
         }
 
-        void MakeMove(string src, string dest, int sleepTime)
+        void MakeMove(string src, string dest, int sleepTime = 0)
         {
             Thread.Sleep(sleepTime);
             Debug.WriteLine(src + dest + " | " + sleepTime);
@@ -555,8 +553,30 @@ namespace chessGraphics
             PlayMove();
         }
 
+        void CapturePiece(Square square)
+        {
+            matBoard[square.Row, square.Col].BackgroundImage = null;
+        }
+
+        void PutPiece(Square square, char identifier)
+        {
+            matBoard[square.Row, square.Col].BackgroundImage = GetImageBySign(identifier);
+        }
+
+        void MovePiece(Square src, Square dest)
+        {
+            matBoard[dest.Row, dest.Col].BackgroundImage = matBoard[src.Row, src.Col].BackgroundImage;
+            matBoard[src.Row, src.Col].BackgroundImage = null;
+        }
+
+        void ChangeTurn()
+        {
+            isCurPlWhite = !isCurPlWhite;
+            lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
+        }
+
         // if standalone=true, graphics will perform the move only on the form and will not contact engine
-        void PlayMove(bool standalone = false, Image img = null, bool isEnPassant = false)
+        void PlayMove()
         {
             if (isGameOver)
                 return;
@@ -566,13 +586,11 @@ namespace chessGraphics
             {
                 Invoke((MethodInvoker)delegate
                 {
+                    string m = "";
 
                     lblEngineCalc.Visible = true;
-
                     lblMove.Text = string.Format("Move from {0} to {1}", srcSquare, dstSquare);
                     lblMove.Visible = true;
-                    //lblEngineCalc.Invalidate();
-
                     label2.Visible = false;
                     lblResult.Visible = false;
 
@@ -582,134 +600,109 @@ namespace chessGraphics
                     {
                         Thread.Sleep(200);
                     }
-                    // should send pipe to engine
-                    if (!standalone) enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
-                    string m = "Move restored";
 
-                    // should get pipe from engine
-                    if (!standalone) m = enginePipe.getEngineMessage();
-
-                    if (!enginePipe.isConnected())
+                    enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
+                    while (m != "done")
                     {
-                        MessageBox.Show("Connection to engine has lost. Bye bye.");
-                        this.Close();
-                        return;
-                    }
-
-                    string res = m;
-                    if (!standalone) res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text);
-
-                    if (res.ToLower().StartsWith("game over"))
-                    {
-                        isGameOver = true;
-                        matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
-                        matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = null;
-
-                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
-                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
-
-
-                        // quit engine, close pipe and remove the load moves/undo/redo buttons,
-                        // since its un-useable at that point + set the "log history" button to the same location
-                        // as the now-deleted "load moves" button
-
-                        LogHistory.Location = LoadMoves.Location;
-                        this.Controls.Remove(LoadMoves);
-                        this.Controls.Remove(UndoBtn);
-                        this.Controls.Remove(RedoBtn);
-                        enginePipe.sendEngineMove("quit");
-                        gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
-                        enginePipe.close();
-                    }
-                    else if (res.ToLower().StartsWith("valid") || res.ToLower().Contains("restored"))
-                    {
-                        if(res.ToLower().Contains("castle"))
+                        m = enginePipe.getEngineMessage();
+                        string res = ConvertEngineToText(m);
+                        bool isMoveCode = int.TryParse(m, out int numericValue);
+                        if (isMoveCode)
                         {
-                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
-                            int row = dstSquare.Row;
-                            int srcCol = dstSquare.Col == 6 ? 7 : 0;
-                            int dstCol = srcCol == 7 ? 5 : 3;
-                            matBoard[row, dstCol].BackgroundImage = matBoard[row, srcCol].BackgroundImage;
-                            matBoard[row, srcCol].BackgroundImage = null;
-                        }
-                        else if (res.ToLower().Contains("promotion"))
-                        {
-                            string[] promptions =
+                            if (res.ToLower().Contains("game over"))
                             {
-                            "queen",
-                            "rook",
-                            "bishop",
-                            "knight"
-                            };
+                                // quit engine, close pipe and remove the load moves/undo/redo buttons,
+                                // since its un-useable at that point + set the "log history" button to the same location
+                                // as the now-deleted "load moves" button
 
-                            char type = ' ';
-                            PawnPromotion prompt = new PawnPromotion();
-                            string result = prompt.GetResult();
+                                isGameOver = true;
 
-                            switch (result.ToLower())
+                                LogHistory.Location = LoadMoves.Location;
+                                this.Controls.Remove(LoadMoves);
+                                this.Controls.Remove(UndoBtn);
+                                this.Controls.Remove(RedoBtn);
+                                enginePipe.sendEngineMove("quit");
+                                gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
+                                enginePipe.close();
+                            }
+                            else if (res.ToLower().Contains("promotion"))
                             {
-                                case "queen":
-                                    type = isCurPlWhite ? 'Q' : 'q';
-                                    break;
-                                case "rook":
-                                    type = isCurPlWhite ? 'R' : 'r';
-                                    break;
-                                case "bishop":
-                                    type = isCurPlWhite ? 'B' : 'b';
-                                    break;
-                                case "knight":
-                                    type = isCurPlWhite ? 'N' : 'n';
-                                    break;
+                                string[] promptions =
+                                {
+                                    "queen",
+                                    "rook",
+                                    "bishop",
+                                    "knight"
+                                };
+
+                                char type = ' ';
+                                PawnPromotion prompt = new PawnPromotion();
+                                string result = prompt.GetResult();
+
+                                switch (result.ToLower())
+                                {
+                                    case "queen":
+                                        type = isCurPlWhite ? 'Q' : 'q';
+                                        break;
+                                    case "rook":
+                                        type = isCurPlWhite ? 'R' : 'r';
+                                        break;
+                                    case "bishop":
+                                        type = isCurPlWhite ? 'B' : 'b';
+                                        break;
+                                    case "knight":
+                                        type = isCurPlWhite ? 'N' : 'n';
+                                        break;
+                                }
+
+                                matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type);
+                                enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
+                                m = enginePipe.getEngineMessage(); // get the confirmation message from engine
+                                res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), result);
                             }
 
-                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type);
-                            enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
-                            m = enginePipe.getEngineMessage(); // get the confirmation message from engine
-                            res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), result);
-                        }
-                        else if (res.ToLower().Contains("en passant"))
-                        {
-                            int rowOffset = isCurPlWhite ? 1 : -1;
-                            matBoard[dstSquare.Row + rowOffset, dstSquare.Col].BackgroundImage = null;
-                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
-                        }
-                        else if (isEnPassant)
-                        {
-                            int rowOffset = isCurPlWhite ? -1 : 1;
-                            matBoard[srcSquare.Row + rowOffset, srcSquare.Col].BackgroundImage = img;
-                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
-                            matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = null;
+                            matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
+                            matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
+
+                            if (res.ToLower().StartsWith("valid") || res.ToLower().Contains("promoted"))
+                            {
+                                ChangeTurn();
+                            }
+
+                            lblEngineCalc.Visible = false;
+                            lblResult.Text = String.Format(res, lblCurrentPlayer.Text);
+                            lblResult.Visible = true;
+                            label2.Visible = true;
+                            this.Refresh();
                         }
                         else
                         {
-                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
+                            switch (m.Length)
+                            {
+                                case 4: // move piece from one location to the other
+                                    if (m != "done")
+                                    {
+                                        string src = m.Substring(0, 2);
+                                        string dest = m.Substring(2, 2);
+
+                                        MovePiece(new Square(src), new Square(dest));
+                                    }
+                                    break;
+                                case 3: // put a piece at a specific location
+                                    string location = m.Substring(0, 2);
+
+                                    PutPiece(new Square(location), m[2]);
+                                    break;
+                                case 2: // capture a piece at a specific location
+                                    CapturePiece(new Square(m));
+                                    break;
+                                default:
+                                    m = "done"; // simply create the exit signal from the loop for any invalid input
+                                    break;
+                            }
                         }
-
-                        // only possible case for this conditon is a "redo"
-                        if (standalone && !isEnPassant)
-                        {
-                            int rowOffset = isCurPlWhite ? 1 : -1;
-                            matBoard[dstSquare.Row + rowOffset, dstSquare.Col].BackgroundImage = null;
-                            matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage;
-                        }
-
-                        if (!isEnPassant) matBoard[srcSquare.Row, srcSquare.Col].BackgroundImage = img ?? null;
-
-                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
-                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
-
-                        isCurPlWhite = !isCurPlWhite;
-                        lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
                     }
-
-                    lblEngineCalc.Visible = false;
-                    lblResult.Text = string.Format("{0}", res);
-                    lblResult.Visible = true;
-                    label2.Visible = true;
-                    this.Refresh();
                 });
-
-
             }
             catch
             {
@@ -717,18 +710,14 @@ namespace chessGraphics
             }
             finally
             {
-                Invoke((MethodInvoker)delegate
-                {
-                    if (srcSquare != null)
-                        matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
+                if (srcSquare != null)
+                    matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
-                    if (dstSquare != null)
-                        matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
+                if (dstSquare != null)
+                    matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
-                    dstSquare = null;
-                    srcSquare = null;
-
-                });
+                dstSquare = null;
+                srcSquare = null;
             }
 
         }
@@ -742,29 +731,12 @@ namespace chessGraphics
             }
         }
 
-        private void CheckMateTest(int delay)
-        {
-            MakeMoves("h2h4g8h6h4h5h6g4h5h6g4f2e1f2b8c6b1c3c6e5c3e4e5g4e4g3g4e5g3h5e5c4h5f4c4e5f4d3e5g4d3e2d3e1g4h2f2b6h2g4b6a5g4f2"
-                , delay);
-        }
-
-        private void TieTest(int delay)
-        {
-            MakeMoves("e2e4e7e5e1e3e8e6e3a7e6a2a7a8a2a1a8b8a1b1b8c8d8e7c8b7b1b2b7c7b2c2d1e1c2c1e1e2c1d2e2f3d2e1c7d7e7f6d7e8e1f1e8f8f1g1f8g8g1h1g8h8h1h2h8h7h2g2f3e3g2f2e3d3f2f4h7g7f6e6g7f7e6d6f7h5f4e4d3c3e4h4h5e5d6c6e5h5h4e4h5h4e4a4h4a4c6c5a4b5c5b5"
-                , delay);
-        }
-
-        private void StalemateTest(int delay)
-        {
-            MakeMoves("e2e4a7a5e1e3a5a4e3a3b7b6a3a4b6b5a4b5a8a7b5b8a7a8b8a8c7c6a8c6c8b7c6b7d7d6b7e7d8c8e7d6e8d8d6d8c8b7d8f8b7c7f8g8h7h6g8h8g7g6h8h6c7c8h6g6f7f6g6f6c8b8f6d4b8a8d2d3a8b8c1f4f4b8a8b8b8a8f4e5a8b7d4d5b7c8h2h4"
-                , delay);
-        }
         private void LoadMoves_Click(object sender, EventArgs e)
         {
             LoadMoves prompt = new LoadMoves();
             LoadMovesResult result = prompt.GetResult();
-
-            if (result.cancel != true) MakeMoves(result.moves, result.delay);
+            
+            if (result.cancel != true) new Thread(() => MakeMoves(result.moves, result.delay)).Start();
         }
 
         private void LogHistory_Click(object sender, EventArgs e)
@@ -774,7 +746,7 @@ namespace chessGraphics
 
             GameHistory historyDiaglog = new GameHistory(gameHistory);
             historyDiaglog.ShowDialog();
-            if(!isGameOver) gameHistory = "";
+            if (!isGameOver) gameHistory = "";
         }
 
         private void ShowRestoreError()
@@ -798,6 +770,8 @@ namespace chessGraphics
 
                 if (e.KeyCode == Keys.Z) // undo
                 {
+                    lblResult.Visible = false;
+
                     enginePipe.sendEngineMove("undo");
                     string move = enginePipe.getEngineMessage();
                     if (move == "")
@@ -807,12 +781,38 @@ namespace chessGraphics
                     }
                     string src = move.Substring(0, 2), dest = move.Substring(2, 2);
                     char identifier = move[4];
-                    bool isEnPassant = move[move.Length - 1] == '1';
+                    bool isEnPassant = move[5] == '1';
+                    bool isCastling = move[6] == '1';
+                    bool isPromoted = move[7] == '1';
                     int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
-                    int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
-                    srcSquare = new Square(srcRow, srcCol);
-                    dstSquare = new Square(destRow, destCol);
-                    PlayMove(true, GetImageBySign(identifier), isEnPassant); // play move without contacting engine
+
+                    lblMove.Text = string.Format("Move from {0} to {1}", src, dest);
+                    lblMove.Visible = true;
+
+                    if (isPromoted)
+                    {
+                        PutPiece(new Square(src), isCurPlWhite ? 'p' : 'P');
+                    }
+
+                    MovePiece(new Square(src), new Square(dest));
+
+                    // restore captured piece
+                    int rowOffset = isEnPassant ? (isCurPlWhite ? -1 : 1) : 0;
+                    PutPiece(new Square(srcRow + rowOffset, srcCol), identifier);
+
+                    if(isCastling) // restore rook's move
+                    {
+                        move = enginePipe.getEngineMessage();
+                        src = move.Substring(0, 2);
+                        dest = move.Substring(2, 2);
+                        MovePiece(new Square(src), new Square(dest));
+                    }
+
+                    // change turn to the other player
+                    ChangeTurn();
+
+                    lblResult.Text = "Move undone";
+                    lblResult.Visible = true;
                 }
                 else if (e.KeyCode == Keys.Y) // redo
                 {
@@ -823,12 +823,10 @@ namespace chessGraphics
                         ShowRestoreError();
                         return;
                     }
-                    string src = move.Substring(0, 2), dest = move.Substring(2, 2);
-                    int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
-                    int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
-                    srcSquare = new Square(srcRow, srcCol);
-                    dstSquare = new Square(destRow, destCol);
-                    PlayMove(true);
+                    srcSquare = new Square(move.Substring(0, 2));
+                    dstSquare = new Square(move.Substring(2, 2));
+
+                    new Thread(PlayMove).Start();
                 }
             }
         }
@@ -874,7 +872,7 @@ namespace chessGraphics
                 isRowBlack = !isRowBlack;
             }
 
-            if(srcSquare != null)
+            if (srcSquare != null)
             {
                 i = srcSquare.Row;
                 j = srcSquare.Col;

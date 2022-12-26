@@ -15,6 +15,8 @@ private:
 	Board* _board;
 	Piece* _captured;
 	bool _isEnPassant;
+	bool _isCastling;
+	bool _isPromoted;
 public:
 	static int id;
 	Move(string source, string destination, Board* board);
@@ -26,7 +28,11 @@ public:
 
 	Piece* getCaptured();
 	bool isEnPassant();
+	bool isCastling();
+	bool isPromoted();
 	void setCaptured(Piece* piece);
 	void setEnPassant(bool enPassant);
+	void setCastling(bool castling);
+	void setPromoted(bool promoted);
 };
 

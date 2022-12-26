@@ -146,14 +146,15 @@ public:
 	void shiftCurrentPlayer();
 
 	/*
-	* Undo the last move
+	* Undoing the last move
 	* input: none
 	* output: the move which "undo" applied to
 	*/
 	Move* undoMove();
 
 	/*
-	* Undo the last move
+	* "Redo" the last move, its not actually redoing it, it simply returns the move which needs to be redone
+	* and then we simply apply the same "play" logic to that move
 	* input: none
 	* output: the move which "redo" applied to
 	*/

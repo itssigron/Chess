@@ -562,7 +562,7 @@
             // DesignVerBtn
             // 
             this.DesignVerBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DesignVerBtn.Location = new System.Drawing.Point(910, 157);
+            this.DesignVerBtn.Location = new System.Drawing.Point(910, 197);
             this.DesignVerBtn.Name = "DesignVerBtn";
             this.DesignVerBtn.Size = new System.Drawing.Size(162, 37);
             this.DesignVerBtn.TabIndex = 101;

@@ -242,29 +242,6 @@ Move* Board::redoMove()
 		return nullptr;
 	}
 	Move* lastMove = _movesRedo.top();
-	Piece* capturedPiece = lastMove->getCaptured();
-	Piece* srcPiece = lastMove->getSrcPiece(), * destPiece = lastMove->getDestPiece();
-	char identifier = srcPiece->getIdentifier();
-	if (_board[getIndex(lastMove->getDest())] != EMPTY_PIECE)
-	{
-		lastMove->setCaptured(destPiece);
-		getPiece(lastMove->getDest())->setCaptured(true);
-	}
-	else if (lastMove->isEnPassant())
-	{
-		int rowOffset = srcPiece->getOwner()->getType() == WHITE_PLAYER ? -1 : 1;
-		string capturedPieceLocation = destPiece->getLocation();
-		capturedPieceLocation[1] += rowOffset;
-		capturedPiece = getPiece(capturedPieceLocation);
-		capturedPiece->setCaptured(true);
-		lastMove->setCaptured(capturedPiece);
-		_board[getIndex(capturedPieceLocation)] = EMPTY_PIECE;
-	}
-	srcPiece->setLocation(lastMove->getDest()); // update piece location
-	_board[getIndex(lastMove->getDest())] = identifier;
-	_board[getIndex(lastMove->getSrc())] = EMPTY_PIECE;
-
-	shiftCurrentPlayer();
 
 	// remove move from "redo" history and transfer it into normal moves history
 	_movesRedo.pop();
@@ -462,16 +439,21 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 		return INVALID_SELF_CHECK;
 	}
 
-	// a move has occured, therefore clear the "redo" stack
-	while (!_movesRedo.empty())
+
+
+	if (_movesHistory.empty() || (!_movesHistory.empty() && &move != _movesHistory.top()))
 	{
-		_movesRedo.pop();
+		pushMove(&move); // push move to history only if its not a "redo" move
+
+		// a move has occured, therefore clear the "redo" stack
+		while (!_movesRedo.empty())
+		{
+			_movesRedo.pop();
+		}
 	}
 
 	// piece moved, therefore it should be true
 	src.setMoved(true);
-
-	pushMove(&move); // push move to history
 
 	// check if game is over by either checkmate, stalemate or insufficient material draw
 	int endgameStatus = isInsufficientMaterial() ? VALID_INSUFFICIENT_MATERIAL : VALID_MOVE;

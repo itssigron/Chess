@@ -50,23 +50,13 @@
             this.DelayInput.ImeMode = System.Windows.Forms.ImeMode.NoControl;
             this.DelayInput.Location = new System.Drawing.Point(15, 110);
             this.DelayInput.Maximum = new decimal(new int[] {
-            5000,
-            0,
-            0,
-            0});
-            this.DelayInput.Minimum = new decimal(new int[] {
-            100,
+            10000,
             0,
             0,
             0});
             this.DelayInput.Name = "DelayInput";
             this.DelayInput.Size = new System.Drawing.Size(120, 20);
             this.DelayInput.TabIndex = 2;
-            this.DelayInput.Value = new decimal(new int[] {
-            250,
-            0,
-            0,
-            0});
             // 
             // label1
             // 
@@ -84,9 +74,9 @@
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F);
             this.label2.Location = new System.Drawing.Point(12, 80);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(555, 18);
+            this.label2.Size = new System.Drawing.Size(385, 18);
             this.label2.TabIndex = 4;
-            this.label2.Text = "Please enter the delay in ms before executing each move (recommended min: 250).";
+            this.label2.Text = "Please enter the delay in ms before executing each move.";
             // 
             // confirm
             // 

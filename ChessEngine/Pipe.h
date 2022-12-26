@@ -93,6 +93,11 @@ public:
 
 	}
 
+	bool sendMessageToGraphics(std::string msg)
+	{
+		return sendMessageToGraphics((char*)msg.c_str());
+	}
+
 	bool sendMessageToGraphics(char* msg)
 	{
 		//char ea[] = "SSS";

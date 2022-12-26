@@ -1,5 +1,6 @@
 #include "Pawn.h"
 #include <math.h>
+#include "globalVars.h"
 
 Pawn::Pawn(Player* owner, string location) : Piece(owner, location, PAWN)
 {
@@ -11,18 +12,26 @@ int Pawn::validateMove(Piece& dest)
 	int srcRow = _location[1] - '0', destRow = dest.getLocation()[1] - '0';
 	char srcCol = _location[0], destCol = dest.getLocation()[0];
 	int whiteDiff = destRow - srcRow, blackDiff = srcRow - destRow;
-	bool whitePlayer = _owner->getType() == WHITE_PLAYER, blackPlayer = _owner->getType() == BLACK_PLAYER;
+	bool whitePlayer = _owner->getType() == WHITE_PLAYER;
 	bool emptyPiece = dest.getType() == EMPTY_PIECE;
 	int result = INVALID_PIECE_MOVE;
 	std::stack<Move*> movesHistory = _owner->getBoard().getMovesStack();
 	Move* lastMove = movesHistory.empty() ? nullptr : movesHistory.top();
+	Move* secondLastMove = nullptr;
 	bool possibleEnPassant = false;
 
-	if (lastMove != nullptr)
+	if (lastMove != nullptr && (moveRedone && movesHistory.size() >= 2 || !moveRedone))
 	{
+		if (moveRedone)
+		{
+			movesHistory.pop();
+			secondLastMove = movesHistory.top();
+			movesHistory.push(lastMove); // restore stack
+			lastMove = secondLastMove;
+		}
 		int lastSrcRow = lastMove->getSrc()[1] - '0', lastDestRow = lastMove->getDest()[1] - '0';
 		char lastSrcCol = lastMove->getSrc()[0], lastDestCol = lastMove->getDest()[0];
-		
+
 		// if the last move was a valid pawn initial 2 squares move 
 		// and the current move is from the same place (1 col diff) from the initial enemy pawn move ,then it could possibly be "en passant"
 		possibleEnPassant = (lastSrcCol == lastDestCol) && (srcRow == lastDestRow) && abs(srcCol - lastDestCol) == 1 &&
@@ -46,7 +55,7 @@ int Pawn::validateMove(Piece& dest)
 	// and this move the pawn moves diagonally to "en passant capture" this pawn
 	
 	if (abs(srcCol - destCol) == 1 && emptyPiece && possibleEnPassant && 
-		((whitePlayer && whiteDiff == 1) || (blackPlayer && blackDiff == 1)))
+		((whitePlayer && whiteDiff == 1) || (!whitePlayer && blackDiff == 1)))
 	{
 		int rowOffset = whitePlayer ? -1 : 1;
 		string capturedPieceLocation = string(1, destCol) + (char)(destRow + rowOffset + '0');
@@ -69,9 +78,27 @@ int Pawn::validateMove(Piece& dest)
 			{
 				result = VALID_MOVE;
 			}
-			else if (blackPlayer && (blackDiff == 1 || (srcCol == destCol && blackDiff == 2 && srcRow == BLACK_PAWNS_INDEX)))
+			else if (!whitePlayer && (blackDiff == 1 || (srcCol == destCol && blackDiff == 2 && srcRow == BLACK_PAWNS_INDEX)))
 			{
 				result = VALID_MOVE;
+			}
+
+			// if its the initial move of the pawn and he wants to move 2 squares forward,
+			// make sure there isnt a piece on the pawn's way
+			if (result == VALID_MOVE && (blackDiff == 2 || whiteDiff == 2))
+			{
+				int rowOffset = whitePlayer ? 1 : -1;
+				char middlePieceRow = (srcRow + rowOffset) + '0';
+				string middlePieceLocation = string(1, srcCol) + middlePieceRow;
+				Piece* middlePiece = _owner->getBoard().getPiece(middlePieceLocation);
+				if (middlePiece->getType() != EMPTY_PIECE)
+				{
+					result = INVALID_PIECE_MOVE;
+				}
+				else
+				{
+					delete middlePiece;
+				}
 			}
 		}
 	}

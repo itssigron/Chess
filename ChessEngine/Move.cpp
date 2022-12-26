@@ -9,6 +9,8 @@ Move::Move(string source, string destination, Board* board)
 	_captured = nullptr;
 	_board = board;
 	_isEnPassant = false;
+	_isCastling = false;
+	_isPromoted = false;
 }
 
 const string Move::getSrc() const
@@ -41,6 +43,16 @@ bool Move::isEnPassant()
 	return _isEnPassant;
 }
 
+bool Move::isCastling()
+{
+	return _isCastling;
+}
+
+bool Move::isPromoted()
+{
+	return _isPromoted;
+}
+
 void Move::setCaptured(Piece* piece)
 {
 	_captured = piece;
@@ -49,4 +61,14 @@ void Move::setCaptured(Piece* piece)
 void Move::setEnPassant(bool enPassant)
 {
 	_isEnPassant = true;
+}
+
+void Move::setCastling(bool castling)
+{
+	_isCastling = castling;
+}
+
+void Move::setPromoted(bool promoted)
+{
+	_isPromoted = promoted;
 }

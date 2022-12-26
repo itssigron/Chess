@@ -17,6 +17,12 @@ namespace chessGraphics
             _colIndex = col;
         }
 
+        public Square(string location)
+        {
+            _rowIndex = 8 - (location[1] - '0');
+            _colIndex = location[0] - 'a';
+        }
+
         public int Row
         {
             get { return _rowIndex; }
