@@ -78,7 +78,7 @@ int main()
 				char isEnPassant = move->isEnPassant() + '0'; // '0' for false and '1' for true
 				char isCastling = move->isCastling() + '0';
 				char isPromoted = move->isPromoted() + '0';
-				Piece* srcPiece = move->getSrcPiece();
+				Piece* srcPiece = move->getSrcPiece(true);
 
 				// format is {dest}{src}{captured identifier if any} will undo move in graphics
 				p.sendMessageToGraphics(move->getDest() + move->getSrc() + identifier + isEnPassant + isCastling + isPromoted);
@@ -89,8 +89,8 @@ int main()
 					char srcCol = srcLocation[0], destCol = destLocation[0];
 					int colOffset = srcCol - destCol > 0 ? 1 : -1;
 					char rookCol = destCol + colOffset;
-					string rookLocation = string(1, rookCol) + destLocation[1];
-					string rookOriginalLocation = string(1, colOffset == 1 ? 'a' : 'h') + destLocation[1];
+					string rookLocation = Board::getLocation(rookCol, destLocation[1]);
+					string rookOriginalLocation = Board::getLocation(colOffset == 1 ? 'a' : 'h', destLocation[1]);
 					Piece* rook = board.getPiece(rookLocation);
 
 					// update rook to its original location before the castle
@@ -101,28 +101,17 @@ int main()
 					// set their movement state to false so they will be able to re-castle
 					rook->setMoved(false);
 					srcPiece->setMoved(false);
-					// apply rook location restore in graphics
-					p.sendMessageToGraphics(rookLocation + rookOriginalLocation);
 
+					// restore rook's location in graphics
+					p.sendMessageToGraphics(rookLocation + rookOriginalLocation);
 				}
 
 				if (move->isPromoted())
 				{
-					/*
-					Piece* newPawn = new Pawn(srcPiece->getOwner(), srcPiece->getLocation());
-					std::vector<Piece*>& pieces = srcPiece->getOwner()->getPieces();
-					pieces[find(pieces.begin(), pieces.end(), srcPiece) - pieces.begin()] = newPawn;									  // assign our new promoted piece to the pieces vector
-					delete srcPiece;										  // we dont need this piece anymore
-					_board[newPiece->getIndex()] = newPiece->getIdentifier(); // update the board*/
-					board.shiftCurrentPlayer();
 					board.promotePiece(srcPiece, PAWN); // demote back to pawn
-					board.shiftCurrentPlayer();
 				}
 
-				if (move->getCaptured() != nullptr)
-				{
-					move->setCaptured(nullptr); // un-capture
-				}
+				move->setCaptured(nullptr); // un-capture if move resulted in capture
 			}
 			else
 			{
@@ -154,8 +143,8 @@ int main()
 			// access src and dest pieces using the information from the client
 			string srcLocation = msgFromGraphics.substr(0, 2), destLocation = msgFromGraphics.substr(2, 2);
 			Move* move = moveRedone ? board.getMovesStack().top() : new Move(srcLocation, destLocation, &board);
-			Piece* srcPiece = move->getSrcPiece();
-			Piece* destPiece = move->getDestPiece();
+			Piece* srcPiece = move->getSrcPiece(true);
+			Piece* destPiece = move->getDestPiece(true);
 			bool isEmpty = destPiece->getType() == EMPTY_PIECE;
 			bool whitePlayer = board.getCurrentPlayer().getType() == WHITE_PLAYER;
 			// make basic checks, if all basic checks passed, make
@@ -183,7 +172,7 @@ int main()
 				{
 					if (result == VALID_EN_PASSANT)
 					{
-						char destCol = destPiece->getLocation()[0];
+						char destCol = destPiece->getFile();
 						int rowOffset = whitePlayer ? -1 : 1;
 						string capturedPieceLocation = destPiece->getLocation();
 						capturedPieceLocation[1] += rowOffset;
@@ -201,8 +190,8 @@ int main()
 						char row = move->getDest()[1];
 						int srcCol = (move->getDest()[0] - 'a') == POSSIBLE_KINGSIDE_CASTLE_COL ? KINGSIDE_ROOK_COL : QUEENSIDE_ROOK_COL;
 						int destCol = srcCol == KINGSIDE_ROOK_COL ? AFTER_KINGSIDE_CASTLE_ROOK : AFTER_QUEENSIDE_CASTLE_ROOK;
-						string rookSrcLocation = string(1, (char)(srcCol + 'a')) + row;
-						string rookDestLocation = string(1, (char)(destCol + 'a')) + row;
+						string rookSrcLocation = Board::getLocation((char)(srcCol + 'a'), row);
+						string rookDestLocation = Board::getLocation((char)(destCol + 'a'), row);;
 						Piece* rook = board.getPiece(rookSrcLocation);
 						board.getBoard()[rook->getIndex()] = EMPTY_PIECE;
 						board.getBoard()[Board::getIndex(rookDestLocation)] = rook->getIdentifier();
@@ -257,13 +246,6 @@ int main()
 		// get message from graphics
 		if(msgFromGraphics != "quit") msgFromGraphics = p.getMessageFromGraphics();
 	}
-
-	/*
-	// send history to graphics
-	string history = board.getMoveHistory();
-	strcpy_s(msgToGraphics, history.c_str());
-	p.sendMessageToGraphics(msgToGraphics);*/
-
 
 	// free program's used memory
 	p.close();

@@ -14,7 +14,8 @@
 #define WHITE_PAWNS_INDEX 2 // line after special pieces
 #define BLACK_PAWNS_INDEX BOARD_SIZE - 1 // line before special pieces
 
-#define FINAL_RANK 8 // chess board final rank
+#define WHITE_FARTHEST_RANK 8
+#define BLACK_FARTHEST_RANK 1
 
 // valid moves
 #define VALID_MOVE 0 // valid move
@@ -58,6 +59,14 @@ protected:
 	bool _hasMoved; // if piece moved already or not (used to check mainly for castling)
 
 public:
+
+	/*
+	* A static function to get the identifier of a piece based on the player's side
+	* input: the player's side (WHITE_PLAYER for white and BLACK_PLAYER for black)
+	* output: the identifier char
+	*/
+	static const char getIdentifier(const char& type, const int side);
+
 	// Constructor
 
 	/*
@@ -158,6 +167,21 @@ public:
 	void setMoved(bool hasMoved);
 
 	// methods
+
+	/*
+	* Gets the file of this piece's location
+	* input: none
+	* output: the file in which this piece is in
+	*/
+	char getFile();
+
+	/*
+	* Gets the rank of this piece's location
+	* input: none
+	* output: the rank in which this piece is in
+	*/
+	int getRank();
+
 
 	/*
 	* A streaming operator, allows us to print the type of this piece,

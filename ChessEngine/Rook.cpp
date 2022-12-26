@@ -7,8 +7,8 @@ Rook::Rook(Player* owner, string location) : Piece(owner, location, ROOK)
 
 int Rook::validateMove(Piece& dest)
 {
-	int srcRow = _location[1] - '0', destRow = dest.getLocation()[1] - '0';
-	int srcCol = _location[0] - 'a', destCol = dest.getLocation()[0] - 'a';
+	int srcRow = getRank(), destRow = dest.getRank();
+	int srcCol = getFile() - 'a', destCol = dest.getFile() - 'a';
 
 	// Rooks can only move horizontally or vertically, so if the row or column doesn't change
 	// then the move is invalid
@@ -28,7 +28,7 @@ int Rook::validateMove(Piece& dest)
 	while ((row != destRow || col != destCol) && !foundPiece) {
 		// if theres a piece in the rook's path, update flag accordingly
 		foundPiece =
-			_owner->getBoard().getBoard()[Board::getIndex(string(1, col + 'a') + (char)(row + '0'))] != EMPTY_PIECE;
+			_owner->getBoard().getBoard()[Board::getIndex(Board::getLocation((char)(col + 'a'), row))] != EMPTY_PIECE;
 
 		// go on to the next square in the rook's path
 		row += rowOffset;

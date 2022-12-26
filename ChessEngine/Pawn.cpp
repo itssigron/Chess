@@ -9,8 +9,8 @@ Pawn::Pawn(Player* owner, string location) : Piece(owner, location, PAWN)
 
 int Pawn::validateMove(Piece& dest)
 {
-	int srcRow = _location[1] - '0', destRow = dest.getLocation()[1] - '0';
-	char srcCol = _location[0], destCol = dest.getLocation()[0];
+	int srcRow = getRank(), destRow = dest.getRank();
+	char srcCol = getFile(), destCol = dest.getFile();
 	int whiteDiff = destRow - srcRow, blackDiff = srcRow - destRow;
 	bool whitePlayer = _owner->getType() == WHITE_PLAYER;
 	bool emptyPiece = dest.getType() == EMPTY_PIECE;
@@ -58,8 +58,7 @@ int Pawn::validateMove(Piece& dest)
 		((whitePlayer && whiteDiff == 1) || (!whitePlayer && blackDiff == 1)))
 	{
 		int rowOffset = whitePlayer ? -1 : 1;
-		string capturedPieceLocation = string(1, destCol) + (char)(destRow + rowOffset + '0');
-		Piece* capturedPiece = _owner->getBoard().getPiece(capturedPieceLocation);
+		Piece* capturedPiece = _owner->getBoard().getPiece(Board::getLocation(destCol, destRow + rowOffset));
 		if (capturedPiece->getType() == EMPTY_PIECE)
 		{
 			delete capturedPiece; // empty piece - invalid move + delete its memory since its an empty piece
@@ -88,9 +87,7 @@ int Pawn::validateMove(Piece& dest)
 			if (result == VALID_MOVE && (blackDiff == 2 || whiteDiff == 2))
 			{
 				int rowOffset = whitePlayer ? 1 : -1;
-				char middlePieceRow = (srcRow + rowOffset) + '0';
-				string middlePieceLocation = string(1, srcCol) + middlePieceRow;
-				Piece* middlePiece = _owner->getBoard().getPiece(middlePieceLocation);
+				Piece* middlePiece = _owner->getBoard().getPiece(Board::getLocation(srcCol, srcRow + rowOffset));
 				if (middlePiece->getType() != EMPTY_PIECE)
 				{
 					result = INVALID_PIECE_MOVE;
@@ -105,7 +102,7 @@ int Pawn::validateMove(Piece& dest)
 
 	
 	// if a pawn reaches his farthest rank, he can promote his pawn
-	if (result == VALID_MOVE && (destRow == 8 && whitePlayer || destRow == 1 && !whitePlayer))
+	if (result == VALID_MOVE && ((destRow == WHITE_FARTHEST_RANK && whitePlayer ) || (destRow == BLACK_FARTHEST_RANK && !whitePlayer)))
 	{
 		result = VALID_PAWN_PROMOTION;
 	}

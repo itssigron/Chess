@@ -11,120 +11,23 @@
 
 string Board::getLocation(int index)
 {
-	// Calculate row and col by the index
-	int row = index / BOARD_SIZE;
-	int col = index % BOARD_SIZE;
-
-	// BOARD_SIZE - row because we start from top
-	return string(1, col + 'a') + (char)((BOARD_SIZE - row) + '0');
+	return getLocation(index / BOARD_SIZE, index % BOARD_SIZE);
 }
 
 string Board::getLocation(int row, int col)
 {
-	return getLocation(getIndex(row, col));
+	// BOARD_SIZE - row because we start from top
+	return string(1, col + 'a') + (char)((BOARD_SIZE - row) + '0');
 }
 
-string Board::getAllPossibleMoves(Piece& src)
+string Board::getLocation(const char file, const char rank)
 {
-	Piece* dest;
-	int i = 0, j = 0;
-	string locations = "";
-	string boardCopy = _board;
-	string oldLocation = src.getLocation();
-	Player* enemy = _players[WHITE_PLAYER] == src.getOwner() ? _players[BLACK_PLAYER] : _players[WHITE_PLAYER];
-
-	for (i = 0; i < BOARD_SIZE; i++)
-	{
-		for (j = 0; j < BOARD_SIZE; j++)
-		{
-			dest = getPiece(getLocation(i, j));
-
-			// make basic checks, if all basic checks passed, make
-			// further checks with the current piece
-			int result = src.basicValidateMove(getCurrentPlayer(), *dest);
-			if (result == VALID_MOVE)
-			{
-				result = src.validateMove(*dest);
-			}
-			if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT || result == VALID_CASTLE)
-			{
-				// empty out source
-				_board[src.getIndex()] = '#';
-
-				// move source to desired destination
-				_board[dest->getIndex()] = src.getIdentifier();
-
-				src.setLocation(dest->getLocation()); // update piece location
-
-				// if a capture was made, then perform the action on the player's pieces
-				if (dest->getType() != EMPTY_PIECE)
-				{
-					dest->setCaptured(true);
-				}
-
-				bool enemyDidChess = madeChess(enemy);
-
-				// restore our board state
-				_board = boardCopy;
-				src.setLocation(oldLocation);
-				dest->setCaptured(false);
-
-				// if its not a "self-check"
-				if (!enemyDidChess)
-				{
-					// push valid move's location
-					locations += dest->getLocation();
-				}
-			}
-
-			if (dest->getType() == EMPTY_PIECE)
-			{
-				delete dest; // free Piece's memory after use
-			}
-		}
-	}
-
-	return locations;
+	return string(1, file) + rank;
 }
 
-void Board::printAllValidLocations(Piece& src)
+string Board::getLocation(const char file, const int rank)
 {
-	Piece* dest;
-	int i = 0, j = 0;
-	string validMovesLocations = getAllPossibleMoves(src);
-
-	for (i = 0; i < BOARD_SIZE; i++)
-	{
-		for (j = 0; j < BOARD_SIZE; j++)
-		{
-			dest = getPiece(getLocation(i, j));
-
-			// if its the src, then print it in red
-			if (dest->getLocation() == src.getLocation())
-			{
-				std::cout << "\033[0;31m" << *dest << "\033[0m";
-			}
-			else
-			{
-				if (validMovesLocations.find(dest->getLocation()) != string::npos)
-				{
-					// all valid moves should be printed in green (or blue if its a capture move)
-					std::cout << (dest->getType() == EMPTY_PIECE ? "\033[0;32m" : "\033[0;34m") << *dest << "\033[0m";
-				}
-				else
-				{
-					std::cout << *dest;
-				}
-			}
-			if (dest->getType() == EMPTY_PIECE)
-			{
-				delete dest; // free Piece's memory after use
-			}
-			std::cout << "  ";
-		}
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
+	return getLocation(file, (char)(rank + '0'));
 }
 
 int Board::getIndex(const string& location)
@@ -157,6 +60,54 @@ Board::~Board()
 
 	// clear board's string
 	_board.clear();
+}
+
+string Board::getAllPossibleMoves(Piece& src, Player* player)
+{
+	int i = 0, j = 0;
+	Piece* dest;
+	Player* enemy = getEnemy(player == nullptr ? &getCurrentPlayer() : src.getOwner());
+	string locations = "";
+
+	if (src.getType() == EMPTY_PIECE) // empty piece may not move anywere..
+	{
+		return "";
+	}
+
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			dest = getPiece(i, j);
+
+			// if its a valid move and not a "self-check"
+			if (isValidMove(validateMove(player == nullptr ? getCurrentPlayer() : *player, src, *dest)) && !moveWillCauseCheck(src, *dest))
+			{
+				// push valid move's location
+				locations += dest->getLocation();
+			}
+
+			if (dest->getType() == EMPTY_PIECE)
+			{
+				delete dest; // free Piece's memory after use
+			}
+		}
+	}
+
+	return locations;
+}
+
+bool Board::moveWillCauseCheck(Piece& src, Piece& dest)
+{
+	Move move(&src, &dest, this);
+	Player* enemy = getEnemy(src.getOwner());
+
+	// if move caused chess - its an invalid move
+	move.make();
+	bool enemyDidChess = madeCheck(enemy);
+	move.undo();
+
+	return enemyDidChess;
 }
 
 string& Board::getBoard()
@@ -215,18 +166,7 @@ Move* Board::undoMove()
 	lastMove = _movesHistory.top();
 	capturedPiece = lastMove->getCaptured();
 
-	// update their location and restore board to its last state
-	lastMove->getDestPiece()->setLocation(lastMove->getSrc());
-	_board[getIndex(lastMove->getSrc())] = _board[getIndex(lastMove->getDest())];
-	_board[getIndex(lastMove->getDest())] = (capturedPiece == nullptr || lastMove->isEnPassant()) ? EMPTY_PIECE : capturedPiece->getIdentifier();
-	if (capturedPiece != nullptr)
-	{
-		capturedPiece->setCaptured(false); // un-capture this piece
-		if (lastMove->isEnPassant())
-		{
-			_board[capturedPiece->getIndex()] = capturedPiece->getIdentifier();
-		}
-	}
+	lastMove->undo(false);
 	shiftCurrentPlayer();
 
 	// remove move from history
@@ -255,73 +195,68 @@ Player& Board::getCurrentPlayer() const
 	return *_players[_currentPlayer];
 }
 
-bool Board::madeChess(Player* player)
+Player* Board::getEnemy(Player* player) const
+{
+	return _players[!player->getType()];
+}
+
+int Board::validateMove(Player& currentPlayer, Piece& src, Piece& dest) const
+{
+	int moveCode = src.basicValidateMove(currentPlayer, dest);
+	if (moveCode == VALID_MOVE)
+	{
+		moveCode = src.validateMove(dest);
+	}
+
+	return moveCode;
+}
+
+bool Board::isValidMove(const int& moveCode) const
+{
+	return moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT || moveCode == VALID_CASTLE;
+}
+
+bool Board::madeCheck(Player* player)
 {
 	int i = 0;
-	bool whitePlayer = player->getType() == WHITE_PLAYER;
-	Player* enemy = _players[whitePlayer ? BLACK_PLAYER : WHITE_PLAYER];
-	// enemy's king identifier
-	char kingIdentifier = whitePlayer ? KING : toupper(KING);
-	Piece* src = nullptr, * king = nullptr;
-	bool didChess = false;
-	int moveCode = 0;
-	char type = ' ';
-	std::vector<Piece*> pieces = player->getPieces();
-	std::vector<Piece*> enemyPieces = enemy->getPieces();
 
-	// loop through the board to get the enemey king's piece
-	for (i = 0; i < enemyPieces.size() && king == nullptr; i++)
-	{
-		if (enemyPieces[i]->getIdentifier() == kingIdentifier)
-		{
-			king = enemyPieces[i];
-		}
-	}
+	Piece* src = nullptr;
+	bool didCheck = false;
+	int moveCode = 0;
+	std::vector<Piece*> pieces = player->getPieces();
+
+	// get the enemy's king
+	Piece* king = getEnemy(player)->getPieces()[player->getType() == WHITE_PLAYER ? BLACK_KING_INDEX : WHITE_KING_INDEX];
 
 	// loop through the board to check if any of the player's pieces
 	// can make a valid move against the enemy king, if yes, its a check.
-	for (i = 0; i < pieces.size() && !didChess; i++)
+	for (i = 0; i < pieces.size() && !didCheck; i++)
 	{
 		// we found one of our player's pieces, lets save it
 		src = pieces[i];
 		if (!src->isCaptured())
 		{
-			type = src->getType();
-
-			moveCode = src->basicValidateMove(*player, *king);
-			if (moveCode == VALID_MOVE)
-			{
-				moveCode = src->validateMove(*king);
-			}
-
 			// if all checks passed, its a "check"!
-			if (moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT || moveCode == VALID_CASTLE)
-			{
-				didChess = true;
-			}
+			didCheck = isValidMove(validateMove(*player, *src, *king));
 		}
 	}
 
 	// return final result
-	return didChess;
+	return didCheck;
 }
 
 int Board::checkmateOrStalemate(Player* player)
 {
 	int i = 0, j = 0;
-	bool didCheckmate = false;
-	bool isStalemate = false;
-	bool isCheck = false;
-	bool whitePlayer = player->getType() == WHITE_PLAYER;
-	Player* enemy = _players[whitePlayer ? BLACK_PLAYER : WHITE_PLAYER];
-	Piece* src = nullptr, * dest = nullptr;
-	std::vector<Piece*> pieces = player->getPieces();
-	std::vector<Piece*> enemyPieces = enemy->getPieces();
+	bool isCheck = false, isCheckmate = false, isStalemate = false;
+	Player* enemy = getEnemy(player);
+	Piece *src = nullptr, *dest = nullptr;
+	std::vector<Piece*> &pieces = player->getPieces(), &enemyPieces = enemy->getPieces();
 
 	// First, check if the player has made a "check" and update flags accordingly
-	if (madeChess(player))
+	if (madeCheck(player))
 	{
-		didCheckmate = true;
+		isCheckmate = true;
 		isCheck = true;
 	}
 	else
@@ -330,25 +265,17 @@ int Board::checkmateOrStalemate(Player* player)
 	}
 
 	// loop through the board to get the enemey king's piece
-	for (i = 0; i < enemyPieces.size() && (didCheckmate || isStalemate); i++)
+	for (i = 0; i < enemyPieces.size() && (isCheckmate || isStalemate); i++)
 	{
 		src = enemyPieces[i];
 		if (!src->isCaptured())
 		{
-
-			// save a copy of our board incase of a "self-check"
-			string boardCopy = _board;
-			string location = src->getLocation();
-
-			// set and restore current player so moves for enemy will be valid
-			shiftCurrentPlayer();
-			string locations = getAllPossibleMoves(*src);
-			shiftCurrentPlayer();
+			string locations = getAllPossibleMoves(*src, enemy);
 
 			if (locations.length() > 0)
 			{
-				// if he has atleast one valid move, it cant be a stale mate or checkmate
-				didCheckmate = false;
+				// if he has atleast one valid move, it cant be neither a stale mate nor a checkmate
+				isCheckmate = false;
 				isStalemate = false;
 			}
 		}
@@ -357,7 +284,7 @@ int Board::checkmateOrStalemate(Player* player)
 	// If none of the player's moves allow them to escape the "check",
 	// then the player has made a checkmate and the function should
 	// return true
-	return didCheckmate ? VALID_CHECKMATE : isStalemate ? VALID_STALEMATE : isCheck ? VALID_CHECK : INVALID_CHECKMATE_STALEMATE;
+	return isCheckmate ? VALID_CHECKMATE : isStalemate ? VALID_STALEMATE : isCheck ? VALID_CHECK : INVALID_CHECKMATE_STALEMATE;
 }
 
 bool Board::isInsufficientMaterial()
@@ -395,7 +322,7 @@ bool Board::isInsufficientMaterial()
 		}
 	}
 
-	// todo - check for more possible insufficient material cases
+	// possible todo - check for more possible insufficient material cases
 
 	// check if only kings left on the board - its a tie
 	return whiteKingFound && blackKingFound && whitePiecesAmount == 1 && blackPiecesAmount == 1;
@@ -404,42 +331,21 @@ bool Board::isInsufficientMaterial()
 
 int Board::movePiece(Piece& src, Piece& dest, Move& move)
 {
-	// save a copy of our board incase of a "self-check"
-	string boardCopy = _board;
-	string oldLocation = src.getLocation();
-	// empty out source
-	_board[src.getIndex()] = EMPTY_PIECE;
-
-	// move source to desired destination
-	_board[dest.getIndex()] = src.getIdentifier();
-
-	src.setLocation(dest.getLocation()); // update piece location
-
-	// if a capture was made, then perform the action on the player's pieces
-	if (dest.getType() != EMPTY_PIECE)
-	{
-		dest.setCaptured(true);
-		move.setCaptured(&dest);
-	}
+	move.make();
 
 	// check if either one of sides did "check"
-	// and whether they made a self "check" or not
-	bool whiteDidChess = madeChess(_players[WHITE_PLAYER]);
-	bool blackDidChess = madeChess(_players[BLACK_PLAYER]);
-	bool whitePlayer = getCurrentPlayer().getType() == WHITE_PLAYER;
+	// and whether they made a "self-check" or not
+	bool whiteDidChess = madeCheck(_players[WHITE_PLAYER]);
+	bool blackDidChess = madeCheck(_players[BLACK_PLAYER]);
+	bool whitePlayer = src.getOwner()->getType() == WHITE_PLAYER;
 
 	// if its a "self-check"
 	if ((whiteDidChess && !whitePlayer) || (blackDidChess && whitePlayer))
 	{
 		// restore our board state and return an invalid move
-		_board = boardCopy;
-		src.setLocation(oldLocation);
-		dest.setCaptured(false);
-		move.setCaptured(nullptr);
+		move.undo();
 		return INVALID_SELF_CHECK;
 	}
-
-
 
 	if (_movesHistory.empty() || (!_movesHistory.empty() && &move != _movesHistory.top()))
 	{
@@ -459,7 +365,7 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 	int endgameStatus = isInsufficientMaterial() ? VALID_INSUFFICIENT_MATERIAL : VALID_MOVE;
 	if (endgameStatus == VALID_MOVE)
 	{
-		endgameStatus = checkmateOrStalemate(&getCurrentPlayer());
+		endgameStatus = checkmateOrStalemate(src.getOwner());
 	}
 
 	if (endgameStatus == VALID_INSUFFICIENT_MATERIAL || endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE)
@@ -475,10 +381,7 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 
 int Board::promotePiece(Piece* promoted, char newType)
 {
-	// since this function is called after the move has been complete, we should "switch" the turn to get the previous player
-	// which was promoted
-	shiftCurrentPlayer();
-	Player* player = &getCurrentPlayer();
+	Player* player = promoted->getOwner();
 	std::vector<Piece*>& pieces = player->getPieces();
 	string location = promoted->getLocation();
 	Piece* newPiece = nullptr;
@@ -518,7 +421,7 @@ int Board::promotePiece(Piece* promoted, char newType)
 
 	// check if promotion caused check/checkmate/stalemate
 
-	int endgameStatus = checkmateOrStalemate(&getCurrentPlayer());
+	int endgameStatus = checkmateOrStalemate(player);
 	if (endgameStatus == VALID_CHECKMATE || endgameStatus == VALID_STALEMATE || endgameStatus == VALID_CHECK)
 	{
 		result = endgameStatus;
@@ -527,9 +430,6 @@ int Board::promotePiece(Piece* promoted, char newType)
 	{
 		result = SUCCESSFUL_PROMOTION;
 	}
-
-	// reset current player's state
-	shiftCurrentPlayer();
 
 	return result;
 }
@@ -559,4 +459,14 @@ Piece* Board::getPiece(const string location) const
 	}
 
 	return piece;
+}
+
+Piece* Board::getPiece(const int index) const
+{
+	return getPiece(getLocation(index));
+}
+
+Piece* Board::getPiece(const int row, const int col) const
+{
+	return getPiece(getLocation(row, col));
 }

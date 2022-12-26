@@ -1,5 +1,10 @@
 #include "Piece.h"
 
+const char Piece::getIdentifier(const char& pieceType, const int side)
+{
+	return side == WHITE_PLAYER ? toupper(pieceType) : pieceType;
+}
+
 Piece::Piece(Player* owner, string location, char type)
 {
 	_owner = owner;
@@ -67,6 +72,16 @@ void Piece::setCaptured(bool isCaptured)
 void Piece::setMoved(bool hasMoved)
 {
 	_hasMoved = hasMoved;
+}
+
+char Piece::getFile()
+{
+	return _location[0];
+}
+
+int Piece::getRank()
+{
+	return _location[1] - '0';
 }
 
 int Piece::basicValidateMove(Player& currentPlayer, Piece& dest)

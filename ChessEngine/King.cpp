@@ -6,51 +6,6 @@ King::King(Player* owner, string location) : Piece(owner, location, KING)
 
 }
 
-bool King::kingMoveWillCauseCheck(Piece& dest)
-{
-	Board& board = _owner->getBoard();
-	string& boardStr = board.getBoard();
-	Player* enemy = _owner->getType() == WHITE_PLAYER ? board.getPlayers()[BLACK_PLAYER] : board.getPlayers()[WHITE_PLAYER];
-	string boardCopy;
-	boardCopy.assign(boardStr);
-
-	string oldLocation = getLocation();
-	bool isValid = false;
-
-	// make basic checks, if all basic checks passed, make
-// further checks with the current piece
-	int result = basicValidateMove(*_owner, dest);
-	if (result == VALID_MOVE)
-	{
-		result = validateMove(dest);
-	}
-	if (result == VALID_MOVE)
-	{
-		// empty out source
-		boardStr[getIndex()] = '#';
-
-		// move source to desired destination
-		boardStr[dest.getIndex()] = getIdentifier();
-
-		setLocation(dest.getLocation()); // update piece location
-		
-		board.shiftCurrentPlayer();
-		bool enemyDidChess = board.madeChess(enemy);
-		board.shiftCurrentPlayer();
-
-		if (enemyDidChess)
-		{
-			isValid = true;
-		}
-
-		// restore our board state
-		boardStr = boardCopy;
-		setLocation(oldLocation);
-	}
-
-	return isValid;
-}
-
 int King::validateMove(Piece& dest)
 {
 	Piece* rook = nullptr;
@@ -60,9 +15,9 @@ int King::validateMove(Piece& dest)
 	Board& board = _owner->getBoard();
 
 	// src row and col
-	int x1 = _location[0] - 'a', y1 = _location[1] - '0';
+	int x1 = getFile() - 'a', y1 = getRank();
 	// dest row and col
-	int x2 = dest.getLocation()[0] - 'a', y2 = dest.getLocation()[1] - '0';
+	int x2 = dest.getFile() - 'a', y2 = dest.getRank();
 	int isValid = INVALID_PIECE_MOVE;
 
 	// Calculate offset for row and col (whether we move left or right)
@@ -114,7 +69,7 @@ int King::validateMove(Piece& dest)
 			{
 				isValid = VALID_CASTLE;
 				
-				if (kingMoveWillCauseCheck(*firstSquare))
+				if (board.moveWillCauseCheck(*this, *firstSquare))
 				{
 					isValid = INVALID_PIECE_MOVE;
 				}

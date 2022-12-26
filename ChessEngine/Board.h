@@ -21,6 +21,9 @@
 #define AFTER_KINGSIDE_CASTLE_ROOK 5
 #define AFTER_QUEENSIDE_CASTLE_ROOK 3
 
+#define BLACK_KING_INDEX 4
+#define WHITE_KING_INDEX 12
+
 using std::string;
 
 // protect against circular reference
@@ -55,18 +58,18 @@ public:
 	static string getLocation(const int row, const int col);
 
 	/*
-	* gets a string with all the locations of all possible moves this src can make
-	input: the src piece
-	output: all possible locations, i.e: "e3e4e5"
+	* Gets the stringified location of a file and rank
+	* input: file and rank
+	* output: their stringified location
 	*/
-	string getAllPossibleMoves(Piece& src);
+	static string getLocation(const char file, const char rank);
 
 	/*
-	* Prints the board with src colored in red and all valid moves colored in green
-	* input: the src piece to check all locations against
-	* output: none
+	* Gets the stringified location of a file and numeric rank
+	* input: file and numeric rank
+	* output: their stringified location
 	*/
-	void printAllValidLocations(Piece& src);
+	static string getLocation(const char file, const int rank);
 
 	/*
 	* Gets the numeric index of a stringified location
@@ -81,6 +84,21 @@ public:
 	* output: their absolute
 	*/
 	static int getIndex(int row, int col);
+
+	/*
+	* gets a string with all the locations of all possible moves this src can make
+	* input: the src piece and a possible player overwrite for the current player
+	* output: all possible locations, i.e: "e3e4e5"
+	*/
+	string getAllPossibleMoves(Piece& src, Player* player = nullptr);
+
+	/*
+	* Checks if a specific move will cause self-check
+	* input: src piece, dest piece
+	* output: true if yes, false otherwise
+	*/
+	bool moveWillCauseCheck(Piece& src, Piece& dest);
+
 
 	// ---------------------- CONSTRUCTOR ----------------------
 
@@ -167,15 +185,36 @@ public:
 	*/
 	Player& getCurrentPlayer() const;
 
+	/*
+	* Gets the current enemy
+	* input: none
+	* output: a pointer to the current enemy player
+	*/
+	Player* getEnemy(Player* player) const;
+
 
 	// ---------------------- METHODS ----------------------
+
+	/*
+	* Validates the move and returns move code accordingly
+	* input: src and dest pieces
+	* output: the move code
+	*/
+	int validateMove(Player& currentPlayer, Piece& src, Piece& dest) const;
+
+	/*
+	* checks if a specific move code can be considered a non-endgame valid move
+	* input: the move code to check for
+	* output: true if a valid move which doesnt result in an endgame, false otherwise
+	*/
+	bool isValidMove(const int& moveCode) const;
 
 	/*
 	* Check if a player made a "check" over the other player
 	* input: Player pointer
 	* output: whether a "check" occured over the other player or not
 	*/
-	bool madeChess(Player* player);
+	bool madeCheck(Player* player);
 
 	/*
 	* Checks if the player made a check(mate) or a stalemate
@@ -210,10 +249,23 @@ public:
 	int promotePiece(Piece* promoted, char newType);
 
 	/*
-	* Gets a Piece object for a specific location on the board
+	* Gets a Piece object for a specific location (stringified) on the board
 	* input: the piece's stringified location
-	* output; that Piece object's
-	(dynamically allocated, user's responsibility to delete)
+	* output; that Piece's object ('EmptyPiece's are dynamically allocated, user's responsibility to delete)
 	*/
 	Piece* getPiece(string location) const;
+
+	/*
+	* Gets a Piece object for a specific location (numeric) on the board
+	* input: the piece's numeric location
+	* output; that Piece's object ('EmptyPiece's are dynamically allocated, user's responsibility to delete)
+	*/
+	Piece* getPiece(int index) const;
+
+	/*
+	* Gets a Piece object for a specific location (numeric - row and col) on the board
+	* input: the piece's numeric row and col
+	* output; that Piece's object ('EmptyPiece's are dynamically allocated, user's responsibility to delete)
+	*/
+	Piece* getPiece(int row, int col) const;
 };
