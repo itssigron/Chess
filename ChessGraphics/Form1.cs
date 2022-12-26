@@ -13,6 +13,8 @@ using System.Diagnostics;
 using ChessGraphics;
 using System.Drawing.Imaging;
 using System.IO;
+using static ChessGraphics.Properties.Resources;
+using ChessGraphics.Properties;
 
 namespace chessGraphics
 {
@@ -94,251 +96,35 @@ namespace chessGraphics
             connectionThread.IsBackground = true;
 
             //initForm();
-
-        }
-        private byte[] ToByteArray(Image image)
-        {
-            using (MemoryStream stream = new MemoryStream())
-            {
-                ((Bitmap)image).Save(stream, ImageFormat.Png);
-                return stream.ToArray();
-            }
         }
 
-        char GetSignByImageV1(Image image)
+        Image GetImageBySign(char sign, int version)
         {
-            if (image != null)
+            Image res = null;
+            var images = new Dictionary<char, Image[]>()
             {
-                // Convert the image to a byte array
-                byte[] imageData;
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    image.Save(stream, ImageFormat.Png);
-                    imageData = stream.ToArray();
-                }
+                { 'q', new Image[2]{ black_queen_v1, black_queen_v2 } },
+                { 'Q', new Image[2]{ white_queen_v1, white_queen_v2 } },
+                { 'k', new Image[2]{ black_king_v1, black_king_v2 } },
+                { 'K', new Image[2]{ white_king_v1, white_king_v2 } },
+                { 'p', new Image[2]{ black_pawn_v1, black_pawn_v2 } },
+                { 'P', new Image[2]{ white_pawn_v1, white_pawn_v2 } },
+                { 'r', new Image[2]{ black_rook_v1, black_rook_v2 } },
+                { 'R', new Image[2]{ white_rook_v1 , white_rook_v2 } },
+                { 'n', new Image[2]{ black_knight_v1, black_knight_v2 } },
+                { 'N', new Image[2]{ white_knight_v1, white_knight_v2 } },
+                { 'b', new Image[2]{ black_bishop_v1, black_bishop_v2 } },
+                { 'B', new Image[2]{ white_bishop_v1, white_bishop_v2 } }
+            };
 
-                if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.q_black)))
-                {
-                    return 'q';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.q_white)))
-                {
-                    return 'Q';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.k_black)))
-                {
-                    return 'k';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.k_white)))
-                {
-                    return 'K';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.p_black)))
-                {
-                    return 'p';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.p_white)))
-                {
-                    return 'P';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.r_black)))
-                {
-                    return 'r';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.r_white)))
-                {
-                    return 'R';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.n_black)))
-                {
-                    return 'n';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.n_white)))
-                {
-                    return 'N';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.b_black)))
-                {
-                    return 'b';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.b_white)))
-                {
-                    return 'B';
-                }
-                else
-                {
-                    return 'x';
-                }
-            }
-            else
-            {
-                return '#';
-            }
-        }
 
-        char GetSignByImageV2(Image image)
-        {
-            if (image != null)
+            if (images.ContainsKey(sign))
             {
-                // Convert the image to a byte array
-                byte[] imageData;
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    image.Save(stream, ImageFormat.Png);
-                    imageData = stream.ToArray();
-                }
+                res = images[sign][version - 1];
+                res.Tag = sign;
+            }
 
-                if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_queen)))
-                {
-                    return 'q';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_queen)))
-                {
-                    return 'Q';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_king)))
-                {
-                    return 'k';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_king)))
-                {
-                    return 'K';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_pawn)))
-                {
-                    return 'p';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_pawn)))
-                {
-                    return 'P';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_rook)))
-                {
-                    return 'r';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_rook)))
-                {
-                    return 'R';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_knight)))
-                {
-                    return 'n';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_knight)))
-                {
-                    return 'N';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.black_bishop)))
-                {
-                    return 'b';
-                }
-                else if (Enumerable.SequenceEqual(imageData, ToByteArray(ChessGraphics.Properties.Resources.white_bishop)))
-                {
-                    return 'B';
-                }
-                else
-                {
-                    return 'x';
-                }
-            }
-            else
-            {
-                return '#';
-            }
-        }
-
-        char GetSignByImage(Image image)
-        {
-            if (DesignVersion == 2)
-            {
-                return GetSignByImageV1(image);
-            }
-            else
-            {
-                return GetSignByImageV2(image);
-            }
-        }
-        Image GetImageBySignV1(char sign)
-        {
-            switch (sign)
-            {
-                case 'q':
-                    return ChessGraphics.Properties.Resources.q_black;
-                case 'Q':
-                    return ChessGraphics.Properties.Resources.q_white;
-                case 'k':
-                    return ChessGraphics.Properties.Resources.k_black;
-                case 'K':
-                    return ChessGraphics.Properties.Resources.k_white;
-                case 'p':
-                    return ChessGraphics.Properties.Resources.p_black;
-                case 'P':
-                    return ChessGraphics.Properties.Resources.p_white;
-                case 'r':
-                    return ChessGraphics.Properties.Resources.r_black;
-                case 'R':
-                    return ChessGraphics.Properties.Resources.r_white;
-                case 'n':
-                    return ChessGraphics.Properties.Resources.n_black;
-                case 'N':
-                    return ChessGraphics.Properties.Resources.n_white;
-                case 'b':
-                    return ChessGraphics.Properties.Resources.b_black;
-                case 'B':
-                    return ChessGraphics.Properties.Resources.b_white;
-                case '#':
-                    return null;
-                default:
-                    return ChessGraphics.Properties.Resources.x;
-            }
-        }
-
-        Image GetImageBySignV2(char sign)
-        {
-            switch (sign)
-            {
-                case 'q':
-                    return ChessGraphics.Properties.Resources.black_queen;
-                case 'Q':
-                    return ChessGraphics.Properties.Resources.white_queen;
-                case 'k':
-                    return ChessGraphics.Properties.Resources.black_king;
-                case 'K':
-                    return ChessGraphics.Properties.Resources.white_king;
-                case 'p':
-                    return ChessGraphics.Properties.Resources.black_pawn;
-                case 'P':
-                    return ChessGraphics.Properties.Resources.white_pawn;
-                case 'r':
-                    return ChessGraphics.Properties.Resources.black_rook;
-                case 'R':
-                    return ChessGraphics.Properties.Resources.white_rook;
-                case 'n':
-                    return ChessGraphics.Properties.Resources.black_knight;
-                case 'N':
-                    return ChessGraphics.Properties.Resources.white_knight;
-                case 'b':
-                    return ChessGraphics.Properties.Resources.black_bishop;
-                case 'B':
-                    return ChessGraphics.Properties.Resources.white_bishop;
-                case '#':
-                    return null;
-                default:
-                    return ChessGraphics.Properties.Resources.x;
-
-            }
-        }
-
-        Image GetImageBySign(char sign)
-        {
-            if (DesignVersion == 1)
-            {
-                return GetImageBySignV1(sign);
-            }
-            else
-            {
-                return GetImageBySignV2(sign);
-            }
+            return res;
         }
 
         Color GetWhiteColor()
@@ -399,7 +185,7 @@ namespace chessGraphics
                     newBtn.Location = pnt;
                     newBtn.BackgroundImageLayout = ImageLayout.Stretch;
 
-                    newBtn.BackgroundImage = GetImageBySign(board[z]);
+                    newBtn.BackgroundImage = GetImageBySign(board[z], DesignVersion);
 
                     newBtn.Click += Lastlbl_Click;
 
@@ -560,7 +346,7 @@ namespace chessGraphics
 
         void PutPiece(Square square, char identifier)
         {
-            matBoard[square.Row, square.Col].BackgroundImage = GetImageBySign(identifier);
+            matBoard[square.Row, square.Col].BackgroundImage = GetImageBySign(identifier, DesignVersion);
         }
 
         void MovePiece(Square src, Square dest)
@@ -655,7 +441,7 @@ namespace chessGraphics
                                         break;
                                 }
 
-                                matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type);
+                                matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type, DesignVersion);
                                 enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
                                 m = enginePipe.getEngineMessage(); // get the confirmation message from engine
                                 res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), result);
@@ -735,7 +521,7 @@ namespace chessGraphics
         {
             LoadMoves prompt = new LoadMoves();
             LoadMovesResult result = prompt.GetResult();
-            
+
             if (result.cancel != true) new Thread(() => MakeMoves(result.moves, result.delay)).Start();
         }
 
@@ -800,7 +586,7 @@ namespace chessGraphics
                     int rowOffset = isEnPassant ? (isCurPlWhite ? -1 : 1) : 0;
                     PutPiece(new Square(srcRow + rowOffset, srcCol), identifier);
 
-                    if(isCastling) // restore rook's move
+                    if (isCastling) // restore rook's move
                     {
                         move = enginePipe.getEngineMessage();
                         src = move.Substring(0, 2);
@@ -865,7 +651,7 @@ namespace chessGraphics
                     btn.BackColor = isColBlack ? GetWhiteColor() : GetGrayColor();
                     btn.FlatAppearance.BorderColor = GetDefaultBorderColor();
 
-                    btn.BackgroundImage = GetImageBySign(GetSignByImage(btn.BackgroundImage));
+                    btn.BackgroundImage = GetImageBySign((char)(btn.BackgroundImage?.Tag ?? '#'), DesignVersion);
 
                     isColBlack = !isColBlack;
                 }
