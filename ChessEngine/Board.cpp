@@ -8,6 +8,7 @@
 #include "Bishop.h"
 #include "Knight.h"
 #include "Pawn.h"
+#include <fstream>
 
 string Board::getLocation(int index)
 {
@@ -40,8 +41,9 @@ int Board::getIndex(const int row, const int col)
 	return row * BOARD_SIZE + col;
 }
 
-Board::Board(const string& board)
+Board::Board(const string& board, const string& filePath)
 {
+
 	// last char is which player is starting
 	_currentPlayer = board[BOARD_SIZE * BOARD_SIZE] - '0';
 	_board = board;
@@ -226,7 +228,7 @@ bool Board::madeCheck(Player* player)
 	std::vector<Piece*> pieces = player->getPieces();
 
 	// get the enemy's king
-	Piece* king = getEnemy(player)->getPieces()[player->getType() == WHITE_PLAYER ? BLACK_KING_INDEX : WHITE_KING_INDEX];
+	Piece* king = getEnemy(player)->getKing();
 
 	// loop through the board to check if any of the player's pieces
 	// can make a valid move against the enemy king, if yes, its a check.
@@ -251,7 +253,7 @@ int Board::checkmateOrStalemate(Player* player)
 	bool isCheck = false, isCheckmate = false, isStalemate = false;
 	Player* enemy = getEnemy(player);
 	Piece *src = nullptr, *dest = nullptr;
-	std::vector<Piece*> &pieces = player->getPieces(), &enemyPieces = enemy->getPieces();
+	std::vector<Piece*>& pieces = player->getPieces(), & enemyPieces = enemy->getPieces();
 
 	// First, check if the player has made a "check" and update flags accordingly
 	if (madeCheck(player))

@@ -13,11 +13,11 @@ using System.Windows.Forms;
 
 namespace ChessGraphics
 {
-    public partial class LoadMoves : Form
+    public partial class LoadMovesPrompt : Form
     {
         readonly EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.ManualReset);
         public LoadMovesResult result = new LoadMovesResult(null, 0);
-        public LoadMoves()
+        public LoadMovesPrompt()
         {
             InitializeComponent();
             CenterToParent();
@@ -56,14 +56,14 @@ namespace ChessGraphics
                 confirm.PerformClick();
         }
 
-        private void LoadMoves_FormClosing(object sender, FormClosingEventArgs e)
+        void LoadMoves_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.WindowsShutDown) return;
             result.cancel = !(new StackTrace().GetFrames().Any(x => x.GetMethod().Name == "Close"));
             handle.Set();
         }
 
-        private bool IsValidMoves(string moves)
+        public static bool IsValidMoves(string moves)
         {
             bool isValid = true;
             string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty

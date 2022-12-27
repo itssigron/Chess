@@ -17,6 +17,7 @@ private:
 	Board* _board; // the board in which this player belongs to
 	
 public:
+	static int timesCalled;
 	/*
 	* Initiates our Player object
 	* input: The pointer to the board where this player belongs to, and the player's types
@@ -51,5 +52,12 @@ public:
 	* output: the board which this player belongs in
 	*/
 	Board& getBoard();
+
+	/*
+	* Gets the player's king piece
+	* input: none
+	* output: a pointer to the king's piece
+	*/
+	Piece* getKing();
 };
 

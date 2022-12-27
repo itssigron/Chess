@@ -107,7 +107,7 @@ public:
 	* input: the stringified board
 	* output: the Board object
 	*/
-	Board(const string& board);
+	Board(const string& board, const string& filePath);
 	
 	// ---------------------- DESTRUCTOR ----------------------
 
@@ -236,6 +236,7 @@ public:
 	* source piece will be the piece at that location
 	* otherwise, capture the destination piece and set source piece
 	* as its piece at that location
+	* functions also checks against "self-check" and endgame
 	* input: Source Piece, Destination Piece
 	* output: result move code (possible one of our end-game move codes)
 	*/

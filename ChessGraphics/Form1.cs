@@ -15,6 +15,9 @@ using System.Drawing.Imaging;
 using System.IO;
 using static ChessGraphics.Properties.Resources;
 using ChessGraphics.Properties;
+using System.Reflection;
+using System.Reflection.Emit;
+using Label = System.Windows.Forms.Label;
 
 namespace chessGraphics
 {
@@ -31,9 +34,50 @@ namespace chessGraphics
         int DesignVersion = 1;
 
         const int BOARD_SIZE = 8;
-        Color YELLOW_SQUARE = Color.FromArgb(238, 238, 210);
+        Color YELLOW_SQUARE = Color.FromArgb(255, 206, 158);
+        //Color YELLOW_SQUARE_V2 = Color.FromArgb(238, 238, 210);
+        Color ORANGE_SQUARE = Color.FromArgb(209, 139, 71);
         Color GREEN_SQUARE = Color.FromArgb(118, 150, 86);
         string gameHistory = "";
+
+        /// <summary>
+        /// An application sends the WM_SETREDRAW message to a window to allow changes in that 
+        /// window to be redrawn or to prevent changes in that window from being redrawn.
+        /// </summary>
+        private const int WM_SETREDRAW = 11;
+        private bool isPaused = false;
+
+        /// <summary>
+        /// Suspends painting for the target control. Do NOT forget to call EndControlUpdate!!!
+        /// </summary>
+        /// <param name="control">visual control</param>
+        public void BeginControlUpdate(Control control)
+        {
+            Message msgSuspendUpdate = Message.Create(control.Handle, WM_SETREDRAW, IntPtr.Zero,
+                  IntPtr.Zero);
+
+            NativeWindow window = NativeWindow.FromHandle(control.Handle);
+            window.DefWndProc(ref msgSuspendUpdate);
+            isPaused = true;
+        }
+
+        /// <summary>
+        /// Resumes painting for the target control. Intended to be called following a call to BeginControlUpdate()
+        /// </summary>
+        /// <param name="control">visual control</param>
+        public void EndControlUpdate(Control control)
+        {
+            // Create a C "true" boolean as an IntPtr
+            IntPtr wparam = new IntPtr(1);
+            Message msgResumeUpdate = Message.Create(control.Handle, WM_SETREDRAW, wparam,
+                  IntPtr.Zero);
+
+            NativeWindow window = NativeWindow.FromHandle(control.Handle);
+            window.DefWndProc(ref msgResumeUpdate);
+            control.Invalidate();
+            control.Refresh();
+            isPaused = false;
+        }
 
         public Form1()
         {
@@ -43,6 +87,16 @@ namespace chessGraphics
             lblWaiting.BringToFront();
         }
 
+        void ActionOnButtons(string prop, bool val)
+        {
+            Button[] buttons = new Button[7] { LoadMoves, UndoBtn, RedoBtn, DesignVerBtn, SaveGameBtn, LoadGameBtn, LogHistory };
+            foreach (Button button in buttons)
+            {
+                Type type = button.GetType();
+                PropertyInfo property = type.GetProperty(prop);
+                property.SetValue(button, val);
+            }
+        }
         private void InitForm()
         {
             enginePipe.connect();
@@ -54,17 +108,15 @@ namespace chessGraphics
                 lblWaiting.Visible = false;
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
-                LoadMoves.Visible = true;
-                LogHistory.Visible = true;
-                UndoBtn.Visible = true;
-                RedoBtn.Visible = true;
-                DesignVerBtn.Visible = true;
 
+                ActionOnButtons("Visible", true);
 
 
                 string s = enginePipe.getEngineMessage();
 
-                if (s.Length != (BOARD_SIZE * BOARD_SIZE + 1))
+                // extra 1 character for starting player,
+                // and another extra for whether the game should be started from 0 or was loaded from file
+                if (s.Length != (BOARD_SIZE * BOARD_SIZE + 2))
                 {
                     MessageBox.Show("The length of the board's string is not according the PROTOCOL");
                     this.Close();
@@ -72,8 +124,14 @@ namespace chessGraphics
                 }
                 else
                 {
-                    isCurPlWhite = (s[s.Length - 1] == '0');
-                    PaintBoard(s);
+                    isCurPlWhite = (s[BOARD_SIZE * BOARD_SIZE] == '0');
+                    PaintBoard(s.Substring(0, 65)); // send only the board squares and starting player
+
+                    if (s[BOARD_SIZE * BOARD_SIZE + 1] == '1') // game was loaded from a file
+                    {
+                        string moves = enginePipe.getEngineMessage();
+                        new Thread(() => MakeMoves(moves, 0, this)).Start();
+                    }
                     //Tests tests = new Tests(this);
                     //tests.CheckMateWithPromotions();
                     //tests.CheckMate();
@@ -128,19 +186,82 @@ namespace chessGraphics
             return res;
         }
 
+        public Color ChangeOpacity(Color color, double opacity)
+        {
+            // Clamp the opacity value between 0 and 1
+            opacity = Math.Max(0, Math.Min(opacity, 1));
+
+            // Convert the opacity value to a byte (0-255)
+            byte alpha = (byte)(opacity * 255);
+
+            // Return a new color with the same RGB values as the original color, and the new alpha value
+            return Color.FromArgb(alpha, color.R, color.G, color.B);
+        }
+
         Color GetWhiteColor()
         {
-            return DesignVersion == 1 ? Color.White : YELLOW_SQUARE;
+            return YELLOW_SQUARE;
         }
 
         Color GetGrayColor()
         {
-            return DesignVersion == 1 ? Color.Gray : GREEN_SQUARE;
+            return DesignVersion == 1 ? ORANGE_SQUARE : GREEN_SQUARE;
         }
 
         Color GetDefaultBorderColor()
         {
-            return DesignVersion == 1 ? Color.Blue : Color.Black;
+            return DesignVersion == 1 ? Color.Black : Color.Black;
+        }
+
+        Color GetDefaultValidMoveBorderColor()
+        {
+            return DesignVersion == 1 ? GREEN_SQUARE : ORANGE_SQUARE;
+        }
+
+        Color GetDefaultValidCaptureBorderColor()
+        {
+            return DesignVersion == 1 ? Color.Red : Color.Red;
+        }
+
+        Color GetSquareBackColor(int row, int col)
+        {
+            if ((row % 2 == 0 && col % 2 == 0) || (row % 2 == 1 && col % 2 == 1))
+            {
+                return GetWhiteColor();
+            }
+            else
+            {
+                return GetGrayColor();
+            }
+        }
+
+        Color GetSelectedBorderColor()
+        {
+            return Color.Red;
+        }
+
+        // Store the original color of the button
+        private Color originalColor;
+        private bool shouldRestore = false;
+
+        private void btnBoard_MouseEnter(object sender, EventArgs e)
+        {
+            // Store the original color of the button
+            Button btn = (Button)sender;
+            originalColor = btn.BackColor;
+            shouldRestore = false;
+
+            // Change the color of the button to half of its opacity
+            btn.BackColor = ChangeOpacity(originalColor, 0.5);
+        }
+
+        private void btnBoard_MouseLeave(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+
+            // Return the button to its original color
+            if(shouldRestore == true) originalColor = GetSquareBackColor(((Square)btn.Tag).Row, ((Square)btn.Tag).Col);
+            btn.BackColor = originalColor;
         }
 
         private void PaintBoard(string board)
@@ -174,7 +295,10 @@ namespace chessGraphics
                     newBtn = new Button();
                     matBoard[i, j] = newBtn;
 
-                    newBtn.FlatAppearance.MouseOverBackColor = btnBoard.FlatAppearance.MouseOverBackColor;
+                    //newBtn.FlatAppearance.MouseOverBackColor = btnBoard.FlatAppearance.MouseOverBackColor;
+                    newBtn.MouseEnter += btnBoard_MouseEnter;
+                    newBtn.MouseLeave += btnBoard_MouseLeave;
+
                     newBtn.BackColor = isColBlack ? GetWhiteColor() : GetGrayColor();
                     newBtn.FlatAppearance.BorderColor = GetDefaultBorderColor();
                     newBtn.FlatAppearance.BorderSize = btnBoard.FlatAppearance.BorderSize;
@@ -229,14 +353,7 @@ namespace chessGraphics
                     int col = location[0] - 'a';
 
                     // un-highlight (restore backColor and borderColor) each possible move's border
-                    if ((row % 2 == 0 && col % 2 == 0) || (row % 2 == 1 && col % 2 == 1))
-                    {
-                        matBoard[row, col].BackColor = GetWhiteColor();
-                    }
-                    else
-                    {
-                        matBoard[row, col].BackColor = GetGrayColor();
-                    }
+                    matBoard[row, col].BackColor = GetSquareBackColor(row, col);
                     matBoard[row, col].FlatAppearance.BorderColor = GetDefaultBorderColor();
                 }
                 // unselected
@@ -271,15 +388,15 @@ namespace chessGraphics
                     int col = location[0] - 'a';
 
                     // highlight each possible move, and if its a captureable piece, color its border in red
-                    matBoard[row, col].BackColor = Color.DarkOrange;
+                    matBoard[row, col].BackColor = GetDefaultValidMoveBorderColor();
                     if (matBoard[row, col].BackgroundImage != null)
                     {
-                        matBoard[row, col].BackColor = Color.Red;
-                        matBoard[row, col].FlatAppearance.BorderColor = Color.DarkOrange;
+                        matBoard[row, col].BackColor = GetDefaultValidCaptureBorderColor();
+                        matBoard[row, col].FlatAppearance.BorderColor = GetDefaultValidMoveBorderColor();
                     }
                 }
 
-                matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = Color.DarkGreen;
+                matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetSelectedBorderColor();
             }
 
         }
@@ -316,16 +433,42 @@ namespace chessGraphics
             return messages[res];
         }
 
-        public void MakeMoves(string moves, int delay = 0)
+        public void MakeMoves(string moves, int delay = 0, Control controlToPause = null)
         {
             string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
+            bool isValid = LoadMovesPrompt.IsValidMoves(moves);
 
-            for (int i = 0; i < movesArray.Length - 1; i++)
+            if (!isPaused && controlToPause != null)
             {
-                string src = movesArray[i].Substring(0, 2);
-                string dst = movesArray[i].Substring(2);
-                int copy = i; // we must save a copy, otherwise it could run a thread with a different iteration of i
-                MakeMove(src, dst, delay);
+
+                ActionOnButtons("Enabled", false);
+                loadingLbl.Visible = true;
+                if (!isValid)
+                {
+                    loadingLbl.Font = new Font(loadingLbl.Font.FontFamily, 30, loadingLbl.Font.Style);
+                    loadingLbl.Text = "File corrupted, starting initial game...";
+                }
+                Refresh();
+                Thread.Sleep(2000);
+                BeginControlUpdate(this);
+            }
+
+            if (isValid)
+            {
+                for (int i = 0; i < movesArray.Length - 1; i++)
+                {
+                    string src = movesArray[i].Substring(0, 2);
+                    string dst = movesArray[i].Substring(2);
+                    int copy = i; // we must save a copy, otherwise it could run a thread with a different iteration of i
+                    MakeMove(src, dst, delay);
+                }
+            }
+
+            if (isPaused && controlToPause != null)
+            {
+                loadingLbl.Visible = false;
+                ActionOnButtons("Enabled", true);
+                EndControlUpdate(this);
             }
         }
 
@@ -423,7 +566,7 @@ namespace chessGraphics
                                 };
 
                                 char type = ' ';
-                                PawnPromotion prompt = new PawnPromotion();
+                                PawnPromotionPrompt prompt = new PawnPromotionPrompt();
                                 string result = prompt.GetResult();
 
                                 switch (result.ToLower())
@@ -503,6 +646,7 @@ namespace chessGraphics
                 if (dstSquare != null)
                     matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
+                shouldRestore = true;
                 dstSquare = null;
                 srcSquare = null;
             }
@@ -520,17 +664,21 @@ namespace chessGraphics
 
         private void LoadMoves_Click(object sender, EventArgs e)
         {
-            LoadMoves prompt = new LoadMoves();
+            LoadMovesPrompt prompt = new LoadMovesPrompt();
             LoadMovesResult result = prompt.GetResult();
 
             if (result.cancel != true) new Thread(() => MakeMoves(result.moves, result.delay)).Start();
         }
 
-        private void LogHistory_Click(object sender, EventArgs e)
+        string getHistory()
         {
             enginePipe.sendEngineMove("history"); // ask engine to give game's history
             gameHistory = gameHistory != "" ? gameHistory : enginePipe.getEngineMessage();
-
+            return gameHistory;
+        }
+        private void LogHistory_Click(object sender, EventArgs e)
+        {
+            getHistory();
             GameHistory historyDiaglog = new GameHistory(gameHistory);
             historyDiaglog.ShowDialog();
             if (!isGameOver) gameHistory = "";
@@ -538,13 +686,8 @@ namespace chessGraphics
 
         private void ShowRestoreError()
         {
-            MovesRestoreError.Visible = true;
-
-            // hide success message after 4 seconds
-            Task.Delay(4000).ContinueWith(_ =>
-            {
-                Invoke(new MethodInvoker(() => { MovesRestoreError.Visible = false; }));
-            });
+            // show error message for 4 seconds
+            ShowLabel(MovesRestoreError, 4000);
         }
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
@@ -668,6 +811,61 @@ namespace chessGraphics
             }
 
             this.ResumeLayout();
+        }
+
+        void ShowLabel(Label lbl, int duration)
+        {
+            lbl.Visible = true;
+
+            // hide error message after 4 seconds
+            Task.Delay(duration).ContinueWith(_ =>
+            {
+                Invoke(new MethodInvoker(() => { lbl.Visible = false; }));
+            });
+        }
+        private void SaveGameBtn_Click(object sender, EventArgs e)
+        {
+            getHistory();
+            if (gameHistory == "")
+            {
+                // show error message for 4 seconds.
+                ShowLabel(GameSavedErrorLbl, 4000);
+                return;
+            }
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Chess Game|*.chess";
+            saveFileDialog.Title = "Save a Chess Game File";
+            saveFileDialog.ShowDialog();
+
+            // If the file name is not an empty string open it for saving.
+            if (saveFileDialog.FileName != "")
+            {
+                StreamWriter file = new StreamWriter(saveFileDialog.FileName);
+                file.Write(gameHistory);
+                file.Close();
+
+                // show success message for 4 seconds.
+                ShowLabel(GameSavedSuccessLbl, 4000);
+            }
+
+            if (!isGameOver)
+                gameHistory = "";
+        }
+
+        private void LoadGameBtn_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Chess Game|*.chess";
+            openFileDialog.Title = "Open a Chess Game File";
+            openFileDialog.ShowDialog();
+
+            // If the file name is not an empty string, re-open the game with this file as argument
+            if (openFileDialog.FileName != "")
+            {
+                string serverExecutablePath = Path.Combine(Application.StartupPath, "Chess.exe");
+                Process.Start(serverExecutablePath, "\"" + openFileDialog.FileName + "\"");
+                Application.Exit();
+            }
         }
     }
 }

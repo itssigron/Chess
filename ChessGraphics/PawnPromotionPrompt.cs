@@ -12,11 +12,11 @@ using System.Windows.Forms;
 
 namespace ChessGraphics
 {
-    public partial class PawnPromotion : Form
+    public partial class PawnPromotionPrompt : Form
     {
         public string result;
         readonly EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.ManualReset);
-        public PawnPromotion()
+        public PawnPromotionPrompt()
         {
             InitializeComponent();
             CenterToParent();

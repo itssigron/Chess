@@ -75,6 +75,11 @@
             this.UndoBtn = new System.Windows.Forms.Button();
             this.RedoBtn = new System.Windows.Forms.Button();
             this.DesignVerBtn = new System.Windows.Forms.Button();
+            this.loadingLbl = new System.Windows.Forms.Label();
+            this.SaveGameBtn = new System.Windows.Forms.Button();
+            this.GameSavedSuccessLbl = new System.Windows.Forms.Label();
+            this.LoadGameBtn = new System.Windows.Forms.Button();
+            this.GameSavedErrorLbl = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnBoard
@@ -83,7 +88,6 @@
             this.btnBoard.BackColor = System.Drawing.Color.Black;
             this.btnBoard.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnBoard.BackgroundImage")));
             this.btnBoard.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.btnBoard.FlatAppearance.BorderSize = 3;
             this.btnBoard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBoard.Location = new System.Drawing.Point(49, 47);
             this.btnBoard.Name = "btnBoard";
@@ -156,6 +160,7 @@
             // lblWaiting
             // 
             this.lblWaiting.AutoSize = true;
+            this.lblWaiting.BackColor = System.Drawing.Color.Transparent;
             this.lblWaiting.Font = new System.Drawing.Font("Arial Narrow", 36F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblWaiting.ForeColor = System.Drawing.Color.Red;
             this.lblWaiting.Location = new System.Drawing.Point(221, 218);
@@ -328,8 +333,10 @@
             // 
             // label18
             // 
-            this.label18.AutoSize = true;
+            this.label18.BackColor = System.Drawing.Color.Transparent;
+            this.label18.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.label18.Font = new System.Drawing.Font("Arial Narrow", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label18.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.label18.Location = new System.Drawing.Point(70, 9);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(22, 25);
@@ -500,7 +507,7 @@
             // 
             this.LoadMoves.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.LoadMoves.Location = new System.Drawing.Point(990, 15);
-            this.LoadMoves.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.LoadMoves.Margin = new System.Windows.Forms.Padding(2);
             this.LoadMoves.Name = "LoadMoves";
             this.LoadMoves.Size = new System.Drawing.Size(85, 34);
             this.LoadMoves.TabIndex = 50;
@@ -537,7 +544,7 @@
             // 
             this.UndoBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.UndoBtn.Location = new System.Drawing.Point(879, 15);
-            this.UndoBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.UndoBtn.Margin = new System.Windows.Forms.Padding(2);
             this.UndoBtn.Name = "UndoBtn";
             this.UndoBtn.Size = new System.Drawing.Size(106, 34);
             this.UndoBtn.TabIndex = 54;
@@ -550,7 +557,7 @@
             // 
             this.RedoBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.RedoBtn.Location = new System.Drawing.Point(879, 52);
-            this.RedoBtn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.RedoBtn.Margin = new System.Windows.Forms.Padding(2);
             this.RedoBtn.Name = "RedoBtn";
             this.RedoBtn.Size = new System.Drawing.Size(106, 34);
             this.RedoBtn.TabIndex = 55;
@@ -571,11 +578,81 @@
             this.DesignVerBtn.Visible = false;
             this.DesignVerBtn.Click += new System.EventHandler(this.DesignVerBtn_Click);
             // 
+            // loadingLbl
+            // 
+            this.loadingLbl.AutoSize = true;
+            this.loadingLbl.BackColor = System.Drawing.Color.Transparent;
+            this.loadingLbl.Font = new System.Drawing.Font("Arial Narrow", 50F, System.Drawing.FontStyle.Bold);
+            this.loadingLbl.ForeColor = System.Drawing.Color.Red;
+            this.loadingLbl.Location = new System.Drawing.Point(76, 229);
+            this.loadingLbl.Name = "loadingLbl";
+            this.loadingLbl.Size = new System.Drawing.Size(463, 77);
+            this.loadingLbl.TabIndex = 102;
+            this.loadingLbl.Text = "Loading Game...";
+            this.loadingLbl.Visible = false;
+            // 
+            // SaveGameBtn
+            // 
+            this.SaveGameBtn.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.SaveGameBtn.Font = new System.Drawing.Font("Microsoft Tai Le", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.SaveGameBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.SaveGameBtn.Location = new System.Drawing.Point(910, 301);
+            this.SaveGameBtn.Name = "SaveGameBtn";
+            this.SaveGameBtn.Size = new System.Drawing.Size(162, 37);
+            this.SaveGameBtn.TabIndex = 103;
+            this.SaveGameBtn.Text = "Save Game";
+            this.SaveGameBtn.UseVisualStyleBackColor = false;
+            this.SaveGameBtn.Visible = false;
+            this.SaveGameBtn.Click += new System.EventHandler(this.SaveGameBtn_Click);
+            // 
+            // GameSavedSuccessLbl
+            // 
+            this.GameSavedSuccessLbl.Cursor = System.Windows.Forms.Cursors.Default;
+            this.GameSavedSuccessLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 13F);
+            this.GameSavedSuccessLbl.ForeColor = System.Drawing.Color.Green;
+            this.GameSavedSuccessLbl.Location = new System.Drawing.Point(873, 348);
+            this.GameSavedSuccessLbl.Name = "GameSavedSuccessLbl";
+            this.GameSavedSuccessLbl.Size = new System.Drawing.Size(199, 44);
+            this.GameSavedSuccessLbl.TabIndex = 104;
+            this.GameSavedSuccessLbl.Text = "Game was successfully saved!";
+            this.GameSavedSuccessLbl.Visible = false;
+            // 
+            // LoadGameBtn
+            // 
+            this.LoadGameBtn.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.LoadGameBtn.Font = new System.Drawing.Font("Microsoft Tai Le", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LoadGameBtn.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.LoadGameBtn.Location = new System.Drawing.Point(910, 248);
+            this.LoadGameBtn.Name = "LoadGameBtn";
+            this.LoadGameBtn.Size = new System.Drawing.Size(162, 37);
+            this.LoadGameBtn.TabIndex = 105;
+            this.LoadGameBtn.Text = "Load Game";
+            this.LoadGameBtn.UseVisualStyleBackColor = false;
+            this.LoadGameBtn.Visible = false;
+            this.LoadGameBtn.Click += new System.EventHandler(this.LoadGameBtn_Click);
+            // 
+            // GameSavedErrorLbl
+            // 
+            this.GameSavedErrorLbl.Cursor = System.Windows.Forms.Cursors.Default;
+            this.GameSavedErrorLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 13F);
+            this.GameSavedErrorLbl.ForeColor = System.Drawing.Color.Red;
+            this.GameSavedErrorLbl.Location = new System.Drawing.Point(845, 348);
+            this.GameSavedErrorLbl.Name = "GameSavedErrorLbl";
+            this.GameSavedErrorLbl.Size = new System.Drawing.Size(241, 44);
+            this.GameSavedErrorLbl.TabIndex = 106;
+            this.GameSavedErrorLbl.Text = "Error: Cannot save game. No moves have been made.";
+            this.GameSavedErrorLbl.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1084, 601);
+            this.Controls.Add(this.GameSavedErrorLbl);
+            this.Controls.Add(this.LoadGameBtn);
+            this.Controls.Add(this.GameSavedSuccessLbl);
+            this.Controls.Add(this.SaveGameBtn);
+            this.Controls.Add(this.loadingLbl);
             this.Controls.Add(this.DesignVerBtn);
             this.Controls.Add(this.RedoBtn);
             this.Controls.Add(this.UndoBtn);
@@ -622,6 +699,7 @@
             this.Controls.Add(this.lblResult);
             this.Controls.Add(this.lblMove);
             this.Controls.Add(this.btnBoard);
+            this.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.Name = "Form1";
@@ -682,6 +760,11 @@
         private System.Windows.Forms.Button UndoBtn;
         private System.Windows.Forms.Button RedoBtn;
         private System.Windows.Forms.Button DesignVerBtn;
+        private System.Windows.Forms.Label loadingLbl;
+        private System.Windows.Forms.Button SaveGameBtn;
+        private System.Windows.Forms.Label GameSavedSuccessLbl;
+        private System.Windows.Forms.Button LoadGameBtn;
+        private System.Windows.Forms.Label GameSavedErrorLbl;
     }
 }
 

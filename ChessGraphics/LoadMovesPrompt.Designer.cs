@@ -1,6 +1,6 @@
 ﻿namespace ChessGraphics
 {
-    partial class LoadMoves
+    partial class LoadMovesPrompt
     {
         /// <summary>
         /// Required designer variable.
