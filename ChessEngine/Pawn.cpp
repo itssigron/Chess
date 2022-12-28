@@ -65,7 +65,13 @@ int Pawn::validateMove(Piece& dest)
 		}
 		else
 		{
-			result = VALID_EN_PASSANT;
+			// make sure the captured piece is the same piece who moved two initial squares last move
+			// otherwise if 2 pieces will be one left and one right, both pieces will be considired en-passant-able
+			// and thats wrong..
+			if (capturedPiece == lastMove->getSrcPiece())
+			{
+				result = VALID_EN_PASSANT;
+			}
 		}
 	}
 	else if (srcCol == destCol || (!emptyPiece && abs(srcCol - destCol) == 1))

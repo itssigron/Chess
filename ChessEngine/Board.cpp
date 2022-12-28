@@ -360,8 +360,11 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 		}
 	}
 
-	// piece moved, therefore it should be true
-	src.setMoved(true);
+	// piece moved - check if its his first move, if yes set it
+	if (src.movedAt() == nullptr)
+	{
+		src.setMovedAt(&move);
+	}
 
 	// check if game is over by either checkmate, stalemate or insufficient material draw
 	int endgameStatus = isInsufficientMaterial() ? VALID_INSUFFICIENT_MATERIAL : VALID_MOVE;

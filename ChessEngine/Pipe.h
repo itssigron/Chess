@@ -31,6 +31,7 @@
 \***************************************************************************/
 
 #pragma once
+#pragma warning (disable : 6276 4477 6054)
 #pragma region Includes
 #include "stdafx.h"
 
@@ -55,6 +56,7 @@ public:
 
 	Pipe()
 	{
+		hPipe = nullptr;
 		// Prepare the pipe name
 		pipeNumber = 1;
 		lstrcpyW(strPipeName, (LPWSTR)TEXT("\\\\.\\pipe\\chessPipe"));
@@ -76,28 +78,21 @@ public:
 			NULL);					// No template file 
 
 
-		if (GetLastError() == ERROR_PIPE_BUSY)
+		if (GetLastError() == ERROR_PIPE_BUSY) // pipe is taken, connect to a different one
 		{
 			lstrcpyW(strPipeName, (LPWSTR)TEXT("\\\\.\\pipe\\chessPipe"));
 			lstrcatW(strPipeName, (LPWSTR)std::to_string(++pipeNumber).c_str());
 
 			result = false;
-		}
-		// Break if the pipe handle is valid. 
-		else if (hPipe != INVALID_HANDLE_VALUE)
+		} 
+		else if (hPipe != INVALID_HANDLE_VALUE) // pipe is valid and connected
 		{
 			result = true;
 		}
 		else if (GetLastError() != ERROR_PIPE_BUSY || !WaitNamedPipe((LPCSTR)strPipeName, 0))
 		{
-			_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"), strPipeName, GetLastError());
+			_tprintf(_T("Unable to open named pipe %ls w/err 0x%08lx\n"), strPipeName, GetLastError());
 			result = false;
-		}
-		else
-		{
-			#ifdef _DEBUG
-				_tprintf(_T("The named pipe, %s, is connected.\n"), strPipeName);
-			#endif	
 		}
 
 		return result;
@@ -134,8 +129,7 @@ public:
 		}
 
 		#ifdef _DEBUG
-			_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"),
-			cbBytesWritten, chRequest);
+			_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"), cbBytesWritten, chRequest);
 		#endif
 
 		return true;
@@ -165,8 +159,7 @@ public:
 		}
 
 		#ifdef _DEBUG
-			_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"),
-			cbBytesRead, chReply);
+			_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"), cbBytesRead, chReply);
 		#endif	
 		std::string s = chReply;
 		return s;

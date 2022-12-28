@@ -47,6 +47,7 @@ using std::string;
 // protect against circular reference
 class Board;
 class Player;
+class Move;
 
 class Piece
 {
@@ -56,7 +57,7 @@ protected:
 	char _type; // type of the piece
 	char _identifier; //capital letter for white and small for black
 	bool _captured; // whether piece is captured or not 
-	bool _hasMoved; // if piece moved already or not (used to check mainly for castling)
+	Move* _movedAt; // a pointer to the first Move object of this piece
 
 public:
 
@@ -123,11 +124,11 @@ public:
 	const bool& isCaptured() const;
 
 	/*
-	* Check if piece has moved atleast once in the game
+	* If piece ever moved, it will return a pointer to its first Move object, nullptr otherwise
 	* input: none
-	* output: true if it did moved, false otherwise
+	* output: nullptr or Move object pointer
 	*/
-	const bool& hasMoved() const;
+	const Move* movedAt() const;
 
 	/*
 	* Gets the identifier of this piece
@@ -160,11 +161,11 @@ public:
 	void setCaptured(bool isCaptured);
 
 	/*
-	* sets the "hasMoved" state accordingly
-	* input: whether it moved or not
+	* sets the "movedAt" state accordingly
+	* input: pointer to the piece's first move
 	* output: none
 	*/
-	void setMoved(bool hasMoved);
+	void setMovedAt(Move* move);
 
 	// methods
 

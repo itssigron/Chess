@@ -95,6 +95,12 @@ int main(int argc, char* argv[])
 				char isPromoted = move->isPromoted() + '0';
 				Piece* srcPiece = move->getSrcPiece(true);
 
+				// if its the piece's first move, set its movedAt state to nullptr
+				if (srcPiece->movedAt() == move)
+				{
+					srcPiece->setMovedAt(nullptr);
+				}
+
 				// format is {dest}{src}{captured identifier if any} will undo move in graphics
 				p.sendMessageToGraphics(move->getDest() + move->getSrc() + identifier + isEnPassant + isCastling + isPromoted);
 
@@ -112,10 +118,6 @@ int main(int argc, char* argv[])
 					boardStr[Board::getIndex(rookOriginalLocation)] = rook->getIdentifier();
 					boardStr[Board::getIndex(rookLocation)] = EMPTY_PIECE;
 					rook->setLocation(rookOriginalLocation);
-
-					// set their movement state to false so they will be able to re-castle
-					rook->setMoved(false);
-					srcPiece->setMoved(false);
 
 					// restore rook's location in graphics
 					p.sendMessageToGraphics(rookLocation + rookOriginalLocation);

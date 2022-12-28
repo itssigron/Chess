@@ -36,7 +36,7 @@ int King::validateMove(Piece& dest)
 		isValid = VALID_MOVE;
 	}
 	// check if king wants and can castle
-	else if (y1 == y2 && !_hasMoved && (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL || x2 == POSSIBLE_KINGSIDE_CASTLE_COL))
+	else if (y1 == y2 && _movedAt == nullptr && (x2 == POSSIBLE_QUEENSIDE_CASTLE_COL || x2 == POSSIBLE_KINGSIDE_CASTLE_COL))
 	{
 		// Check player color
 		usedCastleRow = _owner->getType() == WHITE_PLAYER ? POSSIBLE_WHITE_CASTLE_ROW : POSSIBLE_BLACK_CASTLE_ROW;
@@ -55,7 +55,7 @@ int King::validateMove(Piece& dest)
 		}
 
 		// Check if rook hasnt moved yet
-		if (!rook->hasMoved())
+		if (rook->movedAt() == nullptr)
 		{
 			// Now we need to check if: 1. both squares are empty and 2. both squares arent under attack
 			firstSquare = board.getPiece(board.getLocation(usedCastleRow, firstSquareCol));

@@ -10,7 +10,7 @@ Piece::Piece(Player* owner, string location, char type)
 	_owner = owner;
 	_location = location;
 	_type = type;
-	_hasMoved = false;
+	_movedAt = nullptr;
 	_identifier = owner == nullptr ? EMPTY_PIECE : owner->getType() == WHITE_PLAYER ? toupper(type) : type;
 }
 
@@ -44,9 +44,9 @@ const bool& Piece::isCaptured() const
 	return _captured;
 }
 
-const bool& Piece::hasMoved() const
+const Move* Piece::movedAt() const
 {
-	return _hasMoved;
+	return _movedAt;
 }
 
 const char& Piece::getIdentifier() const
@@ -69,9 +69,9 @@ void Piece::setCaptured(bool isCaptured)
 	_captured = isCaptured;
 }
 
-void Piece::setMoved(bool hasMoved)
+void Piece::setMovedAt(Move* move)
 {
-	_hasMoved = hasMoved;
+	_movedAt = move;
 }
 
 char Piece::getFile()
