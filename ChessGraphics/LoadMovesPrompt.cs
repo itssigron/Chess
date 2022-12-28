@@ -66,7 +66,8 @@ namespace ChessGraphics
         public static bool IsValidMoves(string moves)
         {
             bool isValid = true;
-            string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
+            string[] movesArray = Regex.Split(moves, "(?<=\\G....)");
+            string src, dst;
 
             if (moves.Length < 4)
             {
@@ -74,16 +75,27 @@ namespace ChessGraphics
             }
             else
             {
-                for (int i = 0; i < movesArray.Length - 1; i++)
+                for (int i = 0; i < movesArray.Length; i++)
                 {
-                    string src = movesArray[i].Substring(0, 2);
-                    string dst = movesArray[i].Substring(2);
-
-                    if (!(src.Length == 2 && dst.Length == 2) ||
-                        !(src[0] >= 'a' && src[0] <= 'h') || !(dst[0] >= 'a' && dst[0] <= 'h') ||
-                        !(src[1] >= '1' && src[1] <= '8') || !(dst[1] >= '1' && dst[1] <= '8'))
+                    if (movesArray[i].Length == 0)
+                    {
+                        continue;
+                    }
+                    else if (movesArray[i].Length < 4)
                     {
                         isValid = false;
+                    }
+                    else
+                    {
+                        src = movesArray[i].Substring(0, 2);
+                        dst = movesArray[i].Substring(2);
+
+                        if (!(src.Length == 2 && dst.Length == 2) ||
+                            !(src[0] >= 'a' && src[0] <= 'h') || !(dst[0] >= 'a' && dst[0] <= 'h') ||
+                            !(src[1] >= '1' && src[1] <= '8') || !(dst[1] >= '1' && dst[1] <= '8'))
+                        {
+                            isValid = false;
+                        }
                     }
                 }
             }
