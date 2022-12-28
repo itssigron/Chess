@@ -1,6 +1,10 @@
 # Chess Project
 
 Chess Game developed as part of Magshimim's second year (Israel's National Cyber Education Program)
+
+![Showcase design v1](./ChessEngine/Resources/ChessClientV1.png)
+![Showcase design v2](./ChessEngine/Resources/ChessClientV2.png)
+
 ## Features
 
 * Customizable design
@@ -61,4 +65,3 @@ If any problem occurs during the use of this program, feel free to open an issue
 
 - [Harel Sigron](https://gitlab.com/itssigron)
 - [Raz](https://gitlab.com/Razkoo)
-
