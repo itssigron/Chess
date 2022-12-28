@@ -75,7 +75,7 @@ public:
 	* input: owner, stringifed location and piece type
 	* output: the Piece
 	*/
-	Piece(Player* owner, string location, char type);
+	Piece(Player* owner, const string location, const char type);
 
 	// Destructor
 
@@ -93,21 +93,21 @@ public:
 	* input: none
 	* output: a pointer to the player object
 	*/
-	Player* getOwner() const;
+	const Player* getOwner() const;
 
 	/*
 	* Gets the location of this piece
 	* input: none
 	* output: the location's string
 	*/
-	string& getLocation();
+	const string& getLocation() const;
 
 	/*
 	* Gets the numeric index of this piece
 	* input: none
 	* output: the piece's numeric index
 	*/
-	int getIndex();
+	const int getIndex() const;
 
 	/*
 	* Gets the type of this piece
@@ -151,14 +151,14 @@ public:
 	* input: the type to set
 	* output: none
 	*/
-	void setType(char& type);
+	void setType(const char type);
 
 	/*
 	* Sets the piece's captured state
 	* input: its new state
 	* output: none
 	*/
-	void setCaptured(bool isCaptured);
+	void setCaptured(const bool isCaptured);
 
 	/*
 	* sets the "movedAt" state accordingly
@@ -174,29 +174,21 @@ public:
 	* input: none
 	* output: the file in which this piece is in
 	*/
-	char getFile();
+	const char getFile() const;
 
 	/*
 	* Gets the rank of this piece's location
 	* input: none
 	* output: the rank in which this piece is in
 	*/
-	int getRank();
-
-
-	/*
-	* A streaming operator, allows us to print the type of this piece,
-	* by printing the Piece object itself
-	* input: the output stream and the Piece object
-	*/
-	friend std::ostream& operator<<(std::ostream& os, const Piece& obj);
+	const int getRank() const;
 
 	/*
 	* Performs basic checks on the provided move
 	* input: the current player, and the destination piece
 	* output: VALID_MOVE if all basic checks were passed, error code otherwise
 	*/
-	int basicValidateMove(Player& currentPlayer, Piece& dest);
+	int basicValidateMove(const Player* currentPlayer, Piece& dest);
 
 	//abstract method to validate the move according to its piece type
 	virtual int validateMove(Piece& dest) = 0;

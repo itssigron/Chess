@@ -11,9 +11,9 @@ public:
 	Knight(Player* owner, string location);
 
 	/*
-	* Validate knight's move
-	* Input: Destination knight wants to go to
-	* Output: Valid or not
+	* Validates the knights's move - as many squares as he wants + diagonal direction only,
+	* input: destination piece
+	* output: result move code
 	*/
 	int validateMove(Piece& dest) override;
 };

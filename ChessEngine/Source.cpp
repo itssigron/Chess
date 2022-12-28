@@ -181,7 +181,7 @@ void performMove(const string srcLocation, const string destLocation, Board& boa
 	Piece* srcPiece = move->getSrcPiece(true);
 	Piece* destPiece = move->getDestPiece(true);
 	bool isEmpty = destPiece->getType() == EMPTY_PIECE;
-	bool whitePlayer = board.getCurrentPlayer().getType() == WHITE_PLAYER;
+	bool whitePlayer = board.getCurrentPlayer()->getType() == WHITE_PLAYER;
 	int result = 0;
 	int newResult = 0;
 	string msgFromGraphics = "";

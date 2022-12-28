@@ -83,14 +83,14 @@ public:
 	* input: row and col
 	* output: their absolute
 	*/
-	static int getIndex(int row, int col);
+	static int getIndex(const int row, const int col);
 
 	/*
 	* gets a string with all the locations of all possible moves this src can make
 	* input: the src piece and a possible player overwrite for the current player
 	* output: all possible locations, i.e: "e3e4e5"
 	*/
-	string getAllPossibleMoves(Piece& src, Player* player = nullptr);
+	string getAllPossibleMoves(Piece& src, const Player* player = nullptr);
 
 	/*
 	* Checks if a specific move will cause self-check
@@ -132,7 +132,7 @@ public:
 	* input: none
 	* output: the array of Player pointers
 	*/
-	Player** getPlayers();
+	const Player** getPlayers() const;
 
 	/*
 	* Gets the stack of the move's history
@@ -147,7 +147,7 @@ public:
 	* input: none
 	* output: moves's history string
 	*/
-	string getMoveHistory();
+	const string getMoveHistory() const;
 
 	/*
 	* Pushes a Move object to the history of moves
@@ -183,14 +183,14 @@ public:
 	* input: none
 	* output: a reference to the current player
 	*/
-	Player& getCurrentPlayer() const;
+	const Player* getCurrentPlayer() const;
 
 	/*
 	* Gets the current enemy
 	* input: none
 	* output: a pointer to the current enemy player
 	*/
-	Player* getEnemy(Player* player) const;
+	const Player* getEnemy(const Player* player) const;
 
 
 	// ---------------------- METHODS ----------------------
@@ -200,7 +200,7 @@ public:
 	* input: src and dest pieces
 	* output: the move code
 	*/
-	int validateMove(Player& currentPlayer, Piece& src, Piece& dest) const;
+	int validateMove(const Player* currentPlayer, Piece& src, Piece& dest) const;
 
 	/*
 	* checks if a specific move code can be considered a non-endgame valid move
@@ -214,14 +214,14 @@ public:
 	* input: Player pointer
 	* output: whether a "check" occured over the other player or not
 	*/
-	bool madeCheck(Player* player);
+	bool madeCheck(const Player* player);
 
 	/*
 	* Checks if the player made a check(mate) or a stalemate
 	* input: the player to check for
 	* output: result code
 	*/
-	int checkmateOrStalemate(Player* player);
+	int checkmateOrStalemate(const Player* player);
 
 	/*
 	* Checks if the board is in an insufficient material state

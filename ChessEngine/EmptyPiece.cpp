@@ -4,5 +4,5 @@ EmptyPiece::EmptyPiece(Player* owner, string location) : Piece(owner, location, 
 
 int EmptyPiece::validateMove(Piece& dest)
 {
-	return VALID_MOVE;
+	return INVALID_SRC_MISSING_PIECE;
 }

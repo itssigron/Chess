@@ -73,7 +73,7 @@ const int& Player::getType() const
 	return _type;
 }
 
-std::vector<Piece*>& Player::getPieces()
+const std::vector<Piece*>& Player::getPieces() const
 {
 	return _pieces;
 }
@@ -84,7 +84,7 @@ Board& Player::getBoard()
 	return *_board;
 }
 
-Piece* Player::getKing()
+Piece* Player::getKing() const
 {
 	int i = 0;
 	Piece* king = nullptr;

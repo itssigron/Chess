@@ -64,11 +64,11 @@ Board::~Board()
 	_board.clear();
 }
 
-string Board::getAllPossibleMoves(Piece& src, Player* player)
+string Board::getAllPossibleMoves(Piece& src, const Player* player)
 {
 	int i = 0, j = 0;
 	Piece* dest;
-	Player* enemy = getEnemy(player == nullptr ? &getCurrentPlayer() : src.getOwner());
+	const Player* enemy = getEnemy(player == nullptr ? getCurrentPlayer() : src.getOwner());
 	string locations = "";
 
 	if (src.getType() == EMPTY_PIECE) // empty piece may not move anywere..
@@ -83,7 +83,7 @@ string Board::getAllPossibleMoves(Piece& src, Player* player)
 			dest = getPiece(i, j);
 
 			// if its a valid move and not a "self-check"
-			if (isValidMove(validateMove(player == nullptr ? getCurrentPlayer() : *player, src, *dest)) && !moveWillCauseCheck(src, *dest))
+			if (isValidMove(validateMove(player == nullptr ? getCurrentPlayer() : player, src, *dest)) && !moveWillCauseCheck(src, *dest))
 			{
 				// push valid move's location
 				locations += dest->getLocation();
@@ -102,7 +102,7 @@ string Board::getAllPossibleMoves(Piece& src, Player* player)
 bool Board::moveWillCauseCheck(Piece& src, Piece& dest)
 {
 	Move move(&src, &dest, this);
-	Player* enemy = getEnemy(src.getOwner());
+	const Player* enemy = getEnemy(src.getOwner());
 
 	// if move caused chess - its an invalid move
 	move.make();
@@ -117,9 +117,9 @@ string& Board::getBoard()
 	return _board;
 }
 
-Player** Board::getPlayers()
+const Player** Board::getPlayers() const
 {
-	return _players;
+	return (const Player**)_players;
 }
 
 const std::stack<Move*>& Board::getMovesStack() const
@@ -127,7 +127,7 @@ const std::stack<Move*>& Board::getMovesStack() const
 	return _movesHistory;
 }
 
-string Board::getMoveHistory()
+const string Board::getMoveHistory() const
 {
 	string result = "";
 	Move* cur = nullptr;
@@ -192,17 +192,17 @@ Move* Board::redoMove()
 	return lastMove;
 }
 
-Player& Board::getCurrentPlayer() const
+const Player* Board::getCurrentPlayer() const
 {
-	return *_players[_currentPlayer];
+	return _players[_currentPlayer];
 }
 
-Player* Board::getEnemy(Player* player) const
+const Player* Board::getEnemy(const Player* player) const
 {
 	return _players[!player->getType()];
 }
 
-int Board::validateMove(Player& currentPlayer, Piece& src, Piece& dest) const
+int Board::validateMove(const Player* currentPlayer, Piece& src, Piece& dest) const
 {
 	int moveCode = src.basicValidateMove(currentPlayer, dest);
 	if (moveCode == VALID_MOVE)
@@ -218,7 +218,7 @@ bool Board::isValidMove(const int& moveCode) const
 	return moveCode == VALID_MOVE || moveCode == VALID_PAWN_PROMOTION || moveCode == VALID_EN_PASSANT || moveCode == VALID_CASTLE;
 }
 
-bool Board::madeCheck(Player* player)
+bool Board::madeCheck(const Player* player)
 {
 	int i = 0;
 
@@ -239,7 +239,7 @@ bool Board::madeCheck(Player* player)
 		if (!src->isCaptured())
 		{
 			// if all checks passed, its a "check"!
-			didCheck = isValidMove(validateMove(*player, *src, *king));
+			didCheck = isValidMove(validateMove(player, *src, *king));
 		}
 	}
 
@@ -247,13 +247,13 @@ bool Board::madeCheck(Player* player)
 	return didCheck;
 }
 
-int Board::checkmateOrStalemate(Player* player)
+int Board::checkmateOrStalemate(const Player* player)
 {
 	int i = 0, j = 0;
 	bool isCheck = false, isCheckmate = false, isStalemate = false;
-	Player* enemy = getEnemy(player);
+	const Player* enemy = getEnemy(player);
 	Piece *src = nullptr, *dest = nullptr;
-	std::vector<Piece*>& pieces = player->getPieces(), & enemyPieces = enemy->getPieces();
+	const std::vector<Piece*> &pieces = player->getPieces(), &enemyPieces = enemy->getPieces();
 
 	// First, check if the player has made a "check" and update flags accordingly
 	if (madeCheck(player))
@@ -386,9 +386,9 @@ int Board::movePiece(Piece& src, Piece& dest, Move& move)
 
 int Board::promotePiece(Piece* promoted, char newType)
 {
-	Player* player = promoted->getOwner();
-	std::vector<Piece*>& pieces = player->getPieces();
-	string location = promoted->getLocation();
+	Player* player = (Player*)promoted->getOwner();
+	std::vector<Piece*>& pieces = (std::vector<Piece*>&)player->getPieces();
+	const string location = promoted->getLocation();
 	Piece* newPiece = nullptr;
 	int i = 0;
 	bool foundPiece = false;

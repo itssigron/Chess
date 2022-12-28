@@ -12,6 +12,12 @@ public:
 	*/
 	Queen(Player* owner, string location);
 
+	/*
+	* Validates the queen's move - as many squares as he want to any direction
+	* basically just a combination of both a rook and a knight
+	* input: destination piece
+	* output: result move code
+	*/
 	int validateMove(Piece& dest) override;
 };
 

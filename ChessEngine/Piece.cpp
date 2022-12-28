@@ -5,7 +5,7 @@ const char Piece::getIdentifier(const char& pieceType, const int side)
 	return side == WHITE_PLAYER ? toupper(pieceType) : pieceType;
 }
 
-Piece::Piece(Player* owner, string location, char type)
+Piece::Piece(Player* owner, const string location, const char type)
 {
 	_owner = owner;
 	_location = location;
@@ -19,17 +19,17 @@ Piece::~Piece()
 	_location.clear();
 }
 
-Player* Piece::getOwner() const
+const Player* Piece::getOwner() const
 {
 	return _owner;
 }
 
-string& Piece::getLocation()
+const string& Piece::getLocation() const
 {
 	return _location;
 }
 
-int Piece::getIndex()
+const int Piece::getIndex() const
 {
 	return Board::getIndex(getLocation());
 }
@@ -59,12 +59,12 @@ void Piece::setLocation(const string& location)
 	_location = location;
 }
 
-void Piece::setType(char& type)
+void Piece::setType(const char type)
 {
 	_type = type;
 }
 
-void Piece::setCaptured(bool isCaptured)
+void Piece::setCaptured(const bool isCaptured)
 {
 	_captured = isCaptured;
 }
@@ -74,21 +74,21 @@ void Piece::setMovedAt(Move* move)
 	_movedAt = move;
 }
 
-char Piece::getFile()
+const char Piece::getFile() const
 {
 	return _location[0];
 }
 
-int Piece::getRank()
+const int Piece::getRank() const
 {
 	return _location[1] - '0';
 }
 
-int Piece::basicValidateMove(Player& currentPlayer, Piece& dest)
+int Piece::basicValidateMove(const Player* currentPlayer, Piece& dest)
 {
 	int result = VALID_MOVE; // assume move is valid until proven wrong
 
-	if (_type == EMPTY_PIECE || currentPlayer.getType() != _owner->getType())
+	if (_type == EMPTY_PIECE || currentPlayer->getType() != _owner->getType())
 	{
 		//src location doesnt have the current player's piece on it
 		result = INVALID_SRC_MISSING_PIECE;
@@ -104,9 +104,4 @@ int Piece::basicValidateMove(Player& currentPlayer, Piece& dest)
 
 	//finished all basic checks, return final result
 	return result;
-}
-
-std::ostream& operator<<(std::ostream& os, const Piece& obj)
-{
-	return std::cout << (char)(obj._owner && obj._owner->getType() == WHITE_PLAYER ? toupper(obj._type) : obj._type);
 }

@@ -99,7 +99,7 @@ public:
 
 	}
 
-	bool sendMessageToGraphics(std::string msg)
+	bool sendMessageToGraphics(const std::string& msg)
 	{
 		return sendMessageToGraphics((char*)msg.c_str());
 	}

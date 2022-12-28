@@ -13,7 +13,7 @@ public:
 	/*
 		Validate move
 		Input: Destination piece wants to go to
-		Output: Valid
+		Output: Invalid move since empty piece cannot move
 	*/
 	int validateMove(Piece& dest) override;
 };

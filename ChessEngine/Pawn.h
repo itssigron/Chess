@@ -11,6 +11,12 @@ public:
 	*/
 	Pawn(Player* owner, string location);
 
+	/*
+	* Validates the pawn's move - 2 squares forward on initial move, 1 square forward normal move
+	* 1 diagonal square if move makes capture / en passant
+	* input: destination piece
+	* output: result move code
+	*/
 	int validateMove(Piece& dest) override;
 };
 

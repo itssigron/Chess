@@ -67,28 +67,28 @@ public:
 	* input: none
 	* output: the captured piece of this move if any (null if none)
 	*/
-	Piece* getCaptured();
+	Piece* getCaptured() const;
 
 	/*
 	* Checks if move is en passant
 	* input: none
 	* output: whether this move is an en passant capture
 	*/
-	bool isEnPassant();
+	const bool isEnPassant() const;
 
 	/*
 	* Checks if move is castling
 	* input: none
 	* output: whether this move made castling
 	*/
-	bool isCastling();
+	const bool isCastling() const;
 
 	/*
 	* Checks if move caused pawn promotion
 	* input: none
 	* output: whether this move caused pawn promoted
 	*/
-	bool isPromoted();
+	const bool isPromoted() const;
 
 	/*
 	* Sets the piece captured by this move
@@ -102,21 +102,21 @@ public:
 	* input: whether this move caused en passant
 	* output: none
 	*/
-	void setEnPassant(bool enPassant);
+	void setEnPassant(const bool enPassant);
 
 	/*
 	* Sets the castling state of this move
 	* input: whether this move caused castling
 	* output: none
 	*/
-	void setCastling(bool castling);
+	void setCastling(const bool castling);
 
 	/*
 	* Sets the promotion state of this move
 	* input: whether this move caused pawn promotion
 	* output: none
 	*/
-	void setPromoted(bool promoted);
+	void setPromoted(const bool promoted);
 	
 	/*
 	* Makes the move and reflect the changes on the board

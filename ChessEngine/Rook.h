@@ -11,10 +11,9 @@ public:
 	Rook(Player* owner, string location);
 
 	/*
-	* A function to validate the rook's move, it makes sure he can only move horizontally and vertically
-	* + it makes sure there isnt a piece in its path
-	* input: the destination piece
-	* output: the result move code
+	* Validates the rook's move - as many square as he want to either horizontal or vertical direction,
+	* input: destination piece
+	* output: result move code
 	*/
 	int validateMove(Piece& dest) override;
 };

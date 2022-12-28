@@ -45,22 +45,22 @@ Piece* Move::getDestPiece(bool force)
 	return _destPiece;
 }
 
-Piece* Move::getCaptured()
+Piece* Move::getCaptured() const
 {
 	return _captured;
 }
 
-bool Move::isEnPassant()
+const bool Move::isEnPassant() const
 {
 	return _isEnPassant;
 }
 
-bool Move::isCastling()
+const bool Move::isCastling() const
 {
 	return _isCastling;
 }
 
-bool Move::isPromoted()
+const bool Move::isPromoted() const
 {
 	return _isPromoted;
 }
@@ -70,25 +70,25 @@ void Move::setCaptured(Piece* piece)
 	_captured = piece;
 }
 
-void Move::setEnPassant(bool enPassant)
+void Move::setEnPassant(const bool enPassant)
 {
 	_isEnPassant = true;
 }
 
-void Move::setCastling(bool castling)
+void Move::setCastling(const bool castling)
 {
 	_isCastling = castling;
 }
 
-void Move::setPromoted(bool promoted)
+void Move::setPromoted(const bool promoted)
 {
 	_isPromoted = promoted;
 }
 
 void Move::make(bool forceUpdate, bool capture)
 {
-	Piece& src = *getSrcPiece(forceUpdate), & dest = *getDestPiece(forceUpdate);
-	string& boardStr = _board->getBoard();
+	Piece &src = *getSrcPiece(forceUpdate), &dest = *getDestPiece(forceUpdate);
+	string& boardStr = (string&)_board->getBoard();
 
 	// empty out source
 	boardStr[src.getIndex()] = '#';
@@ -111,7 +111,7 @@ void Move::make(bool forceUpdate, bool capture)
 
 void Move::undo(bool uncapture)
 {
-	string& boardStr = _board->getBoard();
+	string& boardStr = (string&)_board->getBoard();
 	Piece* capturedPiece = getCaptured();
 
 	// restore our move and return board to its original state

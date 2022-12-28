@@ -44,7 +44,7 @@ public:
 	* input: none
 	* output: the player's pieces vector
 	*/
-	std::vector<Piece*>& getPieces();
+	const std::vector<Piece*>& getPieces() const;
 
 	/*
 	* Gets the board
@@ -58,6 +58,6 @@ public:
 	* input: none
 	* output: a pointer to the king's piece
 	*/
-	Piece* getKing();
+	Piece* getKing() const;
 };
 
