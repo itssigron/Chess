@@ -195,7 +195,7 @@
             this.label11.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
             this.label11.Font = new System.Drawing.Font("Arial Narrow", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label11.ForeColor = System.Drawing.Color.White;
-            this.label11.Location = new System.Drawing.Point(536, 5);
+            this.label11.Location = new System.Drawing.Point(532, 5);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(23, 25);
             this.label11.TabIndex = 26;
@@ -279,7 +279,7 @@
             this.label18.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.label18.Font = new System.Drawing.Font("Arial Narrow", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label18.ForeColor = System.Drawing.Color.White;
-            this.label18.Location = new System.Drawing.Point(52, 3);
+            this.label18.Location = new System.Drawing.Point(63, 3);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(20, 25);
             this.label18.TabIndex = 33;
@@ -701,7 +701,7 @@
             this.label28.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(33)))), ((int)(((byte)(33)))));
             this.label28.Font = new System.Drawing.Font("Arial Narrow", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label28.ForeColor = System.Drawing.Color.White;
-            this.label28.Location = new System.Drawing.Point(536, 5);
+            this.label28.Location = new System.Drawing.Point(532, 5);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(23, 25);
             this.label28.TabIndex = 26;
@@ -773,7 +773,7 @@
             this.label34.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.label34.Font = new System.Drawing.Font("Arial Narrow", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label34.ForeColor = System.Drawing.Color.White;
-            this.label34.Location = new System.Drawing.Point(52, 3);
+            this.label34.Location = new System.Drawing.Point(63, 3);
             this.label34.Name = "label34";
             this.label34.Size = new System.Drawing.Size(20, 25);
             this.label34.TabIndex = 33;
