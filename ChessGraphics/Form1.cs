@@ -382,7 +382,7 @@ namespace chessGraphics
                 else
                 {
                     dstSquare = (Square)b.Tag;
-                    matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = Color.DarkGreen;
+                    matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetSelectedBorderColor();
 
                     new Thread(PlayMove).Start();
                 }
