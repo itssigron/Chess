@@ -39,6 +39,8 @@ namespace chessGraphics
         Color ORANGE_SQUARE = Color.FromArgb(209, 139, 71);
         Color GREEN_SQUARE = Color.FromArgb(118, 150, 86);
         string gameHistory = "";
+        List<string> promotionsIn = new List<string>(); // list to hold cached promotions of loaded games
+        List<string> promotionsOut = new List<string>(); // list to hold promotions to be saved in saved files
 
         /// <summary>
         /// An application sends the WM_SETREDRAW message to a window to allow changes in that 
@@ -129,7 +131,9 @@ namespace chessGraphics
 
                     if (s[BOARD_SIZE * BOARD_SIZE + 1] == '1') // game was loaded from a file
                     {
-                        string moves = enginePipe.getEngineMessage();
+                        string[] game = enginePipe.getEngineMessage().Split('\n');
+                        string moves = game[0].Trim();
+                        promotionsIn = game[1].Trim().Split(',').ToList();
                         new Thread(() => MakeMoves(moves, 0, this)).Start();
                     }
                     //Tests tests = new Tests(this);
@@ -240,6 +244,18 @@ namespace chessGraphics
             return Color.Red;
         }
 
+        void CleanBoard()
+        {
+            for (int i = 0; i < BOARD_SIZE; i++)
+            {
+                for (int j = 0; j < BOARD_SIZE; j++)
+                {
+                    matBoard[i, j].BackColor = GetSquareBackColor(i, j);
+                    matBoard[i, j].FlatAppearance.BorderColor = GetDefaultBorderColor();
+                }
+            }
+        }
+
         // Store the original color of the button
         private Color originalColor;
         private bool shouldRestore = false;
@@ -260,7 +276,7 @@ namespace chessGraphics
             Button btn = (Button)sender;
 
             // Return the button to its original color
-            if(shouldRestore == true) originalColor = GetSquareBackColor(((Square)btn.Tag).Row, ((Square)btn.Tag).Col);
+            if (shouldRestore == true) originalColor = GetSquareBackColor(((Square)btn.Tag).Row, ((Square)btn.Tag).Col);
             btn.BackColor = originalColor;
         }
 
@@ -395,7 +411,6 @@ namespace chessGraphics
                         matBoard[row, col].FlatAppearance.BorderColor = GetDefaultValidMoveBorderColor();
                     }
                 }
-
                 matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetSelectedBorderColor();
             }
 
@@ -505,7 +520,27 @@ namespace chessGraphics
             lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
         }
 
-        // if standalone=true, graphics will perform the move only on the form and will not contact engine
+        string GetPromotion()
+        {
+            string promotion;
+
+            // if we have a cached list of promotions, extract promotion from there
+            if (promotionsIn.Count != 0)
+            {
+                promotion = promotionsIn[0];
+                promotionsIn.RemoveAt(0);
+            }
+            else // otherwise, just prompt user to choose his desired promotion
+            {
+                PawnPromotionPrompt prompt = new PawnPromotionPrompt();
+                promotion = prompt.GetResult();
+            }
+            
+            promotionsOut.Add(promotion);
+
+            return promotion;
+        }
+
         void PlayMove()
         {
             if (isGameOver)
@@ -557,19 +592,10 @@ namespace chessGraphics
                             }
                             else if (res.ToLower().Contains("promotion"))
                             {
-                                string[] promptions =
-                                {
-                                    "queen",
-                                    "rook",
-                                    "bishop",
-                                    "knight"
-                                };
-
                                 char type = ' ';
-                                PawnPromotionPrompt prompt = new PawnPromotionPrompt();
-                                string result = prompt.GetResult();
+                                string promotion = GetPromotion();
 
-                                switch (result.ToLower())
+                                switch (promotion.ToLower())
                                 {
                                     case "queen":
                                         type = isCurPlWhite ? 'Q' : 'q';
@@ -588,7 +614,7 @@ namespace chessGraphics
                                 matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type, DesignVersion);
                                 enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
                                 m = enginePipe.getEngineMessage(); // get the confirmation message from engine
-                                res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), result);
+                                res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), promotion);
                             }
 
                             matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
@@ -721,6 +747,11 @@ namespace chessGraphics
 
                     if (isPromoted)
                     {
+                        // save promotion in cache for possible "redo"
+                        // insert at 0 since its "undo" so its going backwards
+                        promotionsIn.Insert(0, promotionsOut[promotionsOut.Count - 1]);
+                        promotionsOut.RemoveAt(promotionsOut.Count - 1);
+
                         PutPiece(new Square(src), isCurPlWhite ? 'p' : 'P');
                     }
 
@@ -741,6 +772,8 @@ namespace chessGraphics
                     // change turn to the other player
                     ChangeTurn();
 
+                    CleanBoard();
+
                     lblResult.Text = "Move undone";
                     lblResult.Visible = true;
                 }
@@ -756,7 +789,7 @@ namespace chessGraphics
                     srcSquare = new Square(move.Substring(0, 2));
                     dstSquare = new Square(move.Substring(2, 2));
 
-                    new Thread(PlayMove).Start();
+                    new Thread(() => { PlayMove(); CleanBoard(); }).Start();
                 }
             }
         }
@@ -841,7 +874,7 @@ namespace chessGraphics
             if (saveFileDialog.FileName != "")
             {
                 StreamWriter file = new StreamWriter(saveFileDialog.FileName);
-                file.Write(gameHistory);
+                file.Write(gameHistory + "\n" + String.Join(",", promotionsOut));
                 file.Close();
 
                 // show success message for 4 seconds.

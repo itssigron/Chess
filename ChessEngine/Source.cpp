@@ -34,9 +34,7 @@ int main(int argc, char* argv[])
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(hOut, dwMode);
 
-	#ifndef _DEBUG
-		startClient();
-	#endif // !_DEBUG
+	startClient();
 
 	srand(time_t(NULL));
 	bool isConnect = p.connect();
@@ -58,22 +56,23 @@ int main(int argc, char* argv[])
 
 	std::ifstream file(filePath);
 	string history = "";
-
+	string promotions = "";
 	// letting graphics know if the game was loaded from a file
 	if (filePath.length() && file.is_open())
 	{
 		msgToGraphics[BOARD_SIZE * BOARD_SIZE + 1] = '1';
 		std::getline(file, history); // get file's content (game's history)
+		std::getline(file, promotions); // get game's promotions
 	}
 
 	// send the board string
 	p.sendMessageToGraphics(msgToGraphics);
 
-	// send history to graphics if game was loaded from file
+	// send game history and promotions to graphics if game was loaded from file
 	if (filePath.length() && file.is_open())
 	{
 		file.close();
-		p.sendMessageToGraphics(history);
+		p.sendMessageToGraphics(history + "\n" + promotions);
 	}
 
 	// get message from graphics
@@ -173,24 +172,23 @@ int main(int argc, char* argv[])
 	
 void performMove(const string srcLocation, const string destLocation, Board& board, Pipe& p)
 {
-	// access src and dest pieces using the information from the client
+	// we use moveRedone as a "cache", if this move is a result of a redo, 
+	// then we already pushed the move onto the stack,
+	// so we can just get it instead of creating new Move object
 	Move* move = moveRedone ? board.getMovesStack().top() : new Move(srcLocation, destLocation, &board);
 	Piece* srcPiece = move->getSrcPiece(true);
 	Piece* destPiece = move->getDestPiece(true);
 	bool isEmpty = destPiece->getType() == EMPTY_PIECE;
 	bool whitePlayer = board.getCurrentPlayer().getType() == WHITE_PLAYER;
 	int result = 0;
-	string msgFromGraphics;
-
-	// make basic checks, if all basic checks passed, make
-	// further checks with the current piece, and send result to graphics
-	result = srcPiece->basicValidateMove(board.getCurrentPlayer(), *destPiece);
-	if (result == VALID_MOVE)
-		result = srcPiece->validateMove(*destPiece);
 	int newResult = 0;
+	string msgFromGraphics = "";
+
+	// validate move
+	result = board.validateMove(board.getCurrentPlayer(), *srcPiece, *destPiece);
 
 	// perform the actual "move"
-	if (result == VALID_MOVE || result == VALID_PAWN_PROMOTION || result == VALID_EN_PASSANT || result == VALID_CASTLE)
+	if (board.isValidMove(result))
 	{
 		// update source piece location + update result incase of "check"/"self-check"
 		newResult = board.movePiece(*srcPiece, *destPiece, *move);
@@ -203,6 +201,7 @@ void performMove(const string srcLocation, const string destLocation, Board& boa
 			p.sendMessageToGraphics(srcLocation + destLocation);
 		}
 
+		// if the new result is not an endgame result, then continue to check for special moves
 		if (newResult == VALID_MOVE || newResult == VALID_CHECK)
 		{
 			if (result == VALID_EN_PASSANT)
