@@ -615,6 +615,8 @@ namespace chessGraphics
                                 enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
                                 m = enginePipe.getEngineMessage(); // get the confirmation message from engine
                                 res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), promotion);
+                                
+                                CleanBoard(); // clean board colors after promotion - fixes design issue
                             }
 
                             matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
