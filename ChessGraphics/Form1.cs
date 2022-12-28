@@ -721,6 +721,11 @@ namespace chessGraphics
         {
             if (e.Modifiers == Keys.Control)
             {
+                if(e.KeyCode == Keys.S) // save game
+                {
+                    SaveGameBtn.PerformClick();
+                }
+
                 if (isGameOver)
                 {
                     return;

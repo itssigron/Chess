@@ -1,7 +1,6 @@
 #pragma warning(disable : 6011)
 
 #include "EmptyPiece.h"
-#include <windows.h> // WinApi header
 #include "Board.h"
 #include "Queen.h"
 #include "Rook.h"

@@ -19,7 +19,18 @@ using std::endl;
 using std::string;
 bool moveRedone = false;
 
+/*
+* performs the move in-board + in-graphics, handle move errors and in perfect communication with graphics
+* input: source piece location, dest piece location, board and pipe
+* output: none
+*/
 void performMove(const string srcLocation, const string destLocation, Board& board, Pipe& p);
+
+/*
+* Starts the client (graphics) executable
+* input: none
+* output: none
+*/
 void startClient();
 
 int main(int argc, char* argv[])
@@ -34,6 +45,7 @@ int main(int argc, char* argv[])
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	SetConsoleMode(hOut, dwMode);
 
+	// start our client exe
 	startClient();
 
 	srand(time_t(NULL));
@@ -245,6 +257,7 @@ void performMove(const string srcLocation, const string destLocation, Board& boa
 				msgFromGraphics = p.getMessageFromGraphics();
 				result = board.promotePiece(board.getPiece(msgFromGraphics.substr(0, 2)), msgFromGraphics[2]);
 				move->setPromoted(true);
+				srcPiece = nullptr;
 			}
 		}
 
@@ -255,7 +268,10 @@ void performMove(const string srcLocation, const string destLocation, Board& boa
 	}
 
 	// free pieces's memory after use incase needed
-	if (srcPiece->getType() == EMPTY_PIECE)
+
+	// here we check for nullptr because if pawn is being promoted,
+	// then srcPiece will get deleted and set to nullptr
+	if (srcPiece != nullptr && srcPiece->getType() == EMPTY_PIECE)
 	{
 		delete srcPiece;
 	}
