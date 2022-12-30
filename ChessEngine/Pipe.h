@@ -34,7 +34,7 @@
 #pragma warning (disable : 6276 4477 6054)
 #pragma region Includes
 #include "stdafx.h"
-
+#include "Socket.h"
 #include <windows.h>
 #include <string>
 #include <stdio.h>
@@ -51,6 +51,8 @@ private:
 	HANDLE hPipe;
 	wchar_t strPipeName[20];
 	int pipeNumber;
+	Socket socket;
+	SOCKET clientSocket;
 
 public:
 
@@ -58,9 +60,17 @@ public:
 	{
 		hPipe = nullptr;
 		// Prepare the pipe name
-		pipeNumber = 1;
-		lstrcpyW(strPipeName, (LPWSTR)TEXT("\\\\.\\pipe\\chessPipe"));
-		lstrcatW(strPipeName, (LPWSTR)std::to_string(pipeNumber).c_str());
+		//pipeNumber = 1;
+		//lstrcpyW(strPipeName, (LPWSTR)TEXT("\\\\.\\pipe\\chessPipe"));
+		//lstrcatW(strPipeName, (LPWSTR)std::to_string(pipeNumber).c_str());
+		SOCKET serverSocket = socket.getServerSocket();
+
+		std::cout << "Ready to accept a connection." << std::endl;
+
+		// Accept a connection from a client
+		sockaddr_in clientAddr;
+		int clientAddrSize = sizeof(clientAddr);
+		clientSocket = accept(serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
 	}
 
 	bool connect()
@@ -84,7 +94,7 @@ public:
 			lstrcatW(strPipeName, (LPWSTR)std::to_string(++pipeNumber).c_str());
 
 			result = false;
-		} 
+		}
 		else if (hPipe != INVALID_HANDLE_VALUE) // pipe is valid and connected
 		{
 			result = true;
@@ -106,64 +116,15 @@ public:
 
 	bool sendMessageToGraphics(char* msg)
 	{
-		//char ea[] = "SSS";
-		char* chRequest = msg;	// Client -> Server
-		DWORD cbBytesWritten, cbRequestBytes;
-
-		// Send one message to the pipe.
-		cbRequestBytes = sizeof(TCHAR) * (lstrlen((chRequest)) + 1);
-
-		BOOL bResult = WriteFile(			// Write to the pipe.
-			hPipe,						// Handle of the pipe
-			chRequest,					// Message to be written
-			cbRequestBytes,				// Number of bytes to write
-			&cbBytesWritten,			// Number of bytes written
-			NULL);						// Not overlapped 
-
-		if (!bResult/*Failed*/ || cbRequestBytes != cbBytesWritten/*Failed*/)
-		{
-			#ifdef _DEBUG
-				_tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
-			#endif		
-			return false;
-		}
-
-		#ifdef _DEBUG
-			_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"), cbBytesWritten, chRequest);
-		#endif
-
-		return true;
-
+		return socket.sendMsg(clientSocket, msg);
 	}
 
 	std::string getMessageFromGraphics()
 	{
-		DWORD cbBytesRead;
-		DWORD cbReplyBytes;
-		TCHAR chReply[BUFFER_SIZE];		// Server -> Client
+		string result = "";
+		socket.recvMsg(clientSocket, result);
 
-		cbReplyBytes = sizeof(TCHAR) * BUFFER_SIZE;
-		BOOL bResult = ReadFile(			// Read from the pipe.
-			hPipe,					// Handle of the pipe
-			chReply,				// Buffer to receive the reply
-			cbReplyBytes,			// Size of buffer 
-			&cbBytesRead,			// Number of bytes read 
-			NULL);					// Not overlapped 
-
-		if (!bResult && GetLastError() != ERROR_MORE_DATA)
-		{
-			#ifdef _DEBUG
-				_tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
-			#endif
-			return "";
-		}
-
-		#ifdef _DEBUG
-			_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"), cbBytesRead, chReply);
-		#endif	
-		std::string s = chReply;
-		return s;
-
+		return result;
 	}
 
 	void close()

@@ -3,7 +3,6 @@ This file servers as an example of how to use Pipe.h file.
 It is recommended to use the following code in your project,
 in order to read and write information from and to the Backend
 */
-
 #include "Pipe.h"
 #include <iostream>
 #include <thread>
@@ -13,7 +12,6 @@ in order to read and write information from and to the Backend
 #include "Move.h"
 #include "Pawn.h"
 #include "globalVars.h"
-
 using std::cout;
 using std::endl;
 using std::string;
@@ -35,30 +33,12 @@ void startClient();
 
 int main(int argc, char* argv[])
 {
+	::ShowWindow(::GetConsoleWindow(), SW_SHOW);
 	string filePath = argc > 1 ? argv[1] : "";
 	Pipe p;
 
-	// enable virtual terimal processing (ansi color codes)
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	DWORD dwMode = 0;
-	GetConsoleMode(hOut, &dwMode);
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	SetConsoleMode(hOut, dwMode);
-
 	// start our client exe
-	startClient();
-
-	srand(time_t(NULL));
-	bool isConnect = p.connect();
-
-
-	// loop until an available pipe has been found
-	while (!isConnect)
-	{
-		cout << "cant connect to graphics... trying to re-connect..." << endl;
-		Sleep(500);
-		isConnect = p.connect();
-	}
+	//startClient();
 
 	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
 	char msgToGraphics[1024] = "rnbqkbnrpppppppp################################PPPPPPPPRNBQKBNR00";
@@ -309,5 +289,5 @@ void startClient()
 
 	//start the client and hide engine's console window
 	system(cmd.c_str());
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
+	//::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
 }
