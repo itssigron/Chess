@@ -18,6 +18,7 @@ public:
 
 	Pipe(void (*handleClient)(SOCKET, SOCKET, Pipe*))
 	{
+		socket = Socket(5555);
 		SOCKET serverSocket = socket.getServerSocket();
 
 

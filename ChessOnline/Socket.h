@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <Winsock2.h> // Use Winsock2 instead of sys/socket.h
 #include <exception>
 
@@ -11,6 +12,10 @@ private:
 	SOCKET _serverSocket;
 public:
 	Socket()
+	{
+		_serverSocket = 0;
+	}
+	Socket(int port)
 	{
 		// Initialize Winsock2
 		WSADATA wsaData;
@@ -28,8 +33,8 @@ public:
 		// Set up the server address structure
 		sockaddr_in serverAddr;
 		serverAddr.sin_family = AF_INET;
-		serverAddr.sin_port = htons(3000); // Use port 3000
-		serverAddr.sin_addr.s_addr = INADDR_ANY; // Listen on all available interfaces
+		serverAddr.sin_port = htons(port);
+		serverAddr.sin_addr.S_un.S_addr = inet_addr("0.0.0.0"); // Listen on all available interfaces
 
 		// Bind the socket to the address and port
 		result = bind(_serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
