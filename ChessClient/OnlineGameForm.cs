@@ -55,26 +55,22 @@ namespace chessClient
         }
         private void InitForm()
         {
+
             enginePipe.connect();
 
             Invoke((MethodInvoker)delegate
             {
-
-                lblWaiting.Visible = false;
+                string s = enginePipe.getEngineMessage();
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
-
                 ActionOnButtons("Visible", true);
-
-
-                string s = enginePipe.getEngineMessage();
+                lblWaiting.Visible = false;
 
                 // extra 1 character for the player whom this client belongs to,
                 if (s.Length != (BOARD_SIZE * BOARD_SIZE + 1))
                 {
                     MessageBox.Show("The length of the board's string is not according the PROTOCOL");
                     this.Close();
-
                 }
                 else
                 {
@@ -86,7 +82,6 @@ namespace chessClient
                         new Thread(UpdateBoard).Start();
                     }
                 }
-
             });
 
         }
@@ -328,15 +323,66 @@ namespace chessClient
         {
 
             string newBoard = enginePipe.getEngineMessage();
-
-            isCurPlWhite = newBoard[BOARD_SIZE * BOARD_SIZE] == '0';
-            Invoke((MethodInvoker)delegate
+            if (newBoard == "disconnected" || newBoard == "quit")
             {
-                lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
-            });
-            SuspendLayout();
-            PaintSquares(newBoard);
-            ResumeLayout();
+                isGameOver = true;
+                Invoke((MethodInvoker)delegate
+                {
+                    AutoWinLbl.Text = String.Format(AutoWinLbl.Text, isOwnerWhite ? "Black" : "White");
+                    AutoWinLbl.BringToFront();
+                    AutoWinLbl.Visible = true;
+                });
+            }
+            else
+            {
+                // checks if move code is 2 chars length or not
+                string moveCode = newBoard.Substring(BOARD_SIZE * BOARD_SIZE + 1, 2).Trim();
+                bool isMoveCode = int.TryParse(moveCode, out int numericValue);
+                if(!isMoveCode)
+                {
+                    moveCode = newBoard[BOARD_SIZE * BOARD_SIZE + 1].ToString();
+                }
+
+                string res = ConvertEngineToText(moveCode);
+                char promotionType = newBoard[BOARD_SIZE * BOARD_SIZE + moveCode.Length + 1];
+                string move = newBoard.Substring(BOARD_SIZE * BOARD_SIZE + moveCode.Length + 2);
+                string srcLocation = move.Substring(0, 2), destLocation = move.Substring(2);
+                if (promotionType != ' ')
+                {
+                    res = String.Format(res, isOwnerWhite ? "Black" : "White", destLocation, promotionType);
+                }
+                else
+                {
+                    res = String.Format(res, isOwnerWhite ? "Black" : "White");
+                }
+
+                if (res.ToLower().Contains("game over"))
+                {
+                    // quit engine, close pipe and remove the load moves/undo/redo buttons,
+                    // since its un-useable at that point + set the "log history" button to the same location
+                    // as the now-deleted "load moves" button
+
+                    isGameOver = true;
+                    enginePipe.sendEngineMove("quit");
+                    gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
+                    enginePipe.close();
+                }
+
+                isCurPlWhite = newBoard[BOARD_SIZE * BOARD_SIZE] == '0';
+                Invoke((MethodInvoker)delegate
+                {
+                    lblMove.Text = string.Format("Move from {0} to {1}", srcLocation, destLocation);
+                    lblMove.Visible = true;
+                    lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
+                    lblResult.Text = res;
+                    lblResult.Visible = true;
+                    label2.Visible = true;
+                    Refresh();
+                });
+                SuspendLayout();
+                PaintSquares(newBoard);
+                ResumeLayout();
+            }
         }
 
         void Lastlbl_Click(object sender, EventArgs e)
@@ -532,7 +578,8 @@ namespace chessClient
                                 // as the now-deleted "load moves" button
 
                                 isGameOver = true;
-
+                                m = "done";
+                                // send engine the winner
                                 enginePipe.sendEngineMove("quit");
                                 gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
                                 enginePipe.close();
@@ -608,7 +655,7 @@ namespace chessClient
                             }
                         }
                     }
-                    if (isValid)
+                    if (isValid && !isGameOver)
                     {
                         new Thread(UpdateBoard).Start();
                     }

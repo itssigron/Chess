@@ -1,4 +1,6 @@
 ﻿using ChessClient;
+using System;
+using System.Windows.Forms;
 
 namespace chessClient
 {
@@ -9,7 +11,7 @@ namespace chessClient
 
         public OnlinePipe()
         {
-            socket = new Socket("127.0.0.1", 3000);
+            socket = new Socket("20.21.96.201", 5555);
         }
 
         public bool connect()
@@ -24,7 +26,28 @@ namespace chessClient
 
         public string getEngineMessage()
         {
-            return isConnected() ? socket.Recv() : "";
+            bool connected = isConnected();
+            string res = "";
+
+            if (connected)
+            {
+                try
+                {
+                    res = socket.Recv();
+                }
+                catch (Exception)
+                {
+                    connected = false;
+                }
+            }
+
+            if(!connected)
+            {
+                MessageBox.Show("The connection to the server has been lost.");
+                Environment.Exit(0);
+            }
+
+            return res;
         }
 
         public void sendEngineMove(string move)
