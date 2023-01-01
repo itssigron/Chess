@@ -13,14 +13,15 @@
 class Pipe
 {
 private:
-	Socket socket;
+	Socket _socket;
 public:
 
 	Pipe(void (*handleClient)(SOCKET, SOCKET, Pipe*))
 	{
-		socket = Socket(5555);
-		SOCKET serverSocket = socket.getServerSocket();
+		_socket = Socket(5555);
+		SOCKET serverSocket = _socket.getServerSocket();
 
+		SOCKET cachedClient = 0;
 
 		// Create a vector to store the threads
 		std::vector<std::thread> clientThreads;
@@ -31,26 +32,27 @@ public:
 		{
 			if (clientThreads.size() < 10)
 			{
-				std::cout << "Ready to accept a pair of connections." << std::endl;
-
-				// Accept a connection from a client
-				sockaddr_in clientAddr;
-				int clientAddrSize = sizeof(clientAddr);
 				SOCKET clientSocket1, clientSocket2;
 
-				do
+				std::cout << "Ready to accept a pair of connections." << std::endl;
+
+				clientSocket1 = cachedClient != 0 ? cachedClient : _socket.acceptClient();
+				cachedClient = 0;
+
+				std::cout << "First client connected! Waiting for the second to make a pair..." << std::endl;
+
+				clientSocket2 = _socket.acceptClient();
+
+				// check if the first client hasnt made a disconnect during the wait time for the second client
+				if (!_socket.clientConnected(clientSocket1))
 				{
-					clientSocket1 = accept(serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
-				} while (clientSocket1 == -1); // loop until valid connection
+					cachedClient = clientSocket2;
+					std::cout << "First client disconnected while matchmaking, waiting for another client to create a match..." << std::endl;
+					continue;
+				}
 
-				std::cout << "First client connetected! Waiting for the second to make a pair..." << std::endl;
+				std::cout << "Second client connected! Starting game..." << std::endl;
 
-				do
-				{
-					clientSocket2 = accept(serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
-				} while (clientSocket2 == -1); // loop until valid connection
-
-				std::cout << "Second client connetected! Starting game..." << std::endl;
 
 				// Lock the mutex to prevent concurrent access to the vector
 				std::lock_guard<std::mutex> guard(clientThreadsMutex);
@@ -71,6 +73,11 @@ public:
 		}
 	}
 
+	const Socket& getSocket() const
+	{
+		return _socket;
+	}
+
 	bool sendMessageToGraphics(SOCKET client, const std::string& msg)
 	{
 		return sendMessageToGraphics(client, (char*)msg.c_str());
@@ -78,13 +85,13 @@ public:
 
 	bool sendMessageToGraphics(SOCKET client, char* msg)
 	{
-		return socket.sendMsg(client, msg);
+		return _socket.sendMsg(client, msg);
 	}
 
 	std::string getMessageFromGraphics(SOCKET client)
 	{
 		string result = "";
-		socket.recvMsg(client, result);
+		_socket.recvMsg(client, result);
 
 		return result;
 	}

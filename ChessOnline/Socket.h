@@ -59,12 +59,40 @@ public:
 		std::cout << "Successfully initiated socket." << std::endl;
 	}
 
-	SOCKET getServerSocket()
+	const SOCKET getServerSocket() const
 	{
 		return _serverSocket;
 	}
 
-	bool sendMsg(SOCKET client, const char* message)
+	bool clientConnected(SOCKET clientSocket) const
+	{
+		return send(clientSocket, NULL, 0, 0) != SOCKET_ERROR;
+	}
+
+	SOCKET acceptClient(bool forceValid = true, int maxTries = 5) const
+	{
+
+		// Accept a connection from a client
+		sockaddr_in clientAddr;
+		int clientAddrSize = sizeof(clientAddr);
+		SOCKET clientSocket;
+		int tries = 1;
+
+		// only run a single iteration
+		if (forceValid == false)
+		{
+			maxTries = 1;
+		}
+
+		do
+		{
+			clientSocket = accept(_serverSocket, (sockaddr*)&clientAddr, &clientAddrSize);
+		} while (clientSocket == -1 && tries++ != maxTries); // loop until valid connection or max tries reached
+
+		return clientSocket;
+	}
+
+	bool sendMsg(SOCKET client, const char* message) const
 	{
 		char* newMsg = new char[strlen(message) + 2]; // extra for dot and extra for null
 		strcpy_s(newMsg, strlen(message) + 2, message);
@@ -86,12 +114,12 @@ public:
 		return true;
 	}
 
-	bool sendMsg(SOCKET client, string message)
+	bool sendMsg(SOCKET client, string message) const
 	{
 		return sendMsg(client, message.c_str());
 	}
 
-	bool recvMsg(SOCKET client, string& out)
+	bool recvMsg(SOCKET client, string& out) const
 	{
 		std::string result = "";
 

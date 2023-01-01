@@ -15,10 +15,10 @@ bool moveRedone = false;
 
 /*
 * performs the move in-board + in-graphics, handle move errors and in perfect communication with graphics
-* input: source piece location, dest piece location, board and pipe
-* output: none
+* input: client socket, enemy client socket, source piece location, dest piece location, board and pipe
+* output: string contains information about the move (move code, promotion type, src and dest location)
 */
-void performMove(SOCKET client, const string srcLocation, const string destLocation, Board& board, Pipe& p);
+string performMove(SOCKET client, SOCKET enemyClient, const string srcLocation, const string destLocation, Board& board, Pipe& p);
 
 void handleClient(SOCKET whitePlayer, SOCKET blackPlayer, Pipe* pipe);
 
@@ -52,14 +52,27 @@ void handleClient(SOCKET whitePlayer, SOCKET blackPlayer, Pipe* pipe)
 	p.sendMessageToGraphics(blackPlayer, msgToGraphics);
 
 	// get message from graphics (white player is starting)
-	string msgFromGraphics = p.getMessageFromGraphics(whitePlayer);
+	string msgFromGraphics = "";
 	SOCKET client = whitePlayer;
 
-	while (msgFromGraphics != "quit" && msgFromGraphics != "") // an empty string can be considered as a "quit"
+	do
 	{
+		msgFromGraphics = p.getMessageFromGraphics(client);
+
 		// only accept messages from current player
 		// if the other player tries to make a move, the client will prevent him
 		int curPlayerType = board.getCurrentPlayer()->getType();
+
+
+		// let the other client know in case of a quit/disconnection
+		if (msgFromGraphics == "quit")
+		{
+			p.sendMessageToGraphics(curPlayerType == WHITE_PLAYER ? blackPlayer : whitePlayer, msgFromGraphics);
+		}
+		else if (!p.getSocket().clientConnected(client))
+		{
+			p.sendMessageToGraphics(curPlayerType == WHITE_PLAYER ? blackPlayer : whitePlayer, "disconnected");
+		}
 
 		if (msgFromGraphics == "history") // graphics wants to get history
 		{
@@ -136,26 +149,23 @@ void handleClient(SOCKET whitePlayer, SOCKET blackPlayer, Pipe* pipe)
 				delete srcPiece;
 			}
 		}
-		else // graphics sent command to make the move
+		else if(msgFromGraphics.length() == 4 && msgFromGraphics != "quit")// graphics sent command to make the move
 		{
 			// perform the move and let graphics know the result
-			performMove(client, msgFromGraphics.substr(0, 2), msgFromGraphics.substr(2, 4), board, p);
+			string res = performMove(client, client == whitePlayer ? blackPlayer : whitePlayer, msgFromGraphics.substr(0, 2), msgFromGraphics.substr(2, 4), board, p);
 			curPlayerType = board.getCurrentPlayer()->getType();
 			client = curPlayerType == WHITE_PLAYER ? whitePlayer : blackPlayer;
 
 			// send the enemy player's client the new board
-			p.sendMessageToGraphics(client, board.getBoard() + (char)(curPlayerType + '0'));
+			p.sendMessageToGraphics(client, board.getBoard() + (char)(curPlayerType + '0') + res);
 		}
-
-		// get message from graphics
-		if (msgFromGraphics != "quit") msgFromGraphics = p.getMessageFromGraphics(client);
-	}
+	} while (msgFromGraphics != "quit" && p.getSocket().clientConnected(client));
 
 	// free program's used memory
 	msgFromGraphics.clear();
 }
 
-void performMove(SOCKET client, const string srcLocation, const string destLocation, Board& board, Pipe& p)
+string performMove(SOCKET client, SOCKET enemyClient, const string srcLocation, const string destLocation, Board& board, Pipe& p)
 {
 	// we use moveRedone as a "cache", if this move is a result of a redo, 
 	// then we already pushed the move onto the stack,
@@ -168,6 +178,8 @@ void performMove(SOCKET client, const string srcLocation, const string destLocat
 	int result = 0;
 	int newResult = 0;
 	string msgFromGraphics = "";
+	string res = "";
+	char promotionType = ' ';
 
 	// validate move
 	result = board.validateMove(board.getCurrentPlayer(), *srcPiece, *destPiece);
@@ -226,7 +238,8 @@ void performMove(SOCKET client, const string srcLocation, const string destLocat
 				p.sendMessageToGraphics(client, std::to_string(result));
 
 				msgFromGraphics = p.getMessageFromGraphics(client);
-				result = board.promotePiece(board.getPiece(msgFromGraphics.substr(0, 2)), msgFromGraphics[2]);
+				promotionType = msgFromGraphics[2];
+				result = board.promotePiece(board.getPiece(msgFromGraphics.substr(0, 2)), promotionType);
 				move->setPromoted(true);
 				srcPiece = nullptr;
 			}
@@ -236,6 +249,7 @@ void performMove(SOCKET client, const string srcLocation, const string destLocat
 		{
 			result = newResult;
 		}
+		res = std::to_string(result) + promotionType + srcLocation + destLocation;
 	}
 
 	// free pieces's memory after use incase needed
@@ -260,8 +274,12 @@ void performMove(SOCKET client, const string srcLocation, const string destLocat
 	{
 		msgFromGraphics = p.getMessageFromGraphics(client); // get the quit message
 		p.sendMessageToGraphics(client, board.getMoveHistory());
+		p.sendMessageToGraphics(enemyClient, board.getBoard() + (char)(!whitePlayer + '0') + res);
+		p.sendMessageToGraphics(enemyClient, board.getMoveHistory());
 	}
 
 	// finish current move
 	p.sendMessageToGraphics(client, "done");
+
+	return res;
 }
