@@ -13,20 +13,20 @@ namespace ChessClient
         private TcpClient client;
         // Get a client stream for reading and writing.
         private NetworkStream stream;
-        private string ip;
-        private int port;
+        private readonly string ip;
+        private readonly int port;
         public Socket(string ip, int port)
         {
             this.ip = ip;
             this.port = port;
         }
 
-        public bool isConnected()
+        public bool IsConnected()
         {
-            return client == null ? false : client.Connected;
+            return client != null && client.Connected;
         }
 
-        public bool connect()
+        public bool Connect()
         {
             if (client == null || client.Connected == false)
             {
@@ -84,8 +84,7 @@ namespace ChessClient
 
             return result;
         }
-
-        public void close()
+        public void Close()
         {
             client.Close();
         }

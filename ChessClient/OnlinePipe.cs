@@ -6,27 +6,26 @@ namespace chessClient
 {
     public class OnlinePipe
     {
-        Socket socket;
-        public int pipeNumber;
+        readonly Socket socket;
 
         public OnlinePipe()
         {
             socket = new Socket("20.21.96.201", 5555);
         }
 
-        public bool connect()
+        public bool Connect()
         {
-            return socket.connect();
+            return socket.Connect();
         }
 
-        public bool isConnected()
+        public bool IsConnected()
         {
-            return socket.isConnected();
+            return socket.IsConnected();
         }
 
-        public string getEngineMessage()
+        public string GetEngineMessage()
         {
-            bool connected = isConnected();
+            bool connected = IsConnected();
             string res = "";
 
             if (connected)
@@ -50,17 +49,17 @@ namespace chessClient
             return res;
         }
 
-        public void sendEngineMove(string move)
+        public void SendEngineMove(string move)
         {
-            if (!isConnected())
+            if (!IsConnected())
                 return;
 
             socket.Send(move);
         }
 
-        public void close()
+        public void Close()
         {
-            socket.close();
+            socket.Close();
         }
     }
 }

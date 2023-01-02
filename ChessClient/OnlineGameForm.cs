@@ -56,11 +56,11 @@ namespace chessClient
         private void InitForm()
         {
 
-            enginePipe.connect();
+            enginePipe.Connect();
 
             Invoke((MethodInvoker)delegate
             {
-                string s = enginePipe.getEngineMessage();
+                string s = enginePipe.GetEngineMessage();
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
                 ActionOnButtons("Visible", true);
@@ -293,10 +293,13 @@ namespace chessClient
             {
                 for (int j = 0; j < BOARD_SIZE; j++)
                 {
-                    matBoard[i, j].BackgroundImage = GetImageBySign(board[i * BOARD_SIZE + j], DesignVersion);
+                    if (matBoard[i, j].BackgroundImage?.Tag?.ToString() != board[i * BOARD_SIZE + j].ToString())
+                    {
+                        matBoard[i, j].BackgroundImage = GetImageBySign(board[i * BOARD_SIZE + j], DesignVersion);
+                    }
                 }
             }
-            PaintSquares();
+            //PaintSquares();
         }
 
         private void PaintSquares()
@@ -321,8 +324,14 @@ namespace chessClient
 
         void UpdateBoard()
         {
+            // as long as updateBoard is active, the history btn must be disabled
+            // because the server wont listen to this client's requests
+            Invoke((MethodInvoker)delegate
+            {
+                LogHistory.Enabled = false;
+            });
 
-            string newBoard = enginePipe.getEngineMessage();
+            string newBoard = enginePipe.GetEngineMessage();
             if (newBoard == "disconnected" || newBoard == "quit")
             {
                 isGameOver = true;
@@ -338,7 +347,7 @@ namespace chessClient
                 // checks if move code is 2 chars length or not
                 string moveCode = newBoard.Substring(BOARD_SIZE * BOARD_SIZE + 1, 2).Trim();
                 bool isMoveCode = int.TryParse(moveCode, out int numericValue);
-                if(!isMoveCode)
+                if (!isMoveCode)
                 {
                     moveCode = newBoard[BOARD_SIZE * BOARD_SIZE + 1].ToString();
                 }
@@ -363,9 +372,9 @@ namespace chessClient
                     // as the now-deleted "load moves" button
 
                     isGameOver = true;
-                    enginePipe.sendEngineMove("quit");
-                    gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
-                    enginePipe.close();
+                    enginePipe.SendEngineMove("quit");
+                    gameHistory = enginePipe.GetEngineMessage(); // get end-game history from engine
+                    enginePipe.Close();
                 }
 
                 isCurPlWhite = newBoard[BOARD_SIZE * BOARD_SIZE] == '0';
@@ -383,6 +392,12 @@ namespace chessClient
                 PaintSquares(newBoard);
                 ResumeLayout();
             }
+
+            // re-enable button
+            Invoke((MethodInvoker)delegate
+            {
+                LogHistory.Enabled = true;
+            });
         }
 
         void Lastlbl_Click(object sender, EventArgs e)
@@ -436,10 +451,10 @@ namespace chessClient
             else
             {
                 srcSquare = (Square)b.Tag;
-                enginePipe.sendEngineMove(srcSquare.ToString());
+                enginePipe.SendEngineMove(srcSquare.ToString());
 
                 // all possible locations this piece can move to, example output: e5e6e7e8
-                string possibleMoves = enginePipe.getEngineMessage();
+                string possibleMoves = enginePipe.GetEngineMessage();
                 locationsArray = Regex.Split(possibleMoves, "(?<=\\G..)");
 
                 // last element is an empty string, therefore exclude it
@@ -562,11 +577,11 @@ namespace chessClient
                         Thread.Sleep(200);
                     }
 
-                    enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
+                    enginePipe.SendEngineMove(srcSquare.ToString() + dstSquare.ToString());
                     bool isValid = false;
                     while (m != "done")
                     {
-                        m = enginePipe.getEngineMessage();
+                        m = enginePipe.GetEngineMessage();
                         string res = ConvertEngineToText(m);
                         bool isMoveCode = int.TryParse(m, out int numericValue);
                         if (isMoveCode)
@@ -580,9 +595,9 @@ namespace chessClient
                                 isGameOver = true;
                                 m = "done";
                                 // send engine the winner
-                                enginePipe.sendEngineMove("quit");
-                                gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
-                                enginePipe.close();
+                                enginePipe.SendEngineMove("quit");
+                                gameHistory = enginePipe.GetEngineMessage(); // get end-game history from engine
+                                enginePipe.Close();
                             }
                             else if (res.ToLower().Contains("promotion"))
                             {
@@ -606,8 +621,8 @@ namespace chessClient
                                 }
 
                                 matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type, DesignVersion);
-                                enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
-                                m = enginePipe.getEngineMessage(); // get the confirmation message from engine
+                                enginePipe.SendEngineMove(dstSquare.ToString() + Char.ToLower(type));
+                                m = enginePipe.GetEngineMessage(); // get the confirmation message from engine
                                 res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), promotion);
 
                                 CleanBoard(); // clean board colors after promotion - fixes design issue
@@ -682,17 +697,17 @@ namespace chessClient
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (enginePipe.isConnected())
+            if (enginePipe.IsConnected())
             {
-                enginePipe.sendEngineMove("quit");
-                enginePipe.close();
+                enginePipe.SendEngineMove("quit");
+                enginePipe.Close();
             }
         }
 
         string getHistory()
         {
-            enginePipe.sendEngineMove("history"); // ask engine to give game's history
-            gameHistory = gameHistory != "" ? gameHistory : enginePipe.getEngineMessage();
+            enginePipe.SendEngineMove("history"); // ask engine to give game's history
+            gameHistory = gameHistory != "" ? gameHistory : enginePipe.GetEngineMessage();
             return gameHistory;
         }
         private void LogHistory_Click(object sender, EventArgs e)
