@@ -17,7 +17,7 @@ public:
 
 	OnlinePipe(void (*handleGame)(SOCKET, SOCKET, OnlinePipe*))
 	{
-		_socket = Socket(5555);
+		_socket = Socket(18079);
 		SOCKET serverSocket = _socket.getServerSocket();
 
 		SOCKET cachedClient = 0;
