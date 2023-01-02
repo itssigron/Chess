@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessClient", "ChessClient\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChessOnline", "ChessOnline\ChessOnline.vcxproj", "{675703CC-C2C5-47DE-9990-350B327EA981}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChessEngine", "ChessOffline\ChessEngine.vcxproj", "{675703CC-C2C5-47DE-9990-350B327EA982}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChessEngine", "ChessEngine\ChessEngine.vcxproj", "{675703CC-C2C5-47DE-9990-350B327EA982}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
