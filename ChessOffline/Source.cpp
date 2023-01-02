@@ -48,7 +48,6 @@ int main(int argc, char* argv[])
 	while (!isConnect)
 	{
 		cout << "cant connect to graphics... trying to re-connect..." << endl;
-		Sleep(1000);
 		isConnect = p.connect();
 	}
 
