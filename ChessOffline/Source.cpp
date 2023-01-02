@@ -26,13 +26,6 @@ bool moveRedone = false;
 */
 void performMove(const string srcLocation, const string destLocation, Board& board, Pipe& p);
 
-/*
-* Starts the client (graphics) executable
-* input: none
-* output: none
-*/
-//void startClient();
-
 int main(int argc, char* argv[])
 {
 	string filePath = argc > 1 ? argv[1] : "";
@@ -285,21 +278,3 @@ void performMove(const string srcLocation, const string destLocation, Board& boa
 	// finish current move
 	p.sendMessageToGraphics("done");
 }
-
-/*
-void startClient()
-{
-	// Get the path and file name of the current executable
-	char path[MAX_PATH];
-	GetModuleFileName(NULL, path, MAX_PATH);
-
-	// Convert the char array to a string
-	string pathString = path;
-
-	// construct a command to start graphics which is in the same directory as the engine
-	string cmd = "cmd /c start \"\" \"" + pathString.substr(0, pathString.find_last_of('\\')) + "\\ChessClient.exe\"";
-
-	//start the client and hide engine's console window
-	system(cmd.c_str());
-	::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window so only game client visible
-}*/
