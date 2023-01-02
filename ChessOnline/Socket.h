@@ -3,6 +3,7 @@
 #include <Winsock2.h> 
 
 using std::string;
+const std::string currentDateTime();
 
 class Socket
 {
@@ -21,7 +22,7 @@ public:
 
 		if (result != 0)
 		{
-			std::cerr << "WSAStartup failed: " << result << std::endl;
+			std::cerr << currentDateTime() << "WSAStartup failed: " << result << std::endl;
 			throw "WSAStartup failed";
 		}
 
@@ -38,7 +39,7 @@ public:
 		result = bind(_serverSocket, (sockaddr*)&serverAddr, sizeof(serverAddr));
 		if (result == SOCKET_ERROR)
 		{
-			std::cerr << "bind failed: " << WSAGetLastError() << std::endl;
+			std::cerr << currentDateTime() << "bind failed: " << WSAGetLastError() << std::endl;
 			closesocket(_serverSocket);
 			WSACleanup();
 			throw "binding failed";
@@ -48,13 +49,13 @@ public:
 		result = listen(_serverSocket, SOMAXCONN);
 		if (result == SOCKET_ERROR)
 		{
-			std::cerr << "listen failed: " << WSAGetLastError() << std::endl;
+			std::cerr << currentDateTime() << "listen failed: " << WSAGetLastError() << std::endl;
 			closesocket(_serverSocket);
 			WSACleanup();
 			throw "listening socket failed";
 		}
 
-		std::cout << "Successfully initiated socket." << std::endl;
+		std::cout << currentDateTime() << "Successfully initiated socket." << std::endl;
 	}
 
 	const SOCKET getServerSocket() const
@@ -101,12 +102,12 @@ public:
 
 		if (result == SOCKET_ERROR)
 		{
-			std::cerr << "send failed: " << WSAGetLastError() << std::endl;
+			std::cerr << currentDateTime() << "send failed: " << WSAGetLastError() << std::endl;
 			delete[] newMsg;
 			return false;
 		}
 
-		std::cout << "Sent: " << newMsg << std::endl;
+		std::cout << currentDateTime() << "Sent: " << newMsg << std::endl;
 		delete[] newMsg;
 
 		return true;
@@ -132,7 +133,7 @@ public:
 			int bytesReceived = recv(client, data, 1, 0);
 			if (bytesReceived == SOCKET_ERROR || bytesReceived == 0)
 			{
-				std::cerr << "recv failed: " << WSAGetLastError() << std::endl;
+				std::cerr << currentDateTime() << "recv failed: " << WSAGetLastError() << std::endl;
 				failed = true;
 				finished = true;
 			}
@@ -151,7 +152,7 @@ public:
 		if (!failed)
 		{
 			out = result;
-			std::cout << "Received: " << result << std::endl;
+			std::cout << currentDateTime() << "Received: " << result << std::endl;
 		}
 
 		return failed;

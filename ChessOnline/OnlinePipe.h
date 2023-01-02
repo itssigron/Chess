@@ -1,6 +1,7 @@
 #pragma once
 #pragma warning (disable : 6276 4477 6054)
 #pragma region Includes
+#define _CRT_SECURE_NO_WARNINGS
 #include "Socket.h"
 #include <string>
 #include <thread>
@@ -9,13 +10,16 @@
 
 #pragma endregion
 
+class OnlinePipe;
+typedef void (*handler)(SOCKET, SOCKET, OnlinePipe&);
+
 class OnlinePipe
 {
 private:
 	Socket _socket;
 public:
 
-	OnlinePipe(void (*handleGame)(SOCKET, SOCKET, OnlinePipe*))
+	OnlinePipe(handler handleGame)
 	{
 		_socket = Socket(18079);
 		SOCKET serverSocket = _socket.getServerSocket();
@@ -33,12 +37,12 @@ public:
 			{
 				SOCKET clientSocket1, clientSocket2;
 
-				std::cout << "Ready to accept a pair of connections." << std::endl;
+				std::cout << currentDateTime() << "Ready to accept a pair of connections." << std::endl;
 
 				clientSocket1 = cachedClient != 0 ? cachedClient : _socket.acceptClient();
 				cachedClient = 0;
 
-				std::cout << "First client connected! Waiting for the second to make a pair..." << std::endl;
+				std::cout << currentDateTime() << "First client connected! Waiting for the second to make a pair..." << std::endl;
 
 				clientSocket2 = _socket.acceptClient();
 
@@ -46,11 +50,11 @@ public:
 				if (!_socket.clientConnected(clientSocket1))
 				{
 					cachedClient = clientSocket2;
-					std::cout << "First client disconnected while matchmaking, waiting for another client to create a match..." << std::endl;
+					std::cout << currentDateTime() << "First client disconnected while matchmaking, waiting for another client to create a match..." << std::endl;
 					continue;
 				}
 
-				std::cout << "Second client connected! Starting game..." << std::endl;
+				std::cout << currentDateTime() << "Second client connected! Starting game..." << std::endl;
 
 
 				// Lock the mutex to prevent concurrent access to the vector
@@ -58,7 +62,7 @@ public:
 
 				// Create a new thread to handle the connection
 				clientThreads.push_back(std::thread([handleGame, clientSocket1, clientSocket2, this]() {
-					handleGame(clientSocket1, clientSocket2, this);
+					handleGame(clientSocket1, clientSocket2, *this);
 					}));
 			}
 			else
