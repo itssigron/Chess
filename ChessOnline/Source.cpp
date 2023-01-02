@@ -69,6 +69,10 @@ void handleClient(SOCKET whitePlayer, SOCKET blackPlayer, Pipe* pipe)
 		{
 			p.sendMessageToGraphics(curPlayerType == WHITE_PLAYER ? blackPlayer : whitePlayer, msgFromGraphics);
 		}
+		else if (msgFromGraphics == "black" || msgFromGraphics == "white")
+		{
+			closesocket(client);
+		}
 		else if (!p.getSocket().clientConnected(client))
 		{
 			p.sendMessageToGraphics(curPlayerType == WHITE_PLAYER ? blackPlayer : whitePlayer, "disconnected");
@@ -152,12 +156,17 @@ void handleClient(SOCKET whitePlayer, SOCKET blackPlayer, Pipe* pipe)
 		else if(msgFromGraphics.length() == 4 && msgFromGraphics != "quit")// graphics sent command to make the move
 		{
 			// perform the move and let graphics know the result
+			string oldBoard = board.getBoard();
 			string res = performMove(client, client == whitePlayer ? blackPlayer : whitePlayer, msgFromGraphics.substr(0, 2), msgFromGraphics.substr(2, 4), board, p);
 			curPlayerType = board.getCurrentPlayer()->getType();
 			client = curPlayerType == WHITE_PLAYER ? whitePlayer : blackPlayer;
 
-			// send the enemy player's client the new board
-			p.sendMessageToGraphics(client, board.getBoard() + (char)(curPlayerType + '0') + res);
+			// only if the move was valid
+			if (board.getBoard() != oldBoard)
+			{
+				// send the enemy player's client the new board
+				p.sendMessageToGraphics(client, board.getBoard() + (char)(curPlayerType + '0') + res);
+			}
 		}
 	} while (msgFromGraphics != "quit" && p.getSocket().clientConnected(client));
 
