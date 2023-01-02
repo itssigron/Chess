@@ -24,7 +24,7 @@ Chess Game developed as part of Magshimim's second year (Israel's National Cyber
 
 ### Installation
 
-* Download the [Stable](https://github.com/itssigron/Magshimim-GifMaker/releases/tag/v1.0.0) release
+* Download the [Stable](https://gitlab.com/harel_sigron_advanced_programming_2023/chess-project/-/releases/Stable) release
 * Follow all installation steps
 * Note - the online game mode is queue-based, meaning that a game is being set up to the first 2 players joining each time.<br>So if you want to play with your friend, you will probably want to enter around the same time so no one else will.
 * The game is also currently able to run only 10 games at once, you may change that limit in ChessOnline/OnlinePipe.h:32
