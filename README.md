@@ -2,13 +2,13 @@
 
 Chess Game developed as part of Magshimim's second year (Israel's National Cyber Education Program)
 
-![Showcase design v1](./ChessEngine/Resources/ChessClientV1.png)
-![Showcase design v2](./ChessEngine/Resources/ChessClientV2.png)
+![Showcase design v1](./ChessOnline/Resources/ChessClientV1.png)
+![Showcase design v2](./ChessOnline/Resources/ChessClientV2.png)
 
 ## Features
 
 * Customizable design
-* offline PvP (possibly online mode in the future)
+* Online and Offline PvP
 * Save a game to a `.chess` file (in-game button or Ctrl+S)
 * Load a game by either opening a `.chess` file or by loading it from in-game
 * Standalone button to load moves one by one
@@ -26,10 +26,17 @@ Chess Game developed as part of Magshimim's second year (Israel's National Cyber
 
 * Download the [Stable](https://github.com/itssigron/Magshimim-GifMaker/releases/tag/v1.0.0) release
 * Follow all installation steps
-* Enjoy :)
+* Note - the online game mode is queue-based, meaning that a game is being set up to the first 2 players joining each time.<br>So if you want to play with your friend, you will probably want to enter around the same time so no one else will.
+* The game is also currently able to run only 10 games at once, you may change that limit in ChessOnline/OnlinePipe.h:32
 ## File Structure
 
-* `ChessEngine` - The game's engine (contains all game's logic and built in C++ using named pipes)
+* `ChessOnline` - The game's server 
+(for online game mode)
+    * `Socket.h` - A socket server wrapper for `winsock2`.
+    * `OnlinePipe.h` - The main bridge between the server and clients. it handles new connections and matchmake every 2 first players to connect.
+    * `Source.cpp` - The main game logic (contains the functionality to handle games)<br><br>
+
+* `ChessOffline` - The game's engine (contains all game's logic and built in C++ using named pipes)
     * `Board.h & Board.cpp` - Represents the game's Board.
     * `Player.h & Player.cpp` - Represent a player in the game.
     * `Piece.h & Piece.cpp` - Abstract class represents one of the following:
@@ -45,17 +52,18 @@ Chess Game developed as part of Magshimim's second year (Israel's National Cyber
     * `Pipe.h` - Contains named pipe's main logic.
     * `Source.cpp` - Main's engine file<br><br>
 
-* `ChessGraphics` - The game's GUI (contains all game's design and built in C# Windows forms app)
+* `ChessClient` - The game's GUI (contains all game's design and built in C# Windows forms app)
     * `Resources` - All game's resources (i.e images)
-    * `Form1.cs & Form1.Designer.cs & Form1.resx` - The game's main GUI design
-    * `GameHistory.cs & GameHistory.Designer.cs & GameHistory.resx` - A prompt to show the game's history to the user.
-
-    * `LoadMovesPrompt.cs & LoadMovesPrompt.Designer.cs & LoadMovesPrompt.resx` - A prompt to allow the user to load a sequence of moves automatically.
-
-    * `PawnPromotionPrompt.cs & PawnPromotionPrompt.Designer.cs & PawnPromotionPrompt.resx` - A prompt to let the user choose a promotion for his pawn.    
+    * `OfflineGameForm.cs` - The GUI for the offline game mode.
+    * `OnlineGameForm.cs` - The GUI for the online game mode.
+    * `GameHistory.cs` - A prompt to show the game's history to the user.
+    * `LoadMovesPrompt.cs` - A prompt to allow the user to load a sequence of moves automatically.
+    * `PawnPromotionPrompt.cs` - A prompt to let the user choose a promotion for his pawn.    
     * `Square.cs` - Represents a square in the board.
     * `Tests.cs` - Contains automated tests to check specific functionality.
-    * `Pipe.cs` - Contains named pipe's main logic.
+    * `OfflinePipe.cs` - Contains named pipe's main logic for offline use.
+    * `ServerPipe.cs` - Contains the online communication logic using sockets.
+    * `Socket.cs` - A socket client wrapper for TcpClient used in `ServerPipe.cs`.
     * `Program.cs` - Main client's file.
 ## Support
 
