@@ -38,6 +38,20 @@ void handleGame(SOCKET whitePlayer, SOCKET blackPlayer, OnlinePipe& p)
 	blackPlayerThread.join();
 
 	std::cout << currentDateTime() << "Game over." << std::endl;
+
+	std::vector<std::thread*>& threads = p.getThreads();
+	std::thread::id threadId = std::this_thread::get_id();
+	std::thread* th = nullptr;
+
+	// remove the thread from the threads vector
+	for (std::thread*& t : threads)
+	{
+		if (t->get_id() == threadId)
+		{
+			th = t;
+			threads.erase(std::remove(threads.begin(), threads.end(), t), threads.end());
+		}
+	}
 }
 
 void handleClient(SOCKET client, SOCKET enemyClient, OnlinePipe& p)
@@ -67,6 +81,7 @@ const std::string currentDateTime()
 	// Convert the current time to the Israeli timezone (GMT + 2)
 	std::tm* tm = std::gmtime(&t);
 	tm->tm_hour += ISRAEL_TIMEZONE_OFFSET;
+	t = std::mktime(tm);
 
 	// Get the current date and time as a string in the Israeli timezone
 	char date_time_str[100];

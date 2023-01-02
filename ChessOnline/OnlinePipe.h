@@ -17,6 +17,9 @@ class OnlinePipe
 {
 private:
 	Socket _socket;
+
+	// Create a vector to store the threads
+	std::vector<std::thread*> _clientThreads;
 public:
 
 	OnlinePipe(handler handleGame)
@@ -26,14 +29,12 @@ public:
 
 		SOCKET cachedClient = 0;
 
-		// Create a vector to store the threads
-		std::vector<std::thread> clientThreads;
 		// Create a mutex to synchronize access to the vector
 		std::mutex clientThreadsMutex;
 
 		while (true)
 		{
-			if (clientThreads.size() < 10)
+			if (_clientThreads.size() < 10)
 			{
 				SOCKET clientSocket1, clientSocket2;
 
@@ -58,19 +59,12 @@ public:
 
 				// Lock the mutex to prevent concurrent access to the vector
 				std::lock_guard<std::mutex> guard(clientThreadsMutex);
-				
+
 				// Create a new thread to handle the connection
-				clientThreads.push_back(std::thread([handleGame, clientSocket1, clientSocket2, this]() {
+				std::thread* thread = new std::thread([handleGame, clientSocket1, clientSocket2, this]() {
 					handleGame(clientSocket1, clientSocket2, *this);
-					}));
-			}
-			else
-			{
-				// wait for all 10 games to finish before accepting another 10 games
-				for (std::thread& t : clientThreads) {
-					t.join();
-				}
-				clientThreads.clear();
+					});
+				_clientThreads.push_back(thread);
 			}
 		}
 	}
@@ -78,6 +72,11 @@ public:
 	const Socket& getSocket() const
 	{
 		return _socket;
+	}
+
+	std::vector<std::thread*>& getThreads()
+	{
+		return _clientThreads;
 	}
 
 	bool sendMessageToGraphics(SOCKET& client, const std::string& msg)
