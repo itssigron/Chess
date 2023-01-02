@@ -101,6 +101,8 @@ namespace chessClient
                                 if (move == "quit" || move == "win")
                                 {
                                     isGameOver = true;
+                                    serverPipe.Close();
+                                    enginePipe.Close();
 
                                     if (move == "quit")
                                     {
@@ -531,9 +533,9 @@ namespace chessClient
             {
                 return;
             }
-            
+
             // disalow moves while reflecting a different move
-            if(currentlyReflecting && !isReflection)
+            if (currentlyReflecting && !isReflection)
             {
                 return;
             }
@@ -692,10 +694,16 @@ namespace chessClient
         {
             if (enginePipe.IsConnected())
             {
-                enginePipe.SendEngineMove("quit");
-                serverPipe.SendEngineMove(isGameOver ? "win" : "quit");
-                enginePipe.Close();
-                serverPipe.Close();
+                if (enginePipe.IsConnected())
+                {
+                    enginePipe.SendEngineMove("quit");
+                    enginePipe.Close();
+                }
+                if (serverPipe.IsConnected())
+                {
+                    serverPipe.SendEngineMove(isGameOver ? "win" : "quit");
+                    serverPipe.Close();
+                }
                 Environment.Exit(0);
             }
         }

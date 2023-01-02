@@ -23,30 +23,29 @@ int main(int argc, char* argv[])
 
 void handleGame(SOCKET whitePlayer, SOCKET blackPlayer, OnlinePipe& p)
 {
-	string msgFromGraphics = "";
-	//SOCKET client = whitePlayer; // white player starts
-	//SOCKET enemyClient = blackPlayer;
+	std::thread whitePlayerThread = std::thread(handleClient, whitePlayer, blackPlayer, std::ref(p));
+	std::thread blackPlayerThread = std::thread(handleClient, blackPlayer, whitePlayer, std::ref(p));
+
+	std::cout << currentDateTime() << "Game started." << std::endl;
 
 	// let clients know which side they are
 	p.sendMessageToGraphics(whitePlayer, WHITE_PLAYER);
 	p.sendMessageToGraphics(blackPlayer, BLACK_PLAYER);
 
-	std::thread whitePlayerThread = std::thread(handleClient, whitePlayer, blackPlayer, std::ref(p));
-	std::thread blackPlayerThread = std::thread(handleClient, blackPlayer, whitePlayer, std::ref(p));
 
 	// white for clients's threads to finish before finishing the game
 	whitePlayerThread.join();
 	blackPlayerThread.join();
+
+	std::cout << currentDateTime() << "Game over." << std::endl;
 }
 
 void handleClient(SOCKET client, SOCKET enemyClient, OnlinePipe& p)
 {
 	string msgFromGraphics = "";
 
-	do
+	while (msgFromGraphics != "quit" && msgFromGraphics != "win" && p.getMessageFromGraphics(client, msgFromGraphics))
 	{
-		msgFromGraphics = p.getMessageFromGraphics(client);
-
 		// if its a valid message and not an empty string (most likely disconnection)
 		if (msgFromGraphics.length())
 		{
@@ -56,9 +55,8 @@ void handleClient(SOCKET client, SOCKET enemyClient, OnlinePipe& p)
 			{
 				msgFromGraphics = "quit";
 			}
-
 		}
-	} while (msgFromGraphics != "quit" && msgFromGraphics != "win" && p.getSocket().clientConnected(client));
+	}
 }
 
 const std::string currentDateTime()

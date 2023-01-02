@@ -56,10 +56,9 @@ public:
 
 				std::cout << currentDateTime() << "Second client connected! Starting game..." << std::endl;
 
-
 				// Lock the mutex to prevent concurrent access to the vector
 				std::lock_guard<std::mutex> guard(clientThreadsMutex);
-
+				
 				// Create a new thread to handle the connection
 				clientThreads.push_back(std::thread([handleGame, clientSocket1, clientSocket2, this]() {
 					handleGame(clientSocket1, clientSocket2, *this);
@@ -81,21 +80,26 @@ public:
 		return _socket;
 	}
 
-	bool sendMessageToGraphics(SOCKET client, const std::string& msg)
+	bool sendMessageToGraphics(SOCKET& client, const std::string& msg)
 	{
 		return sendMessageToGraphics(client, (char*)msg.c_str());
 	}
 
-	bool sendMessageToGraphics(SOCKET client, char* msg)
+	bool sendMessageToGraphics(SOCKET& client, char* msg)
 	{
 		return _socket.sendMsg(client, msg);
 	}
 
-	std::string getMessageFromGraphics(SOCKET client)
+	std::string getMessageFromGraphics(SOCKET& client)
 	{
 		string result = "";
 		_socket.recvMsg(client, result);
 
 		return result;
+	}
+
+	bool getMessageFromGraphics(SOCKET& client, string& out)
+	{
+		return _socket.recvMsg(client, out);
 	}
 };

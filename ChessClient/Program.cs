@@ -3,11 +3,27 @@ using System.Windows.Forms;
 using ChessClient;
 using System.Diagnostics;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace chessClient
 {
     static class Program
     {
+        private static object CreateByTypeName(string typeName)
+        {
+            // scan for the class type
+            var type = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                        from t in assembly.GetTypes()
+                        where t.Name == typeName  // you could use the t.FullName as well
+                        select t).FirstOrDefault();
+
+            if (type == null)
+                throw new InvalidOperationException("Type not found");
+
+            return Activator.CreateInstance(type);
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -17,18 +33,21 @@ namespace chessClient
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
+            var modes = new Dictionary<string, string>()
+            {
+                { "Online",  "OnlineGameForm" },
+                { "Offline",  "OfflineGameForm" }
+            };
+
             string GameMode = new ModeSelection().GetResult();
 
-            // start the game's engine
-            Process.Start(Path.Combine(Application.StartupPath, "ChessEngine.exe"));
-
-            if (GameMode == "Online")
+            if (modes.ContainsKey(GameMode))
             {
-                Application.Run(new OnlineGameForm());
-            }
-            else
-            {
-                Application.Run(new OfflineGameForm());
+                // start the game's engine
+                Process engineProcess = Process.Start(Path.Combine(Application.StartupPath, "ChessEngine.exe"));
+                Application.Run((Form)CreateByTypeName(modes[GameMode]));
+                engineProcess.Kill(); // kill process after use incase form failed to do so
+                engineProcess.Close();
             }
         }
     }

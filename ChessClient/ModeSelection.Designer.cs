@@ -75,6 +75,7 @@
             this.Controls.Add(this.OnlineBtn);
             this.Name = "ModeSelection";
             this.Text = "Game Mode Selection:";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ModeSelection_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
 

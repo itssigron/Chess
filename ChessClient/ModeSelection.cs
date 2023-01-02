@@ -6,7 +6,7 @@ namespace ChessClient
 {
     public partial class ModeSelection : Form
     {
-        public string result;
+        public string result = "";
         readonly EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.ManualReset);
         public ModeSelection()
         {
@@ -32,6 +32,12 @@ namespace ChessClient
         {
             result = ((Button)sender).Text;
             Close();
+            handle.Set();
+        }
+
+        private void ModeSelection_FormClosed(object sender, FormClosedEventArgs e)
+        {
+
             handle.Set();
         }
     }

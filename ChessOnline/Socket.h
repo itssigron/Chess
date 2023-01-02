@@ -155,7 +155,7 @@ public:
 			std::cout << currentDateTime() << "Received: " << result << std::endl;
 		}
 
-		return failed;
+		return !failed;
 	}
 
 	void close()
