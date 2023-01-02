@@ -6,17 +6,16 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-#include "Player.h"
 
 #pragma endregion
 
-class Pipe
+class OnlinePipe
 {
 private:
 	Socket _socket;
 public:
 
-	Pipe(void (*handleClient)(SOCKET, SOCKET, Pipe*))
+	OnlinePipe(void (*handleGame)(SOCKET, SOCKET, OnlinePipe*))
 	{
 		_socket = Socket(5555);
 		SOCKET serverSocket = _socket.getServerSocket();
@@ -58,8 +57,8 @@ public:
 				std::lock_guard<std::mutex> guard(clientThreadsMutex);
 
 				// Create a new thread to handle the connection
-				clientThreads.push_back(std::thread([handleClient, clientSocket1, clientSocket2, this]() {
-					handleClient(clientSocket1, clientSocket2, this);
+				clientThreads.push_back(std::thread([handleGame, clientSocket1, clientSocket2, this]() {
+					handleGame(clientSocket1, clientSocket2, this);
 					}));
 			}
 			else

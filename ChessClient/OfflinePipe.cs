@@ -9,8 +9,8 @@ namespace chessClient
 {
     public class OfflinePipe
     {
-        NamedPipeServerStream pipeServer = null;
-        StreamString ss;
+        readonly NamedPipeServerStream pipeServer = null;
+        readonly StreamString ss;
         public int pipeNumber;
 
         public OfflinePipe()
@@ -32,7 +32,7 @@ namespace chessClient
 
         }
 
-        public bool connect()
+        public bool Connect()
         {
 
             // Wait for a client to connect
@@ -41,25 +41,25 @@ namespace chessClient
             return pipeServer.IsConnected;
         }
 
-        public bool isConnected()
+        public bool IsConnected()
         {
             return pipeServer.IsConnected;
         }
 
-        public string getEngineMessage()
+        public string GetEngineMessage()
         {
-            return isConnected() ? ss.getStringFromEngine() : "";
+            return IsConnected() ? ss.GetStringFromEngine() : "";
         }
 
-        public void sendEngineMove(string move)
+        public void SendEngineMove(string move)
         {
-            if (!isConnected())
+            if (!IsConnected())
                 return;
 
-            ss.sendMoveToEngine(move);
+            ss.SendMoveToEngine(move);
         }
 
-        public void close()
+        public void Close()
         {
             pipeServer.Close();
         }
@@ -69,34 +69,26 @@ namespace chessClient
 
     public class StreamString
     {
-        private Stream ioStream;
-        private Encoding streamEncoding;
+        private readonly Stream ioStream;
 
         public StreamString(Stream ioStream)
         {
             this.ioStream = ioStream;
-            streamEncoding = new ASCIIEncoding();
         }
 
-        public string getStringFromEngine()
+        public string GetStringFromEngine()
         {
             byte[] inBuffer = new byte[1024];
             ioStream.Read(inBuffer, 0, 1024);
 
-
-            String MyString = Encoding.ASCII.GetString(inBuffer).TrimEnd((Char)0);
-            string res = Encoding.ASCII.GetString(inBuffer).TrimEnd((Char)0);
-            Debug.WriteLine("[ENGINE]: " + res);
-
-            return res;
+            return Encoding.ASCII.GetString(inBuffer).TrimEnd((Char)0);
         }
 
-        public void sendMoveToEngine(string outString)
+        public void SendMoveToEngine(string outString)
         {
             byte[] t = Encoding.ASCII.GetBytes(outString);
             byte[] inBuffer = new byte[t.Length + 1];
 
-            Debug.WriteLine("[GRAPHICS]: " + outString);
             for (int i = 0; i < t.Length; i++)
             {
                 inBuffer[i] = t[i];
@@ -106,7 +98,6 @@ namespace chessClient
             try
             {
                 ioStream.Write(inBuffer, 0, inBuffer.Length);
-
                 ioStream.Flush();
             }
             catch

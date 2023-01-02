@@ -1,8 +1,6 @@
 #include <iostream>
-#include <cstring>
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
-#include <Winsock2.h> // Use Winsock2 instead of sys/socket.h
-#include <exception>
+#include <Winsock2.h> 
 
 using std::string;
 
@@ -73,9 +71,9 @@ public:
 	{
 
 		// Accept a connection from a client
-		sockaddr_in clientAddr;
+		sockaddr_in clientAddr = {};
 		int clientAddrSize = sizeof(clientAddr);
-		SOCKET clientSocket;
+		SOCKET clientSocket = 0;
 		int tries = 1;
 
 		// only run a single iteration
@@ -99,7 +97,7 @@ public:
 		newMsg[strlen(message)] = '.';
 		newMsg[strlen(message) + 1] = 0;
 
-		int result = send(client, newMsg, strlen(newMsg), 0);
+		int result = send(client, newMsg, (int)strlen(newMsg), 0);
 
 		if (result == SOCKET_ERROR)
 		{

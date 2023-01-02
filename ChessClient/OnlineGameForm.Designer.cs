@@ -285,7 +285,7 @@
             // 
             this.LogHistory.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F);
             this.LogHistory.Location = new System.Drawing.Point(1213, 26);
-            this.LogHistory.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.LogHistory.Margin = new System.Windows.Forms.Padding(4);
             this.LogHistory.Name = "LogHistory";
             this.LogHistory.Size = new System.Drawing.Size(216, 46);
             this.LogHistory.TabIndex = 51;
@@ -298,7 +298,7 @@
             // 
             this.DesignVerBtn.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.DesignVerBtn.Location = new System.Drawing.Point(1213, 94);
-            this.DesignVerBtn.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.DesignVerBtn.Margin = new System.Windows.Forms.Padding(4);
             this.DesignVerBtn.Name = "DesignVerBtn";
             this.DesignVerBtn.Size = new System.Drawing.Size(216, 46);
             this.DesignVerBtn.TabIndex = 101;
@@ -327,7 +327,7 @@
             this.SaveGameBtn.Font = new System.Drawing.Font("Microsoft Tai Le", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.SaveGameBtn.ForeColor = System.Drawing.SystemColors.ControlText;
             this.SaveGameBtn.Location = new System.Drawing.Point(1213, 159);
-            this.SaveGameBtn.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.SaveGameBtn.Margin = new System.Windows.Forms.Padding(4);
             this.SaveGameBtn.Name = "SaveGameBtn";
             this.SaveGameBtn.Size = new System.Drawing.Size(216, 46);
             this.SaveGameBtn.TabIndex = 103;
@@ -391,7 +391,7 @@
             this.GameRankBorder1.Controls.Add(this.label9);
             this.GameRankBorder1.Controls.Add(this.label10);
             this.GameRankBorder1.Location = new System.Drawing.Point(12, 49);
-            this.GameRankBorder1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.GameRankBorder1.Margin = new System.Windows.Forms.Padding(4);
             this.GameRankBorder1.Name = "GameRankBorder1";
             this.GameRankBorder1.Size = new System.Drawing.Size(53, 624);
             this.GameRankBorder1.TabIndex = 110;
@@ -633,7 +633,7 @@
             this.panel1.Controls.Add(this.label25);
             this.panel1.Controls.Add(this.label26);
             this.panel1.Location = new System.Drawing.Point(779, 49);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(53, 624);
             this.panel1.TabIndex = 200;
@@ -750,7 +750,7 @@
             this.btnBoard.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
             this.btnBoard.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnBoard.Location = new System.Drawing.Point(65, 58);
-            this.btnBoard.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnBoard.Margin = new System.Windows.Forms.Padding(4);
             this.btnBoard.Name = "btnBoard";
             this.btnBoard.Size = new System.Drawing.Size(89, 76);
             this.btnBoard.TabIndex = 2;
@@ -809,7 +809,7 @@
             this.Controls.Add(this.btnBoard);
             this.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
             this.KeyPreview = true;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.Name = "OnlineGameForm";
             this.Text = "Online Chess";

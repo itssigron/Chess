@@ -4,11 +4,11 @@ using System.Windows.Forms;
 
 namespace chessClient
 {
-    public class OnlinePipe
+    public class ServerPipe
     {
         readonly Socket socket;
 
-        public OnlinePipe()
+        public ServerPipe()
         {
             socket = new Socket("20.21.96.201", 5555);
         }
@@ -34,18 +34,8 @@ namespace chessClient
                 {
                     res = socket.Recv();
                 }
-                catch (Exception)
-                {
-                    connected = false;
-                }
+                catch (Exception) {}
             }
-
-            if(!connected)
-            {
-                MessageBox.Show("The connection to the server has been lost.");
-                Environment.Exit(0);
-            }
-
             return res;
         }
 
