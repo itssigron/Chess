@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{675703cc-c2c5-47de-9990-350b327ea982}</ProjectGuid>
-    <RootNamespace>ChessOffline</RootNamespace>
+    <RootNamespace>ChessEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>ChessEngine</ProjectName>
   </PropertyGroup>
