@@ -10,7 +10,7 @@ namespace chessClient
 
         public ServerPipe()
         {
-            socket = new Socket("20.21.96.201", 18079);
+            socket = new Socket("129.159.129.211", 18079);
         }
 
         public bool Connect()
