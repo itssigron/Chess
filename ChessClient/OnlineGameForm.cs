@@ -29,6 +29,7 @@ namespace chessClient
 
         bool isGameOver = false;
         int DesignVersion = 1;
+        bool currentlyReflecting = false;
 
         const int BOARD_SIZE = 8;
         Color YELLOW_SQUARE = Color.FromArgb(255, 206, 158);
@@ -94,6 +95,7 @@ namespace chessClient
                         while (!isGameOver)
                         {
                             string move = serverPipe.GetEngineMessage();
+                            currentlyReflecting = true;
                             if (!isGameOver || move != "")
                             {
                                 if (move == "quit" || move == "win")
@@ -119,6 +121,7 @@ namespace chessClient
                                         // re-change turn since its not an actual play
                                         // its just used to reflect the change that enemy client made
                                         ChangeTurn();
+                                        currentlyReflecting = false;
                                     });
                                 }
                             }
@@ -525,8 +528,15 @@ namespace chessClient
         void PlayMove(bool isReflection = false)
         {
             if (isGameOver)
+            {
                 return;
-
+            }
+            
+            // disalow moves while reflecting a different move
+            if(currentlyReflecting && !isReflection)
+            {
+                return;
+            }
 
             try
             {
