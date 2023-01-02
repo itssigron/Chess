@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
+using System.Diagnostics;
 using ChessClient;
 using System.IO;
 using static ChessClient.Properties.Resources;
@@ -18,11 +20,13 @@ namespace chessClient
         private Square srcSquare;
         private Square dstSquare;
 
-        private OnlinePipe enginePipe;
+        private OfflinePipe enginePipe;
+        private ServerPipe serverPipe;
         Button[,] matBoard;
 
-        bool isOwnerWhite = true;
         bool isCurPlWhite = true;
+        bool isOwnerWhite = true;
+
         bool isGameOver = false;
         int DesignVersion = 1;
 
@@ -55,33 +59,73 @@ namespace chessClient
         }
         private void InitForm()
         {
-
+            serverPipe.Connect();
             enginePipe.Connect();
 
             Invoke((MethodInvoker)delegate
             {
+
+                string startingPlayer = serverPipe.GetEngineMessage();
                 string s = enginePipe.GetEngineMessage();
                 lblCurrentPlayer.Visible = true;
                 label1.Visible = true;
                 ActionOnButtons("Visible", true);
                 lblWaiting.Visible = false;
 
-                // extra 1 character for the player whom this client belongs to,
-                if (s.Length != (BOARD_SIZE * BOARD_SIZE + 1))
+                // extra 1 character for starting player,
+                // and another extra for whether the game should be started from 0 or was loaded from file
+                if (s.Length != (BOARD_SIZE * BOARD_SIZE + 2))
                 {
                     MessageBox.Show("The length of the board's string is not according the PROTOCOL");
                     this.Close();
+
                 }
                 else
                 {
-                    isOwnerWhite = s[BOARD_SIZE * BOARD_SIZE] == '0';
+                    isOwnerWhite = startingPlayer[0] == '0';
                     PlayerColorLbl.Text = String.Format(PlayerColorLbl.Text, isOwnerWhite ? "White" : "Black");
-                    PaintBoard(s);
-                    if (!isOwnerWhite)
+
+                    isCurPlWhite = (s[BOARD_SIZE * BOARD_SIZE] == '0');
+                    PaintBoard(s.Substring(0, 65)); // send only the board squares and starting player
+
+                    // listen for server messages (so board will get updates on enemy move)
+                    new Thread(() =>
                     {
-                        new Thread(UpdateBoard).Start();
-                    }
+                        while (!isGameOver)
+                        {
+                            string move = serverPipe.GetEngineMessage();
+                            if (!isGameOver || move != "")
+                            {
+                                if (move == "quit" || move == "win")
+                                {
+                                    isGameOver = true;
+
+                                    if (move == "quit")
+                                    {
+                                        Invoke((MethodInvoker)delegate
+                                        {
+                                            AutoWinLbl.Text = String.Format(AutoWinLbl.Text, isOwnerWhite ? "Black" : "White");
+                                            AutoWinLbl.BringToFront();
+                                            AutoWinLbl.Visible = true;
+                                        });
+                                    }
+                                }
+                                else
+                                {
+                                    MakeMove(move.Substring(0, 2), move.Substring(2, 2), move[4], 0, true);
+
+                                    Invoke((MethodInvoker)delegate
+                                    {
+                                        // re-change turn since its not an actual play
+                                        // its just used to reflect the change that enemy client made
+                                        ChangeTurn();
+                                    });
+                                }
+                            }
+                        }
+                    }).Start();
                 }
+
             });
 
         }
@@ -89,7 +133,8 @@ namespace chessClient
         Thread connectionThread;
         private void Form1_Load(object sender, EventArgs e)
         {
-            enginePipe = new OnlinePipe();
+            enginePipe = new OfflinePipe();
+            serverPipe = new ServerPipe();
             //this.Show();
 
             //MessageBox.Show("Press OK to start waiting for engine to connect...");
@@ -100,6 +145,28 @@ namespace chessClient
             //initForm();
         }
 
+        string GetNameBySign(char sign)
+        {
+            string name = "#";
+            var names = new Dictionary<char, string>()
+            {
+                { 'q', "Queen" },
+                { 'k', "King" },
+                { 'p', "Pawn" },
+                { 'r', "Rook" },
+                { 'n', "Knight" },
+                { 'b', "Bishop" },
+            };
+
+            sign = char.ToLower(sign);
+
+            if (names.ContainsKey(sign))
+            {
+                name = names[sign];
+            }
+
+            return name;
+        }
         Image GetImageBySign(char sign, int version)
         {
             Image res = null;
@@ -199,7 +266,7 @@ namespace chessClient
         private Color originalColor;
         private bool shouldRestore = false;
 
-        private void btnBoard_MouseEnter(object sender, EventArgs e)
+        private void BtnBoard_MouseEnter(object sender, EventArgs e)
         {
             // Store the original color of the button
             Button btn = (Button)sender;
@@ -210,7 +277,7 @@ namespace chessClient
             btn.BackColor = ChangeOpacity(originalColor, 0.5);
         }
 
-        private void btnBoard_MouseLeave(object sender, EventArgs e)
+        private void BtnBoard_MouseLeave(object sender, EventArgs e)
         {
             Button btn = (Button)sender;
 
@@ -251,8 +318,8 @@ namespace chessClient
                     matBoard[i, j] = newBtn;
 
                     //newBtn.FlatAppearance.MouseOverBackColor = btnBoard.FlatAppearance.MouseOverBackColor;
-                    newBtn.MouseEnter += btnBoard_MouseEnter;
-                    newBtn.MouseLeave += btnBoard_MouseLeave;
+                    newBtn.MouseEnter += BtnBoard_MouseEnter;
+                    newBtn.MouseLeave += BtnBoard_MouseLeave;
 
                     newBtn.BackColor = isColBlack ? GetWhiteColor() : GetGrayColor();
                     newBtn.FlatAppearance.BorderColor = GetDefaultBorderColor();
@@ -287,118 +354,7 @@ namespace chessClient
             this.ResumeLayout(false);
         }
 
-        private void PaintSquares(string board)
-        {
-            for (int i = 0; i < BOARD_SIZE; i++)
-            {
-                for (int j = 0; j < BOARD_SIZE; j++)
-                {
-                    if (matBoard[i, j].BackgroundImage?.Tag?.ToString() != board[i * BOARD_SIZE + j].ToString())
-                    {
-                        matBoard[i, j].BackgroundImage = GetImageBySign(board[i * BOARD_SIZE + j], DesignVersion);
-                    }
-                }
-            }
-            //PaintSquares();
-        }
-
-        private void PaintSquares()
-        {
-            Button btn;
-
-            for (int i = 0; i < BOARD_SIZE; i++)
-            {
-                for (int j = 0; j < BOARD_SIZE; j++)
-                {
-                    btn = matBoard[i, j];
-
-                    btn.BackColor = GetSquareBackColor(i, j);
-                    btn.FlatAppearance.BorderColor = GetDefaultBorderColor();
-
-                    btn.BackgroundImage = GetImageBySign((char)(btn.BackgroundImage?.Tag ?? '#'), DesignVersion);
-
-                }
-            }
-        }
         string[] locationsArray;
-
-        void UpdateBoard()
-        {
-            // as long as updateBoard is active, the history btn must be disabled
-            // because the server wont listen to this client's requests
-            Invoke((MethodInvoker)delegate
-            {
-                LogHistory.Enabled = false;
-            });
-
-            string newBoard = enginePipe.GetEngineMessage();
-            if (newBoard == "disconnected" || newBoard == "quit")
-            {
-                isGameOver = true;
-                Invoke((MethodInvoker)delegate
-                {
-                    AutoWinLbl.Text = String.Format(AutoWinLbl.Text, isOwnerWhite ? "Black" : "White");
-                    AutoWinLbl.BringToFront();
-                    AutoWinLbl.Visible = true;
-                });
-            }
-            else
-            {
-                // checks if move code is 2 chars length or not
-                string moveCode = newBoard.Substring(BOARD_SIZE * BOARD_SIZE + 1, 2).Trim();
-                bool isMoveCode = int.TryParse(moveCode, out int numericValue);
-                if (!isMoveCode)
-                {
-                    moveCode = newBoard[BOARD_SIZE * BOARD_SIZE + 1].ToString();
-                }
-
-                string res = ConvertEngineToText(moveCode);
-                char promotionType = newBoard[BOARD_SIZE * BOARD_SIZE + moveCode.Length + 1];
-                string move = newBoard.Substring(BOARD_SIZE * BOARD_SIZE + moveCode.Length + 2);
-                string srcLocation = move.Substring(0, 2), destLocation = move.Substring(2);
-                if (promotionType != ' ')
-                {
-                    res = String.Format(res, isOwnerWhite ? "Black" : "White", destLocation, promotionType);
-                }
-                else
-                {
-                    res = String.Format(res, isOwnerWhite ? "Black" : "White");
-                }
-
-                if (res.ToLower().Contains("game over"))
-                {
-                    // quit engine, close pipe and remove the load moves/undo/redo buttons,
-                    // since its un-useable at that point + set the "log history" button to the same location
-                    // as the now-deleted "load moves" button
-
-                    isGameOver = true;
-                    enginePipe.SendEngineMove("quit");
-                    gameHistory = enginePipe.GetEngineMessage(); // get end-game history from engine
-                    enginePipe.Close();
-                }
-
-                isCurPlWhite = newBoard[BOARD_SIZE * BOARD_SIZE] == '0';
-                Invoke((MethodInvoker)delegate
-                {
-                    lblMove.Text = string.Format("Move from {0} to {1}", srcLocation, destLocation);
-                    lblMove.Visible = true;
-                    lblCurrentPlayer.Text = isCurPlWhite ? "White" : "Black";
-                    lblResult.Text = res;
-                    lblResult.Visible = true;
-                    label2.Visible = true;
-                    Refresh();
-                });
-                SuspendLayout();
-                PaintSquares(newBoard);
-                ResumeLayout();
-            }
-
-            // re-enable button
-            Invoke((MethodInvoker)delegate
-            {
-                LogHistory.Enabled = true;
-            });
-        }
 
         void Lastlbl_Click(object sender, EventArgs e)
         {
@@ -407,7 +363,6 @@ namespace chessClient
             {
                 return;
             }
-
 
             // prevent a player from playing in the name of the other player
             if ((isOwnerWhite && !isCurPlWhite) || (!isOwnerWhite && isCurPlWhite))
@@ -445,7 +400,7 @@ namespace chessClient
                     dstSquare = (Square)b.Tag;
                     matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetSelectedBorderColor();
 
-                    new Thread(PlayMove).Start();
+                    new Thread(() => PlayMove()).Start();
                 }
             }
             else
@@ -509,6 +464,21 @@ namespace chessClient
             return messages[res];
         }
 
+        void MakeMove(string src, string dest, char promotionType = ' ', int sleepTime = 0, bool isReflection = false)
+        {
+            Thread.Sleep(sleepTime);
+            Debug.WriteLine(src + dest + " | " + sleepTime);
+            int srcRow = 8 - (src[1] - '0'), srcCol = src[0] - 'a';
+            int destRow = 8 - (dest[1] - '0'), destCol = dest[0] - 'a';
+            srcSquare = new Square(srcRow, srcCol);
+            dstSquare = new Square(destRow, destCol);
+            if (promotionType != ' ')
+            {
+                promotionsIn.Insert(0, GetNameBySign(promotionType));
+            }
+            PlayMove(isReflection);
+        }
+
         void CapturePiece(Square square)
         {
             matBoard[square.Row, square.Col].BackgroundImage = null;
@@ -552,7 +522,7 @@ namespace chessClient
             return promotion;
         }
 
-        void PlayMove()
+        void PlayMove(bool isReflection = false)
         {
             if (isGameOver)
                 return;
@@ -563,6 +533,7 @@ namespace chessClient
                 Invoke((MethodInvoker)delegate
                 {
                     string m = "";
+                    char promotionType = ' ';
 
                     lblEngineCalc.Visible = true;
                     lblMove.Text = string.Format("Move from {0} to {1}", srcSquare, dstSquare);
@@ -578,12 +549,12 @@ namespace chessClient
                     }
 
                     enginePipe.SendEngineMove(srcSquare.ToString() + dstSquare.ToString());
-                    bool isValid = false;
                     while (m != "done")
                     {
                         m = enginePipe.GetEngineMessage();
                         string res = ConvertEngineToText(m);
                         bool isMoveCode = int.TryParse(m, out int numericValue);
+                        bool isValid = false;
                         if (isMoveCode)
                         {
                             if (res.ToLower().Contains("game over"))
@@ -593,11 +564,16 @@ namespace chessClient
                                 // as the now-deleted "load moves" button
 
                                 isGameOver = true;
-                                m = "done";
-                                // send engine the winner
+                                if (!isReflection)
+                                {
+                                    serverPipe.SendEngineMove(srcSquare.ToString() + dstSquare.ToString() + ' ');
+                                }
+
                                 enginePipe.SendEngineMove("quit");
+                                serverPipe.SendEngineMove("win");
                                 gameHistory = enginePipe.GetEngineMessage(); // get end-game history from engine
                                 enginePipe.Close();
+                                serverPipe.Close();
                             }
                             else if (res.ToLower().Contains("promotion"))
                             {
@@ -620,21 +596,32 @@ namespace chessClient
                                         break;
                                 }
 
+                                promotionType = type;
                                 matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type, DesignVersion);
                                 enginePipe.SendEngineMove(dstSquare.ToString() + Char.ToLower(type));
                                 m = enginePipe.GetEngineMessage(); // get the confirmation message from engine
                                 res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), promotion);
-
+                                isValid = true;
                                 CleanBoard(); // clean board colors after promotion - fixes design issue
                             }
 
                             matBoard[srcSquare.Row, srcSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
                             matBoard[dstSquare.Row, dstSquare.Col].FlatAppearance.BorderColor = GetDefaultBorderColor();
 
-                            if (res.ToLower().StartsWith("valid") || res.ToLower().Contains("promoted"))
+                            if (res.ToLower().StartsWith("valid"))
                             {
-                                ChangeTurn();
                                 isValid = true;
+                            }
+
+                            if (isValid)
+                            {
+                                // if this move isnt a result from the below replication
+                                if (!isReflection)
+                                {
+                                    // send move to server to replicate move on enemy's client
+                                    serverPipe.SendEngineMove(srcSquare.ToString() + dstSquare.ToString() + promotionType);
+                                    ChangeTurn();
+                                }
                             }
 
                             lblEngineCalc.Visible = false;
@@ -670,10 +657,6 @@ namespace chessClient
                             }
                         }
                     }
-                    if (isValid && !isGameOver)
-                    {
-                        new Thread(UpdateBoard).Start();
-                    }
                 });
             }
             catch
@@ -700,11 +683,14 @@ namespace chessClient
             if (enginePipe.IsConnected())
             {
                 enginePipe.SendEngineMove("quit");
+                serverPipe.SendEngineMove(isGameOver ? "win" : "quit");
                 enginePipe.Close();
+                serverPipe.Close();
+                Environment.Exit(0);
             }
         }
 
-        string getHistory()
+        string GetHistory()
         {
             enginePipe.SendEngineMove("history"); // ask engine to give game's history
             gameHistory = gameHistory != "" ? gameHistory : enginePipe.GetEngineMessage();
@@ -712,7 +698,7 @@ namespace chessClient
         }
         private void LogHistory_Click(object sender, EventArgs e)
         {
-            getHistory();
+            GetHistory();
             GameHistory historyDiaglog = new GameHistory(gameHistory);
             historyDiaglog.ShowDialog();
             if (!isGameOver) gameHistory = "";
@@ -720,17 +706,9 @@ namespace chessClient
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Modifiers == Keys.Control)
+            if (e.Modifiers == Keys.Control && e.KeyCode == Keys.S)
             {
-                if (e.KeyCode == Keys.S) // save game
-                {
-                    SaveGameBtn.PerformClick();
-                }
-
-                if (isGameOver)
-                {
-                    return;
-                }
+                SaveGameBtn.PerformClick();
             }
         }
 
@@ -740,14 +718,40 @@ namespace chessClient
             DesignVerBtn.Text = DesignVerBtn.Text.Substring(0, DesignVerBtn.Text.Length - 1);
             DesignVerBtn.Text += (char)(DesignVersion + '0');
 
-            SuspendLayout();
-            PaintSquares();
+            int i, j;
+
+            Button btn;
+            bool isRowBlack = true;
+
+            this.SuspendLayout();
+
+            for (i = 0; i < BOARD_SIZE; i++)
+            {
+                bool isColBlack = isRowBlack;
+
+                for (j = 0; j < BOARD_SIZE; j++)
+                {
+                    btn = matBoard[i, j];
+
+                    btn.BackColor = isColBlack ? GetWhiteColor() : GetGrayColor();
+                    btn.FlatAppearance.BorderColor = GetDefaultBorderColor();
+
+                    btn.BackgroundImage = GetImageBySign((char)(btn.BackgroundImage?.Tag ?? '#'), DesignVersion);
+
+                    isColBlack = !isColBlack;
+                }
+                isRowBlack = !isRowBlack;
+            }
+
             if (srcSquare != null)
             {
+                i = srcSquare.Row;
+                j = srcSquare.Col;
                 srcSquare = null;
-                matBoard[srcSquare.Row, srcSquare.Col].PerformClick();
+                matBoard[i, j].PerformClick();
             }
-            ResumeLayout();
+
+            this.ResumeLayout();
         }
 
         void ShowLabel(Label lbl, int duration)
@@ -762,23 +766,25 @@ namespace chessClient
         }
         private void SaveGameBtn_Click(object sender, EventArgs e)
         {
-            getHistory();
+            GetHistory();
             if (gameHistory == "")
             {
                 // show error message for 4 seconds.
                 ShowLabel(GameSavedErrorLbl, 4000);
                 return;
             }
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Chess Game|*.chess";
-            saveFileDialog.Title = "Save a Chess Game File";
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Chess Game|*.chess",
+                Title = "Save a Chess Game File"
+            };
             saveFileDialog.ShowDialog();
 
             // If the file name is not an empty string open it for saving.
             if (saveFileDialog.FileName != "")
             {
                 StreamWriter file = new StreamWriter(saveFileDialog.FileName);
-                file.Write(gameHistory + "\n" + String.Join(",", promotionsOut));
+                file.Write(gameHistory + "\n" + string.Join(",", promotionsOut));
                 file.Close();
 
                 // show success message for 4 seconds.

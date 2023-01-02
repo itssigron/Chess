@@ -95,7 +95,7 @@ namespace chessClient
         }
         private void InitForm()
         {
-            enginePipe.connect();
+            enginePipe.Connect();
 
             Invoke((MethodInvoker)delegate
             {
@@ -108,7 +108,7 @@ namespace chessClient
                 ActionOnButtons("Visible", true);
 
 
-                string s = enginePipe.getEngineMessage();
+                string s = enginePipe.GetEngineMessage();
 
                 // extra 1 character for starting player,
                 // and another extra for whether the game should be started from 0 or was loaded from file
@@ -125,7 +125,7 @@ namespace chessClient
 
                     if (s[BOARD_SIZE * BOARD_SIZE + 1] == '1') // game was loaded from a file
                     {
-                        string[] game = enginePipe.getEngineMessage().Split('\n');
+                        string[] game = enginePipe.GetEngineMessage().Split('\n');
                         string moves = game[0].Trim();
                         promotionsIn = game[1].Trim().Split(',').ToList();
                         new Thread(() => MakeMoves(moves, 0, this)).Start();
@@ -384,10 +384,10 @@ namespace chessClient
             else
             {
                 srcSquare = (Square)b.Tag;
-                enginePipe.sendEngineMove(srcSquare.ToString());
+                enginePipe.SendEngineMove(srcSquare.ToString());
 
                 // all possible locations this piece can move to, example output: e5e6e7e8
-                string possibleMoves = enginePipe.getEngineMessage();
+                string possibleMoves = enginePipe.GetEngineMessage();
                 locationsArray = Regex.Split(possibleMoves, "(?<=\\G..)");
 
                 // last element is an empty string, therefore exclude it
@@ -560,10 +560,10 @@ namespace chessClient
                         Thread.Sleep(200);
                     }
 
-                    enginePipe.sendEngineMove(srcSquare.ToString() + dstSquare.ToString());
+                    enginePipe.SendEngineMove(srcSquare.ToString() + dstSquare.ToString());
                     while (m != "done")
                     {
-                        m = enginePipe.getEngineMessage();
+                        m = enginePipe.GetEngineMessage();
                         string res = ConvertEngineToText(m);
                         bool isMoveCode = int.TryParse(m, out int numericValue);
                         if (isMoveCode)
@@ -580,9 +580,9 @@ namespace chessClient
                                 this.Controls.Remove(LoadMoves);
                                 this.Controls.Remove(UndoBtn);
                                 this.Controls.Remove(RedoBtn);
-                                enginePipe.sendEngineMove("quit");
-                                gameHistory = enginePipe.getEngineMessage(); // get end-game history from engine
-                                enginePipe.close();
+                                enginePipe.SendEngineMove("quit");
+                                gameHistory = enginePipe.GetEngineMessage(); // get end-game history from engine
+                                enginePipe.Close();
                             }
                             else if (res.ToLower().Contains("promotion"))
                             {
@@ -606,8 +606,8 @@ namespace chessClient
                                 }
 
                                 matBoard[dstSquare.Row, dstSquare.Col].BackgroundImage = GetImageBySign(type, DesignVersion);
-                                enginePipe.sendEngineMove(dstSquare.ToString() + Char.ToLower(type));
-                                m = enginePipe.getEngineMessage(); // get the confirmation message from engine
+                                enginePipe.SendEngineMove(dstSquare.ToString() + Char.ToLower(type));
+                                m = enginePipe.GetEngineMessage(); // get the confirmation message from engine
                                 res = String.Format(ConvertEngineToText(m), lblCurrentPlayer.Text, dstSquare.ToString(), promotion);
 
                                 CleanBoard(); // clean board colors after promotion - fixes design issue
@@ -677,10 +677,10 @@ namespace chessClient
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (enginePipe.isConnected())
+            if (enginePipe.IsConnected())
             {
-                enginePipe.sendEngineMove("quit");
-                enginePipe.close();
+                enginePipe.SendEngineMove("quit");
+                enginePipe.Close();
             }
         }
 
@@ -694,8 +694,8 @@ namespace chessClient
 
         string getHistory()
         {
-            enginePipe.sendEngineMove("history"); // ask engine to give game's history
-            gameHistory = gameHistory != "" ? gameHistory : enginePipe.getEngineMessage();
+            enginePipe.SendEngineMove("history"); // ask engine to give game's history
+            gameHistory = gameHistory != "" ? gameHistory : enginePipe.GetEngineMessage();
             return gameHistory;
         }
         private void LogHistory_Click(object sender, EventArgs e)
@@ -729,8 +729,8 @@ namespace chessClient
                 {
                     lblResult.Visible = false;
 
-                    enginePipe.sendEngineMove("undo");
-                    string move = enginePipe.getEngineMessage();
+                    enginePipe.SendEngineMove("undo");
+                    string move = enginePipe.GetEngineMessage();
                     if (move == "")
                     {
                         ShowRestoreError();
@@ -764,7 +764,7 @@ namespace chessClient
 
                     if (isCastling) // restore rook's move
                     {
-                        move = enginePipe.getEngineMessage();
+                        move = enginePipe.GetEngineMessage();
                         src = move.Substring(0, 2);
                         dest = move.Substring(2, 2);
                         MovePiece(new Square(src), new Square(dest));
@@ -780,8 +780,8 @@ namespace chessClient
                 }
                 else if (e.KeyCode == Keys.Y) // redo
                 {
-                    enginePipe.sendEngineMove("redo");
-                    string move = enginePipe.getEngineMessage();
+                    enginePipe.SendEngineMove("redo");
+                    string move = enginePipe.GetEngineMessage();
                     if (move == "")
                     {
                         ShowRestoreError();
