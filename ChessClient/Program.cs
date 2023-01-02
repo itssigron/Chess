@@ -20,7 +20,7 @@ namespace chessClient
             string GameMode = new ModeSelection().GetResult();
 
             // start the game's engine
-            Process.Start(Path.Combine(Application.StartupPath, "ChessOffline.exe"));
+            Process.Start(Path.Combine(Application.StartupPath, "ChessEngine.exe"));
 
             if (GameMode == "Online")
             {
