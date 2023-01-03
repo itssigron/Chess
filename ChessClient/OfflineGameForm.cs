@@ -75,6 +75,34 @@ namespace chessClient
             isPaused = false;
         }
 
+        void BeginFileLoad(bool isValid)
+        {
+            Invoke((MethodInvoker)delegate
+            {
+                ActionOnButtons("Enabled", false);
+                loadingLbl.Visible = true;
+                if (!isValid)
+                {
+                    loadingLbl.Font = new Font(loadingLbl.Font.FontFamily, 25, loadingLbl.Font.Style);
+                    loadingLbl.Location = new Point(loadingLbl.Location.X - 15, loadingLbl.Location.Y);
+                    loadingLbl.Text = "File corrupted, starting initial game...";
+                }
+                Refresh();
+                Thread.Sleep(2000);
+                BeginControlUpdate(this);
+            });
+        }
+
+        void EndFileLoad()
+        {
+            Invoke((MethodInvoker)delegate
+            {
+                loadingLbl.Visible = false;
+                ActionOnButtons("Enabled", true);
+                EndControlUpdate(this);
+            });
+        }
+
         public OfflineGameForm()
         {
             InitializeComponent();
@@ -111,7 +139,6 @@ namespace chessClient
                 string s = enginePipe.GetEngineMessage();
 
                 // extra 1 character for starting player,
-                // and another extra for whether the game should be started from 0 or was loaded from file
                 if (s.Length != (BOARD_SIZE * BOARD_SIZE + 2))
                 {
                     MessageBox.Show("The length of the board's string is not according the PROTOCOL");
@@ -121,20 +148,19 @@ namespace chessClient
                 else
                 {
                     isCurPlWhite = (s[BOARD_SIZE * BOARD_SIZE] == '0');
-                    PaintBoard(s.Substring(0, 65)); // send only the board squares and starting player
+                    PaintBoard(s);
 
-                    if (s[BOARD_SIZE * BOARD_SIZE + 1] == '1') // game was loaded from a file
+                    string[] args = Environment.GetCommandLineArgs();
+                    if (args.Length > 1) // game was probably loaded from a file
                     {
-                        string[] game = enginePipe.GetEngineMessage().Split('\n');
-                        string moves = game[0].Trim();
-                        promotionsIn = game[1].Trim().Split(',').ToList();
-                        new Thread(() => MakeMoves(moves, 0, this)).Start();
+                        string filePath = args[1];
+                        if (File.Exists(filePath))
+                        {
+                            string[] game = File.ReadAllLines(filePath);
+
+                            new Thread(() => MakeMoves("", 0, game)).Start();
+                        }
                     }
-                    //Tests tests = new Tests(this);
-                    //tests.CheckMateWithPromotions();
-                    //tests.CheckMate();
-                    //tests.Stalemate();
-                    //tests.Tie();
                 }
 
             });
@@ -442,24 +468,25 @@ namespace chessClient
             return messages[res];
         }
 
-        public void MakeMoves(string moves, int delay = 0, Control controlToPause = null)
+        public void MakeMoves(string moves, int delay = 0, string[] gameData = null)
         {
-            string[] movesArray = Regex.Split(moves, "(?<=\\G....)"); // last element will always be empty
-            bool isValid = LoadMovesPrompt.IsValidMoves(moves);
+            string[] movesArray = null;
+            bool isValid;
 
-            if (!isPaused && controlToPause != null)
+
+            // if game data provided instead of moves string, load it
+            if (gameData != null && gameData.Length == 2)
             {
+                moves = gameData[0].Trim();
+                promotionsIn = gameData[1].Trim().Split(',').ToList();
+            }
 
-                ActionOnButtons("Enabled", false);
-                loadingLbl.Visible = true;
-                if (!isValid)
-                {
-                    loadingLbl.Font = new Font(loadingLbl.Font.FontFamily, 30, loadingLbl.Font.Style);
-                    loadingLbl.Text = "File corrupted, starting initial game...";
-                }
-                Refresh();
-                Thread.Sleep(2000);
-                BeginControlUpdate(this);
+            movesArray = Regex.Split(moves, "(?<=\\G....)");
+            isValid = LoadMovesPrompt.IsValidMoves(moves);
+
+            if (!isPaused)
+            {
+                BeginFileLoad(isValid);
             }
 
             if (isValid)
@@ -468,16 +495,13 @@ namespace chessClient
                 {
                     string src = movesArray[i].Substring(0, 2);
                     string dst = movesArray[i].Substring(2);
-                    int copy = i; // we must save a copy, otherwise it could run a thread with a different iteration of i
                     MakeMove(src, dst, delay);
                 }
             }
 
-            if (isPaused && controlToPause != null)
+            if (isPaused)
             {
-                loadingLbl.Visible = false;
-                ActionOnButtons("Enabled", true);
-                EndControlUpdate(this);
+                EndFileLoad();
             }
         }
 

@@ -39,6 +39,7 @@ namespace chessClient
                 { "Offline",  "OfflineGameForm" }
             };
 
+
             string GameMode = new ModeSelection().GetResult();
 
             if (modes.ContainsKey(GameMode))
@@ -46,8 +47,13 @@ namespace chessClient
                 // start the game's engine
                 Process engineProcess = Process.Start(Path.Combine(Application.StartupPath, "ChessEngine.exe"));
                 Application.Run((Form)CreateByTypeName(modes[GameMode]));
-                engineProcess.Kill(); // kill process after use incase form failed to do so
-                engineProcess.Close();
+
+                if (!engineProcess.HasExited)
+                {
+                    // kill process after use incase form failed to do so
+                    engineProcess.Kill();
+                    engineProcess.Close();
+                }
             }
         }
     }

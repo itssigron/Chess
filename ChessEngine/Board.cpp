@@ -40,7 +40,7 @@ int Board::getIndex(const int row, const int col)
 	return row * BOARD_SIZE + col;
 }
 
-Board::Board(const string& board, const string& filePath)
+Board::Board(const string& board)
 {
 
 	// last char is which player is starting

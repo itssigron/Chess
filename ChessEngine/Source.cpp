@@ -26,9 +26,8 @@ bool moveRedone = false;
 */
 void performMove(const string srcLocation, const string destLocation, Board& board, Pipe& p);
 
-int main(int argc, char* argv[])
+int main()
 {
-	string filePath = argc > 1 ? argv[1] : "";
 	Pipe p;
 
 	ShowWindow(::GetConsoleWindow(), SW_HIDE);
@@ -46,30 +45,12 @@ int main(int argc, char* argv[])
 
 	// the first message to the graphics will be our board with 0 at the end to indicate the WHITE_PLAYER is the starting player
 	char msgToGraphics[1024] = "rnbqkbnrpppppppp################################PPPPPPPPRNBQKBNR00";
-	Board board = Board(string(msgToGraphics), filePath); // initialize our Board class
+	Board board = Board(string(msgToGraphics)); // initialize our Board class
 	string& boardStr = board.getBoard();
 	int result = 0;
 
-	std::ifstream file(filePath);
-	string history = "";
-	string promotions = "";
-	// letting graphics know if the game was loaded from a file
-	if (filePath.length() && file.is_open())
-	{
-		msgToGraphics[BOARD_SIZE * BOARD_SIZE + 1] = '1';
-		std::getline(file, history); // get file's content (game's history)
-		std::getline(file, promotions); // get game's promotions
-	}
-
 	// send the board string
 	p.sendMessageToGraphics(msgToGraphics);
-
-	// send game history and promotions to graphics if game was loaded from file
-	if (filePath.length() && file.is_open())
-	{
-		file.close();
-		p.sendMessageToGraphics(history + "\n" + promotions);
-	}
 
 	// get message from graphics
 	string msgFromGraphics = p.getMessageFromGraphics();

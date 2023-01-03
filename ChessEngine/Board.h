@@ -107,7 +107,7 @@ public:
 	* input: the stringified board
 	* output: the Board object
 	*/
-	Board(const string& board, const string& filePath);
+	Board(const string& board);
 	
 	// ---------------------- DESTRUCTOR ----------------------
 
