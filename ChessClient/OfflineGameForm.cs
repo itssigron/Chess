@@ -26,6 +26,7 @@ namespace chessClient
         bool isCurPlWhite = true;
         bool isGameOver = false;
         int DesignVersion = 1;
+        string filePath = "";
 
         const int BOARD_SIZE = 8;
         Color YELLOW_SQUARE = Color.FromArgb(255, 206, 158);
@@ -153,7 +154,7 @@ namespace chessClient
                     string[] args = Environment.GetCommandLineArgs();
                     if (args.Length > 1) // game was probably loaded from a file
                     {
-                        string filePath = args[1];
+                        filePath = args[1];
                         if (File.Exists(filePath))
                         {
                             string[] game = File.ReadAllLines(filePath);
@@ -890,13 +891,21 @@ namespace chessClient
                 ShowLabel(GameSavedErrorLbl, 4000);
                 return;
             }
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Chess Game|*.chess";
-            saveFileDialog.Title = "Save a Chess Game File";
-            saveFileDialog.ShowDialog();
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Chess Game|*.chess",
+                Title = "Save a Chess Game File",
+                // if game was loaded from file, then set default directory and file as the loaded file
+                InitialDirectory = filePath != "" ? Path.GetDirectoryName(filePath) : "",
+                FileName = filePath != "" ? Path.GetFileName(filePath) : "",
+                OverwritePrompt = filePath == ""
+            };
+
+            DialogResult res = saveFileDialog.ShowDialog();
 
             // If the file name is not an empty string open it for saving.
-            if (saveFileDialog.FileName != "")
+            if (res != DialogResult.Cancel && res != DialogResult.Abort && saveFileDialog.FileName != "")
             {
                 StreamWriter file = new StreamWriter(saveFileDialog.FileName);
                 file.Write(gameHistory + "\n" + String.Join(",", promotionsOut));
@@ -920,8 +929,7 @@ namespace chessClient
             // If the file name is not an empty string, re-open the game with this file as argument
             if (openFileDialog.FileName != "")
             {
-                string serverExecutablePath = Path.Combine(Application.StartupPath, "Chess.exe");
-                Process.Start(serverExecutablePath, "\"" + openFileDialog.FileName + "\"");
+                Process.Start(Application.ExecutablePath, "\"" + openFileDialog.FileName + "\"");
                 Application.Exit();
             }
         }

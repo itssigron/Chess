@@ -28,7 +28,7 @@ namespace chessClient
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -39,8 +39,8 @@ namespace chessClient
                 { "Offline",  "OfflineGameForm" }
             };
 
-
-            string GameMode = new ModeSelection().GetResult();
+            // force offline mode if game was loaded from file
+            string GameMode = args.Length > 0 ? "Offline" : new ModeSelection().GetResult();
 
             if (modes.ContainsKey(GameMode))
             {
