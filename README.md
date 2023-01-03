@@ -72,5 +72,5 @@ If any problem occurs during the use of this program, feel free to open an issue
 
 ## Authors
 
-- [Harel Sigron](https://gitlab.com/itssigron)
-- [Raz](https://gitlab.com/Razkoo)
+- [Harel Sigron](https://github.com/itssigron)
+- [Raz](https://github.com/Razkoo)
