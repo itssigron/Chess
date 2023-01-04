@@ -10,6 +10,8 @@ Chess Game developed as part of Magshimim's second year (Israel's National Cyber
 * Customizable design
 * Online and Offline PvP
 * Online server is currently hosted in a vps, valid connection details can be found in ChessClient/ServerPipe.cs:13
+* Online chat
+* Discord RPC when playing the game
 * Save a game to a `.chess` file (in-game button or Ctrl+S)
 * Load a game by either opening a `.chess` file or by loading it from in-game
 * Standalone button to load moves one by one
