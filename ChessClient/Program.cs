@@ -32,6 +32,9 @@ namespace chessClient
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            DiscordController discordRpc = new DiscordController("1060305608609382410");
+            discordRpc.Connect();
+            discordRpc.UpdatePresence("Main Menu");
 
             var modes = new Dictionary<string, string>()
             {
@@ -44,6 +47,7 @@ namespace chessClient
 
             if (modes.ContainsKey(GameMode))
             {
+                discordRpc.UpdatePresence(GameMode + " Mode");
                 // start the game's engine
                 Process engineProcess = Process.Start(Path.Combine(Application.StartupPath, "ChessEngine.exe"));
                 Application.Run((Form)CreateByTypeName(modes[GameMode]));

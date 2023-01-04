@@ -39,7 +39,6 @@ namespace chessClient
         string gameHistory = "";
         List<string> promotionsIn = new List<string>(); // list to hold cached promotions of loaded games
         List<string> promotionsOut = new List<string>(); // list to hold promotions to be saved in saved files
-
         public OnlineGameForm()
         {
             InitializeComponent();
