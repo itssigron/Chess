@@ -43,9 +43,6 @@ namespace chessClient
         public OnlineGameForm()
         {
             InitializeComponent();
-            CenterToScreen();
-            label25.SendToBack();
-            lblWaiting.BringToFront();
         }
 
         void ActionOnButtons(string prop, bool val)
@@ -146,6 +143,11 @@ namespace chessClient
         Thread connectionThread;
         private void Form1_Load(object sender, EventArgs e)
         {
+            CenterToScreen();
+            label25.SendToBack();
+            lblWaiting.BringToFront();
+            Refresh();
+
             enginePipe = new OfflinePipe();
             serverPipe = new ServerPipe();
             //this.Show();
