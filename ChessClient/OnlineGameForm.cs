@@ -150,17 +150,13 @@ namespace chessClient
         {
             enginePipe = new OfflinePipe();
             serverPipe = new ServerPipe();
-            //this.Show();
 
-            //MessageBox.Show("Press OK to start waiting for engine to connect...");
             connectionThread = new Thread(InitForm);
             connectionThread.Start();
             connectionThread.IsBackground = true;
 
-            // Add some initial text to the RichTextBox
+            // Add some initial text our container
             MessagesContainer.AppendText("Hello, welcome to the chat!\n");
-            MessagesContainer.AppendText("This is an example of a RichTextBox being used as a chat container.\n");
-            //initForm();
         }
 
         string GetNameBySign(char sign)
