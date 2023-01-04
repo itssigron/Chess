@@ -11,43 +11,40 @@ namespace ChessClient
 
         public DiscordController(string clientId)
         {
-            // Set the client ID and initialize the client
-            client = new DiscordRpcClient(clientId);
-
-            // Register the events that you want to use
-            client.OnReady += (sender, e) =>
+            try
             {
-                Console.WriteLine("Discord: ready");
-            };
-
-            client.OnPresenceUpdate += (sender, e) =>
-            {
-                Console.WriteLine("Discord: presence update");
-            };
+                // Set the client ID and initialize the client
+                client = new DiscordRpcClient(clientId);
+            }
+            catch (Exception) { }
         }
 
         public void Connect()
         {
             // Connect to Discord
-            new Thread(() => client.Initialize()).Start();
+            new Thread(() => { try { client.Initialize(); } catch (Exception) { } }).Start();
         }
 
         public void UpdatePresence(string gameState)
         {
             new Thread(() =>
             {
-                // Set the rich presence information
-                RichPresence presence = new RichPresence()
+                try
                 {
-                    Details = "Playing chess",
-                    State = gameState,
-                    Assets = new Assets()
+                    // Set the rich presence information
+                    RichPresence presence = new RichPresence()
                     {
-                        LargeImageKey = "chess-cover",
-                        LargeImageText = "Sigron's Chess Game"
-                    }
-                };
-                client.SetPresence(presence);
+                        Details = "Playing chess",
+                        State = gameState,
+                        Assets = new Assets()
+                        {
+                            LargeImageKey = "chess-cover",
+                            LargeImageText = "Sigron's Chess Game"
+                        }
+                    };
+                    client.SetPresence(presence);
+                }
+                catch (Exception) { }
             }).Start();
         }
     }
