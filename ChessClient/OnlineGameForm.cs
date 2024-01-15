@@ -39,13 +39,14 @@ namespace chessClient
         string gameHistory = "";
         List<string> promotionsIn = new List<string>(); // list to hold cached promotions of loaded games
         List<string> promotionsOut = new List<string>(); // list to hold promotions to be saved in saved files
-
         public OnlineGameForm()
         {
             InitializeComponent();
             CenterToScreen();
             label25.SendToBack();
             lblWaiting.BringToFront();
+            lblWaiting.ForeColor = Color.Red;
+            Refresh();
         }
 
         void ActionOnButtons(string prop, bool val)
@@ -95,36 +96,44 @@ namespace chessClient
                         while (!isGameOver)
                         {
                             string move = serverPipe.GetEngineMessage();
-                            currentlyReflecting = true;
-                            if (!isGameOver || move != "")
+                            if (move.StartsWith("chat")) // the other player has sent a message
                             {
-                                if (move == "quit" || move == "win")
+                                // reflect the message in this client aswell
+                                SendMessage(move.Substring(4), true);
+                            }
+                            else
+                            {
+                                currentlyReflecting = true;
+                                if (!isGameOver && move != "")
                                 {
-                                    isGameOver = true;
-                                    serverPipe.Close();
-                                    enginePipe.Close();
-
-                                    if (move == "quit")
+                                    if (move == "quit" || move == "win")
                                     {
+                                        isGameOver = true;
+                                        serverPipe.Close();
+                                        enginePipe.Close();
+
+                                        if (move == "quit")
+                                        {
+                                            Invoke((MethodInvoker)delegate
+                                            {
+                                                AutoWinLbl.Text = String.Format(AutoWinLbl.Text, isOwnerWhite ? "Black" : "White");
+                                                AutoWinLbl.BringToFront();
+                                                AutoWinLbl.Visible = true;
+                                            });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        MakeMove(move.Substring(0, 2), move.Substring(2, 2), move[4], 0, true);
+
                                         Invoke((MethodInvoker)delegate
                                         {
-                                            AutoWinLbl.Text = String.Format(AutoWinLbl.Text, isOwnerWhite ? "Black" : "White");
-                                            AutoWinLbl.BringToFront();
-                                            AutoWinLbl.Visible = true;
+                                            // re-change turn since its not an actual play
+                                            // its just used to reflect the change that enemy client made
+                                            ChangeTurn();
+                                            currentlyReflecting = false;
                                         });
                                     }
-                                }
-                                else
-                                {
-                                    MakeMove(move.Substring(0, 2), move.Substring(2, 2), move[4], 0, true);
-
-                                    Invoke((MethodInvoker)delegate
-                                    {
-                                        // re-change turn since its not an actual play
-                                        // its just used to reflect the change that enemy client made
-                                        ChangeTurn();
-                                        currentlyReflecting = false;
-                                    });
                                 }
                             }
                         }
@@ -140,14 +149,13 @@ namespace chessClient
         {
             enginePipe = new OfflinePipe();
             serverPipe = new ServerPipe();
-            //this.Show();
 
-            //MessageBox.Show("Press OK to start waiting for engine to connect...");
             connectionThread = new Thread(InitForm);
             connectionThread.Start();
             connectionThread.IsBackground = true;
 
-            //initForm();
+            // Add some initial text our container
+            MessagesContainer.AppendText("Hello, welcome to the chat!\n");
         }
 
         string GetNameBySign(char sign)
@@ -811,6 +819,65 @@ namespace chessClient
 
             if (!isGameOver)
                 gameHistory = "";
+        }
+
+        private void SendMessage(string input, bool isReflection = false)
+        {
+            int length = input.Length;
+            Invoke((MethodInvoker)delegate
+            {
+
+                if (input == "")
+                {
+                    SendMsgError.Text = "You may not send an empty message.";
+                    ShowLabel(SendMsgError, 4000);
+                    return;
+                }
+                else if (length > 200)
+                {
+                    SendMsgError.Text = "You may not send a message larger than 200 characters.";
+                    ShowLabel(SendMsgError, 4000);
+                    return;
+                }
+
+                if (!isReflection)
+                {
+                    // send server the message so he will let the other client know
+                    serverPipe.SendEngineMove("chat" + input);
+                }
+
+                // Append the text from the TextBox to the RichTextBox
+                MessagesContainer.AppendText((isReflection ? (isOwnerWhite ? "Black" : "White") : "You") + ": " +
+                    input + "\n");
+
+                // Clear the TextBox
+                MessageInput.Clear();
+
+                // Scroll to the bottom of the RichTextBox
+                MessagesContainer.SelectionStart = length;
+                MessagesContainer.ScrollToCaret();
+            });
+        }
+
+        private void SendMsgButton_Click(object sender, EventArgs e)
+        {
+            SendMessage(MessageInput.Text.Trim());
+        }
+
+        private void MessageInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                if (e.Modifiers == Keys.Shift)
+                {
+                    MessageInput.Paste(Environment.NewLine);
+                }
+                else
+                {
+                    SendMsgButton.PerformClick();
+                }
+            }
         }
     }
 }

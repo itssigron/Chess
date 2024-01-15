@@ -10,6 +10,8 @@ Chess Game developed as part of Magshimim's second year (Israel's National Cyber
 * Customizable design
 * Online and Offline PvP
 * Online server is currently hosted in a vps, valid connection details can be found in ChessClient/ServerPipe.cs:13
+* Online chat
+* Discord RPC when playing the game
 * Save a game to a `.chess` file (in-game button or Ctrl+S)
 * Load a game by either opening a `.chess` file or by loading it from in-game
 * Standalone button to load moves one by one
@@ -25,7 +27,7 @@ Chess Game developed as part of Magshimim's second year (Israel's National Cyber
 
 ### Installation
 
-* Download the [Stable](https://gitlab.com/harel_sigron_advanced_programming_2023/chess-project/-/releases/Stable) release
+* Download the [Latest](https://github.com/itssigron/Chess/releases/tag/v2.0.0) release
 * Follow all installation steps
 * Note - the online game mode is queue-based, meaning that a game is being set up to the first 2 players joining each time.<br>So if you want to play with your friend, you will probably want to enter around the same time so no one else will.
 * The game is also currently able to run only 10 games at once, you may change that limit in ChessOnline/OnlinePipe.h:32
@@ -72,5 +74,5 @@ If any problem occurs during the use of this program, feel free to open an issue
 
 ## Authors
 
-- [Harel Sigron](https://gitlab.com/itssigron)
-- [Raz](https://gitlab.com/Razkoo)
+- [Harel Sigron](https://github.com/itssigron)
+- [Raz](https://github.com/Razkoo)
