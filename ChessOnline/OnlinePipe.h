@@ -19,18 +19,19 @@ private:
 	Socket _socket;
 
 	// Create a vector to store the threads
-	std::vector<std::thread*> _clientThreads;
+	std::vector<std::thread> _clientThreads;
+	// Create a mutex to synchronize access to the vector
+	std::mutex _clientThreadsMutex;
+
 public:
 
-	OnlinePipe(handler handleGame)
+	OnlinePipe(handler gameHandler)
 	{
 		_socket = Socket(18079);
 		SOCKET serverSocket = _socket.getServerSocket();
 
 		SOCKET cachedClient = 0;
 
-		// Create a mutex to synchronize access to the vector
-		std::mutex clientThreadsMutex;
 
 		while (true)
 		{
@@ -57,26 +58,43 @@ public:
 
 				std::cout << currentDateTime() << "Second client connected! Starting game..." << std::endl;
 
-				// Lock the mutex to prevent concurrent access to the vector
-				std::lock_guard<std::mutex> guard(clientThreadsMutex);
-
-				// Create a new thread to handle the connection
-				std::thread* thread = new std::thread([handleGame, clientSocket1, clientSocket2, this]() {
-					handleGame(clientSocket1, clientSocket2, *this);
-					});
-				_clientThreads.push_back(thread);
+				addGame(clientSocket1, clientSocket2, gameHandler);
 			}
+		}
+	}
+
+	void addGame(SOCKET clientSocket1, SOCKET clientSocket2, handler gameHandler)
+	{
+		// Lock the mutex to prevent concurrent access to the vector
+		std::lock_guard<std::mutex> guard(_clientThreadsMutex);
+
+		// Create a new thread to handle the connection
+		std::thread thread = std::thread([=]() {
+			gameHandler(clientSocket1, clientSocket2, *this);
+			});
+
+		_clientThreads.push_back(std::move(thread));
+	}
+
+	void removeGame(std::thread::id threadId)
+	{
+		// Lock the mutex to prevent concurrent access to the vector
+		std::lock_guard<std::mutex> guard(_clientThreadsMutex);
+
+		// remove the specified thread from the threads vector by its id
+		auto threadIt = std::find_if(_clientThreads.begin(), _clientThreads.end(), [=](std::thread& t) { return (t.get_id() == threadId); });
+
+		// make sure the thread is found
+		if (threadIt != _clientThreads.end())
+		{
+			threadIt->detach();
+			_clientThreads.erase(threadIt);
 		}
 	}
 
 	const Socket& getSocket() const
 	{
 		return _socket;
-	}
-
-	std::vector<std::thread*>& getThreads()
-	{
-		return _clientThreads;
 	}
 
 	bool sendMessageToGraphics(SOCKET& client, const std::string& msg)
