@@ -10,7 +10,7 @@ namespace chessClient
 
         public ServerPipe()
         {
-            socket = new Socket("185.101.105.68", 18079);
+            socket = new Socket("127.0.0.1", 18079);
         }
 
         public bool Connect()
@@ -34,7 +34,7 @@ namespace chessClient
                 {
                     res = socket.Recv();
                 }
-                catch (Exception) {}
+                catch (Exception) { }
             }
             return res;
         }
