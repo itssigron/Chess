@@ -93,12 +93,19 @@ public:
 
 	bool sendMsg(SOCKET client, const char* message) const
 	{
-		char* newMsg = new char[strlen(message) + 2]; // extra for dot and extra for null
-		strcpy_s(newMsg, strlen(message) + 2, message);
-		newMsg[strlen(message)] = '.';
-		newMsg[strlen(message) + 1] = 0;
+		// Calculate the message size
+		uint16_t messageSize = strlen(message);
 
-		int result = send(client, newMsg, (int)strlen(newMsg), 0);
+		// Convert the message size to network byte order
+		char* data = reinterpret_cast<char*>(&messageSize);
+
+		char* newMsg = new char[sizeof(uint16_t) + messageSize + 1]; // message size + message + extra for null
+		memcpy(newMsg, &messageSize, sizeof(uint16_t));
+		memcpy(newMsg + sizeof(uint16_t), message, messageSize);
+
+		newMsg[sizeof(uint16_t) + messageSize] = 0;
+
+		int result = send(client, newMsg, sizeof(uint16_t) + messageSize, 0);
 
 		if (result == SOCKET_ERROR)
 		{
@@ -107,7 +114,7 @@ public:
 			return false;
 		}
 
-		std::cout << currentDateTime() << "Sent: " << newMsg << std::endl;
+		std::cout << currentDateTime() << "Sent: " << (newMsg + sizeof(uint16_t)) << std::endl;
 		delete[] newMsg;
 
 		return true;
@@ -118,44 +125,32 @@ public:
 		return sendMsg(client, message.c_str());
 	}
 
-	bool recvMsg(SOCKET client, string& out) const
+	bool recvMsg(SOCKET client, std::string& out) const
 	{
-		std::string result = "";
+		uint16_t messageSize = 0;
 
-		bool finished = false;
-		bool failed = false;
-
-		// Receive messages until a dot is encountered
-		while (finished == false)
+		// Receive the size header (first 2 bytes)
+		int bytesReceived = recv(client, reinterpret_cast<char*>(&messageSize), sizeof(uint16_t), 0);
+		if (bytesReceived == SOCKET_ERROR || bytesReceived != sizeof(uint16_t))
 		{
-			// Receive a single byte
-			char data[1];
-			int bytesReceived = recv(client, data, 1, 0);
-			if (bytesReceived == SOCKET_ERROR || bytesReceived == 0)
-			{
-				std::cerr << currentDateTime() << "recv failed: " << WSAGetLastError() << std::endl;
-				failed = true;
-				finished = true;
-			}
-			// Check if the message is complete (ends with a dot)
-			if (data[0] == '.')
-			{
-				finished = true;
-			}
-			else
-			{
-				// Append the received byte to the message
-				result += data[0];
-			}
+			std::cerr << currentDateTime() << "recv size header failed: " << WSAGetLastError() << std::endl;
+			return false;
 		}
 
-		if (!failed)
+		// Receive the entire message based on the size received
+		std::string buffer(messageSize, '\0');
+		bytesReceived = recv(client, const_cast<char*>(buffer.c_str()), messageSize, 0);
+
+		if (bytesReceived == SOCKET_ERROR || bytesReceived != messageSize)
 		{
-			out = result;
-			std::cout << currentDateTime() << "Received: " << result << std::endl;
+			std::cerr << currentDateTime() << "recv message failed: " << WSAGetLastError() << std::endl;
+			return false;
 		}
 
-		return !failed;
+		out = buffer;
+		std::cout << currentDateTime() << "Received: " << out << std::endl;
+
+		return true;
 	}
 
 	void close()

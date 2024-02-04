@@ -42,48 +42,43 @@ namespace ChessClient
 
         public void Send(string message)
         {
-            message += ".";
-            // Translate the passed message into ASCII and store it as a Byte array.
-            Byte[] data = Encoding.ASCII.GetBytes(message);
+            // Convert the message into ASCII and store it as a byte array
+            byte[] messageBytes = Encoding.ASCII.GetBytes(message);
 
-            // Send the message to the connected TcpServer.
-            stream.Write(data, 0, data.Length);
+            // Get the size of the message
+            ushort messageSize = (ushort)messageBytes.Length;
+            byte[] sizeBytes = BitConverter.GetBytes(messageSize);
+
+            // Send the size header
+            stream.Write(sizeBytes, 0, sizeBytes.Length);
+
+            // Send the actual message
+            stream.Write(messageBytes, 0, messageBytes.Length);
 
             Console.WriteLine("Sent: {0}", message);
         }
 
         public string Recv()
         {
-            string result = "";
+            // Receive the size header (first 2 bytes)
+            byte[] sizeBytes = new byte[sizeof(ushort)];
+            stream.Read(sizeBytes, 0, sizeBytes.Length);
 
-            // Receive messages until a dot is encountered
-            while (true)
-            {
-                // Receive a single byte
-                Byte[] data = new Byte[1];
-                int bytesReceived = stream.Read(data, 0, 1);
-                if (bytesReceived == 0)
-                {
-                    // Connection closed by server
-                    break;
-                }
+            // Convert the size from network byte order to host byte order
+            ushort messageSize = BitConverter.ToUInt16(sizeBytes, 0);
 
-                // Append the received byte to the message
-                string s = Encoding.ASCII.GetString(data);
+            // Receive the entire message based on the size received
+            byte[] messageBytes = new byte[messageSize];
+            stream.Read(messageBytes, 0, messageBytes.Length);
 
-                // Check if the message is complete (ends with a dot)
-                if (s == ".")
-                {
-                    break;
-                }
-
-                result += s;
-            }
+            // Convert the received message bytes to a string
+            string result = Encoding.ASCII.GetString(messageBytes);
 
             Console.WriteLine("Received: {0}", result);
 
             return result;
         }
+
         public void Close()
         {
             client.Close();
